@@ -62,7 +62,9 @@ hist_cor_desc <- function(path_img){
 
 # obtem caracteristicas de textura   
 lbp_desc <- function(img){
-  lbp(grayscale(img)[,,1,1],1)
+  r1 <- lbp(grayscale(img)[,,1,1],1)
+  lbp_uniforme <- hist(r1$lbp.u2, plot=FALSE, breaks=59)$counts
+  return(c(lbp_uniforme))
 }
 
 
@@ -118,6 +120,17 @@ rownames(features_s) <- names(imagens)
 # Questao 2                               
 #----------------------------------------------------------------#
 
+## visualização das imagens retornadas por um ranking, para uma consulta
+print_top_k <- function(query, ranking, k){
+  
+  par(mfrow = c(k+1,3), mar = rep(2, 4))
+  plot(load.image(query), axes = FALSE, main = paste("consulta: ", query))
+  for(img in names(imagens)[ranking][1:k]){
+    plot(load.image(img), axes = FALSE,
+         main = img)
+  }
+}
+
 # definindo as consultas
 # obs.:  use o caminho completo para a imagem
 consulta_biloba <- "./plantas/biloba_02.jpg"     
@@ -134,8 +147,7 @@ mostrarImagemColorida(consulta_ilex,"ilex_08.jpg")
 mostrarImagemColorida(consulta_monogyna,"monogyna_04.jpg")
 mostrarImagemColorida(consulta_regia,"regia_07.jpg")
 
-# plotando as imagens retornadas
-par(mfrow = c(3,3), mar = rep(2, 4))
+# construindo rankings
 plot_ranking <- function(query, features){
   distancia <- dist(features, method = "euclidean")
   distancia <- as.matrix(distancia)
@@ -169,7 +181,7 @@ ranking_s_regia <- plot_ranking(consulta_regia, features_s)
 
 #-----------------------------#
 # comparando  rankings                              
-s
+
 ## utilize as funções do arquivo ranking_metrics.R para calcular 
 # a precisão, revocação, taxa F1 e precisão média nos 
 # top 5, 10, 15 e 20
