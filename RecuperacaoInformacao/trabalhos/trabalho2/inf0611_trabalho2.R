@@ -27,7 +27,8 @@ path_plantas = "./plantas"
 # Leitura das imagens 
 #----------------------------------------------------------------#
 imagens <- read_images(path_plantas)
-class(imagens[[2]][2])
+class(imagens[[2]][0])
+
 
 #----------------------------------------------------------------#
 # Obtem classe de cada imagem 
@@ -110,7 +111,8 @@ Momentos <- function(img){
 features_c <- t(sapply(names(imagens), hist_cor_desc))
 rownames(features_c) <- names(imagens)
 
-features_t <- t(sapply(imagens, lbp_desc))
+#features_t <- t(sapply(imagens, lbp_desc))
+features_t <- read.csv("features_t.csv")
 rownames(features_t) <- names(imagens)
 
 #features_s <- t(sapply(imagens, Momentos))
@@ -302,18 +304,19 @@ concat_regia_analyse    <- analyse_rankings(ranking_concat_regia, ground_truth_r
 #----------------------------------------------------------------#
 
 # Definindo a consulta (mesmo índice da Questão 2)
-consulta <- 4
+consulta_index <- 4
+consulta <- names(imagens)[consulta_index]
 
 # calculando as distancias, descritor:  histograma de cor 
-dist_hist_q4 <- get_distance_vector(histogramas, consulta) 
+dist_hist_q4 <- get_distance_vector(features_c, consulta) 
 r_hist_q4 <- order(dist_hist_q4)
   
 # calculando as distancias, descritor:  textura 
-dist_text_q4 <- get_distance_vector(texturas, consulta) 
+dist_text_q4 <- get_distance_vector(features_t, consulta) 
 r_text_q4 <- order(dist_text_q4)
   
 # calculando as distancias, descritor:  forma 
-dist_forma_q4 <- get_distance_vector(moments, consulta) 
+dist_forma_q4 <- get_distance_vector(features_s, consulta) 
 r_forma_q4 <- order(dist_forma_q4)
   
 # calculando e analisando rankings combmax
@@ -321,19 +324,23 @@ r_combmax_q4 <- names(imagens)[combmax(dist_hist_q4, dist_text_q4, dist_forma_q4
 r_combmax_q4
 
 # calculando e analisando rankings combsum
+r_combmin_q4 <- names(imagens)[combmin(dist_hist_q4, dist_text_q4, dist_forma_q4)]
+r_combmin_q4
+
+# calculando e analisando rankings combsum
 r_combsum_q4 <- names(imagens)[combsum(dist_hist_q4, dist_text_q4, dist_forma_q4)]
 r_combsum_q4
 
 # calculando e analisando rankings borda
-r_borda_q4 <- names(imagens)[borda(r_hist_q4, r_text_q4, r_forma_q4)]
+r_borda_q4 <- names(imagens)[bordacount(r_hist_q4, r_text_q4, r_forma_q4)]
 r_borda_q4
 
   
 # analisar resultados
-analyse_rankings(r_combmin_q4)
-analyse_rankings(r_combmax_q4)
-analyse_rankings(r_combsum_q4)
-analyse_rankings(r_borda_q4)
+analyse_rankings(r_combmax_q4, ground_truth_biloba)
+analyse_rankings(r_combmin_q4, ground_truth_biloba)
+analyse_rankings(r_combsum_q4, ground_truth_biloba)
+analyse_rankings(r_borda_q4, ground_truth_biloba)
   
 #----------------------------------------------------------------#
 # Questao 4 - RESPONDA:                   
