@@ -315,7 +315,8 @@ df_s_11_points <- generate_df_11_points(
     list(ground_truth_regia, ranking_s_regia)
   )
 )
-
+dev.off()
+par(mfrow=c(1,1))
 plot_precision_x_recall_11_points_t2(rbind(df_c_11_points, df_t_11_points, df_s_11_points), c("Cor", "Textura", "Forma"), "Curva PR - Precisão Média Interpolada em 11 pontos")
 #
 #
@@ -394,10 +395,29 @@ concat_regia_analyse
 # o descritor de pior resulado. Isso indica que de forma isolada este não é
 # capaz de causar diferenciação entre as amostras, mas ao se combinar
 # multiplas features, este foi o que teve mais poder de diferenciação
-# entre as amostrs.
+# entre as amostras.
 
 # (f)
-# 
+df_concat_11_points <- generate_df_11_points(
+  list(
+    list(ground_truth_biloba, ranking_concat_biloba),
+    list(ground_truth_europaea, ranking_concat_europaea),
+    list(ground_truth_ilex, ranking_concat_ilex),
+    list(ground_truth_monogyna, ranking_concat_monogyna),
+    list(ground_truth_regia, ranking_concat_regia)
+  )
+)
+
+dev.off()
+par(mfrow=c(1,1))
+plot_precision_x_recall_11_points_t2(rbind(df_c_11_points, df_t_11_points, df_s_11_points, df_concat_11_points), c("Cor", "Textura", "Forma", "Combinação"), "Curva PR - Precisão Média Interpolada em 11 pontos")
+
+# Observando o gráfico é possível confirmar o que foi constatado nos itens anteriores.
+# Nota-se que o comportamento da curva do descritor de forma e da combinação de 
+# descritores é exatamento igual para os 11 pontos plotados. Ou seja, o descritor
+# combinado assumiu o valor do descritor de forma, sendo este o descritor mais
+# "forte" dentro da combinação de descritores realizada
+
 # 
 # 
 #----------------------------------------------------------------#
