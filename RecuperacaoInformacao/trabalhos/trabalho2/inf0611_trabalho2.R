@@ -112,10 +112,12 @@ features_c <- t(sapply(names(imagens), hist_cor_desc))
 rownames(features_c) <- names(imagens)
 
 #features_t <- t(sapply(imagens, lbp_desc))
+# pegando de csv para evitar tempo de processamento
 features_t <- read.csv("features_t.csv")
 rownames(features_t) <- names(imagens)
 
 #features_s <- t(sapply(imagens, Momentos))
+# pegando de csv para evitar tempo de processamento
 features_s <- read.csv("features_s.csv")
 rownames(features_s) <- names(imagens)
 
@@ -126,9 +128,9 @@ rownames(features_s) <- names(imagens)
 ## visualização das imagens retornadas por um ranking, para uma consulta
 print_top_k <- function(query, ranking, k){
   
-  par(mfrow = c(k+1,3), mar = rep(2, 4))
+  par(mfrow = c(k+1,4), mar = rep(1, 4))
   plot(load.image(query), axes = FALSE, main = paste("consulta: ", query))
-  for(img in names(imagens)[ranking][1:k]){
+  for(img in ranking[1:k]){
     plot(load.image(img), axes = FALSE,
          main = img)
   }
@@ -150,37 +152,28 @@ mostrarImagemColorida(consulta_ilex,"ilex_08.jpg")
 mostrarImagemColorida(consulta_monogyna,"monogyna_04.jpg")
 mostrarImagemColorida(consulta_regia,"regia_07.jpg")
 
-# construindo rankings
-plot_ranking <- function(query, features){
-  distancia <- dist(features, method = "euclidean")
-  distancia <- as.matrix(distancia)
-  distancia_interesse <- distancia[,query]
-  
-  ranking <- order(distancia_interesse)
-  return(ranking)
-}
 #-----------------------------#
 # construindo rankings                          
 # para cada uma das 5 consultas, construa um ranking com base na cor
-ranking_c_biloba <- plot_ranking(consulta_biloba, features_c)
-ranking_c_europaea <- plot_ranking(consulta_europaea, features_c)
-ranking_c_ilex <- plot_ranking(consulta_ilex, features_c)
-ranking_c_monogyna <- plot_ranking(consulta_monogyna, features_c)
-ranking_c_regia <- plot_ranking(consulta_regia, features_c)
+ranking_c_biloba <- get_ranking_by_distance(features_c, consulta_biloba)
+ranking_c_europaea <- get_ranking_by_distance(features_c, consulta_europaea)
+ranking_c_ilex <- get_ranking_by_distance(features_c, consulta_ilex)
+ranking_c_monogyna <- get_ranking_by_distance(features_c, consulta_monogyna)
+ranking_c_regia <- get_ranking_by_distance(features_c, consulta_regia)
 
 # para cada uma das 5 consultas, construa um ranking com base na textura
-ranking_t_biloba <- plot_ranking(consulta_biloba, features_t)
-ranking_t_europaea <- plot_ranking(consulta_europaea, features_t)
-ranking_t_ilex <- plot_ranking(consulta_ilex, features_t)
-ranking_t_monogyna <- plot_ranking(consulta_monogyna, features_t)
-ranking_t_regia <- plot_ranking(consulta_regia, features_t)
+ranking_t_biloba <- get_ranking_by_distance(features_t, consulta_biloba)
+ranking_t_europaea <- get_ranking_by_distance(features_t, consulta_europaea)
+ranking_t_ilex <- get_ranking_by_distance(features_t, consulta_ilex)
+ranking_t_monogyna <- get_ranking_by_distance(features_t, consulta_monogyna)
+ranking_t_regia <- get_ranking_by_distance(features_t, consulta_regia)
   
 # para cada uma das 5 consultas, construa um ranking com base na forma
-ranking_s_biloba <- plot_ranking(consulta_biloba, features_s)
-ranking_s_europaea <- plot_ranking(consulta_europaea, features_s)
-ranking_s_ilex <- plot_ranking(consulta_ilex, features_s)
-ranking_s_monogyna <- plot_ranking(consulta_monogyna, features_s)
-ranking_s_regia <- plot_ranking(consulta_regia, features_s)
+ranking_s_biloba <- get_ranking_by_distance(features_s, consulta_biloba)
+ranking_s_europaea <- get_ranking_by_distance(features_s, consulta_europaea)
+ranking_s_ilex <- get_ranking_by_distance(features_s, consulta_ilex)
+ranking_s_monogyna <- get_ranking_by_distance(features_s, consulta_monogyna)
+ranking_s_regia <- get_ranking_by_distance(features_s, consulta_regia)
 
 #-----------------------------#
 # comparando  rankings                              
@@ -229,26 +222,114 @@ s_regia_analyse <- analyse_rankings(ranking_s_regia, ground_truth_regia)
 
 #----------------------------------------------------------------#
 # Questao 2 - RESPONDA:                   
+#############################################
+
+## IMPORTANTE: para printar corretamente, precisa aumentar o tamanho da janela de plot 
+print_top_k(consulta_europaea, ranking_c_europaea, 10)
+print_top_k(consulta_europaea, ranking_t_europaea, 10)
+print_top_k(consulta_europaea, ranking_s_europaea, 10)
+
+c_europaea_analyse
+t_europaea_analyse
+s_europaea_analyse
+
+#testando para encontrar K onde descritor Textura entrega Recall == 1
+recall(ground_truth_europaea, ranking_t_europaea, 12)
+recall(ground_truth_europaea, ranking_t_europaea, 13)
+
+#############################################
 # (e) 
+#  Ao analisar a consulta com a imagem europaea_01.jpg, podemos perceber visualmente
+#  que o descritor que performa melhor é o de forma. Intuitivamente, podemos perceber
+#  que este descritor tem maior facilidade pois a folha tem um formato alongado, bem 
+#  característico, dentre as 5 espécies analisadas. Ao analisar as métricas de avaliação
+#  para os 3 descritores, o resultado matemático corrobora com a intuição, com o descritor
+#  de forma sendo o único a conseguir precisão média 1 para todos os top-K, além de entregar
+#  Recall=1 desde o top-10, feito que os descritores de cor e textura só conseguiram nos tops
+#  20 e 13, respectivamente.
 #                                         
+# ###########################################
+
+#calculando MAP para os descritores
+color_map_list <- list(
+  list(ground_truth_biloba, ranking_c_biloba),
+  list(ground_truth_europaea, ranking_c_europaea),
+  list(ground_truth_ilex, ranking_c_ilex),
+  list(ground_truth_monogyna, ranking_c_monogyna),
+  list(ground_truth_regia, ranking_c_regia)
+)
+texture_map_list <- list(
+  list(ground_truth_biloba, ranking_t_biloba),
+  list(ground_truth_europaea, ranking_t_europaea),
+  list(ground_truth_ilex, ranking_t_ilex),
+  list(ground_truth_monogyna, ranking_t_monogyna),
+  list(ground_truth_regia, ranking_t_regia)
+)
+
+shape_map_list <- list(
+  list(ground_truth_biloba, ranking_s_biloba),
+  list(ground_truth_europaea, ranking_s_europaea),
+  list(ground_truth_ilex, ranking_s_ilex),
+  list(ground_truth_monogyna, ranking_s_monogyna),
+  list(ground_truth_regia, ranking_s_regia)
+)
+
+MAP_color <- map(color_map_list, 10) ## 0.669
+MAP_texture <- map(texture_map_list, 10) ## 0.492
+MAP_shape <- map(shape_map_list, 10) ## 0.391
+
+########################################
+# (f) 
+#  Com base na métrica de média das precisões médias em top 10, o descritor de cor obteve
+#  melhor performance, atingindo uma MAP de 0.66. Para as 5 consultas, este descritor
+#  foi o que teve a maior capacidade, em média, de retornar resultados relevantes no topo do ranking.
 #                                         
-#                                         
-#                                         
-#                                         
-#                                         
-# (f)  
-#                                         
-#                                         
-#                                         
-#                                         
-#                                         
-# (g) dica: use a função generate_df_11_points para gerar o 
-# data.frame interpolado para cada descritor. Depois, use a função
-# plot_precision_x_recall_11_points_t2 para gerar o gráfico. 
-# Exemplo de chamada da função generate_df_11_points:
-# df_c_11_points <- generate_df_11_points(list(list(ground_truth_biloba, ranking_c_biloba), list(ground_truth_europaea, ranking_c_europaea)))
-# Exemplo de chamada da função plot_precision_x_recall_11_points_t2:
-# plot_precision_x_recall_11_points_t2(rbind(df_c_11_points, df_t_11_points, df_s_11_points), c("Cor", "Textura", "Forma"), "Titulo do Gráfico") 
+######################################
+#
+
+
+df_c_11_points <- generate_df_11_points(
+  list(
+    list(ground_truth_biloba, ranking_c_biloba), 
+    list(ground_truth_europaea, ranking_c_europaea),
+    list(ground_truth_ilex, ranking_c_ilex),
+    list(ground_truth_monogyna, ranking_c_monogyna),
+    list(ground_truth_regia, ranking_c_regia)
+  )
+)
+df_t_11_points <- generate_df_11_points(
+  list(
+    list(ground_truth_biloba, ranking_t_biloba),
+    list(ground_truth_europaea, ranking_t_europaea),
+    list(ground_truth_ilex, ranking_t_ilex),
+    list(ground_truth_monogyna, ranking_t_monogyna),
+    list(ground_truth_regia, ranking_t_regia)
+  )
+)
+df_s_11_points <- generate_df_11_points(
+  list(
+    list(ground_truth_biloba, ranking_s_biloba),
+    list(ground_truth_europaea, ranking_s_europaea),
+    list(ground_truth_ilex, ranking_s_ilex),
+    list(ground_truth_monogyna, ranking_s_monogyna),
+    list(ground_truth_regia, ranking_s_regia)
+  )
+)
+
+plot_precision_x_recall_11_points_t2(rbind(df_c_11_points, df_t_11_points, df_s_11_points), c("Cor", "Textura", "Forma"), "Curva PR - Precisão Média Interpolada em 11 pontos")
+#
+#
+# (g) 
+#  Analisando as curvas geradas, o descritor de cor se mostra muito melhor que os outros,
+#  para niveis baixos de revocação. Conforme chegamos em niveis de revocação mais altos,
+#  o descritor de textura atinge uma precisão média bem próxima, mas cai ao atingir revocação = 1.
+#  Ao final, o descritor de cor consegue uma precisão média de 0.65, enquanto os descritores
+#  textura e forma atingem 0.51 e 0.41, respectivamente, mostrando uma maior capacidade da cor
+#  em caracterizar os elementos do conjunto em consultas para múltiplas espécies. Este resultado
+#  corrobora com a quantidade de features em cada descritor, dado que o descritor de forma tem
+#  apenas 9 features, o de textura (LBP uniforme) tem 59 e o de cor tem 765 (255*3). Isto faz com que
+#  a característica de cor consiga codificar mais nuances do conjunto de dados, trazendo também um
+#  resultado agregado mais preciso.
 #                                         
 #                                         
 #                                         
@@ -266,11 +347,11 @@ s_regia_analyse <- analyse_rankings(ranking_s_regia, ground_truth_regia)
 features_concat <- cbind(features_c, features_t, features_s)
   
 # gerar novos rankings
-ranking_concat_biloba   <- plot_ranking(consulta_biloba, features_concat)
-ranking_concat_europaea <- plot_ranking(consulta_europaea, features_concat)
-ranking_concat_ilex     <- plot_ranking(consulta_ilex, features_concat)
-ranking_concat_monogyna <- plot_ranking(consulta_monogyna, features_concat)
-ranking_concat_regia    <- plot_ranking(consulta_regia, features_concat)
+ranking_concat_biloba   <- get_ranking_by_distance(features_concat, consulta_biloba)
+ranking_concat_europaea <- get_ranking_by_distance(features_concat, consulta_europaea)
+ranking_concat_ilex     <- get_ranking_by_distance(features_concat, consulta_ilex)
+ranking_concat_monogyna <- get_ranking_by_distance(features_concat, consulta_monogyna)
+ranking_concat_regia    <- get_ranking_by_distance(features_concat, consulta_regia)
   
 # analisando rankings gerados com caracteristicas concatenadas
 concat_biloba_analyse   <- analyse_rankings(ranking_concat_biloba, ground_truth_biloba)
