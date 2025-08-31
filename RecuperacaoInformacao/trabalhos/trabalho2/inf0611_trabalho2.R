@@ -365,33 +365,22 @@ concat_regia_analyse    <- analyse_rankings(ranking_concat_regia, ground_truth_r
 # Questao 3 - RESPONDA:  
 # (d) 
 library(tidyverse)
-s_biloba_analyse_para_comparacao <- s_biloba_analyse 
-names(s_biloba_analyse_para_comparacao) <- c("top ", "Precisao_s", "Recall_s", "F1_s", "AP_s")
-t_biloba_analyse_para_comparacao <- t_biloba_analyse
-names(t_biloba_analyse_para_comparacao) <- c("top ","Precisao_t", "Recall_t", "F1_t", "AP_t")
-c_biloba_analyse_para_comparacao <- c_biloba_analyse
-names(c_biloba_analyse_para_comparacao) <- c("top ","Precisao_c", "Recall_c", "F1_c", "AP_c")
-
-lista_analises_biloba <- list(concat_biloba_analyse, s_biloba_analyse_para_comparacao, t_biloba_analyse_para_comparacao, c_biloba_analyse_para_comparacao)
-
-
 s_regia_analyse_para_comparacao <- s_regia_analyse 
 names(s_regia_analyse_para_comparacao) <- c("top ", "Precisao_s", "Recall_s", "F1_s", "AP_s")
 t_regia_analyse_para_comparacao <- t_regia_analyse
 names(t_regia_analyse_para_comparacao) <- c("top ","Precisao_t", "Recall_t", "F1_t", "AP_t")
 c_regia_analyse_para_comparacao <- c_regia_analyse
 names(c_regia_analyse_para_comparacao) <- c("top ","Precisao_c", "Recall_c", "F1_c", "AP_c")
+concat_regia_analyse
 
-lista_analises_regia <- list(concat_regia_analyse, s_regia_analyse_para_comparacao, t_regia_analyse_para_comparacao, c_regia_analyse_para_comparacao)
-
-# Utilizamos as consultas de biloba e regia para realizar a comparação
+# Utilizamos as consultas de regia para realizar a comparação
 # de desempenho entre os descritores isolados e o combinado.
 # Comparando os resultados observa-se que a combinação entre os descritores
 # teve uma piora no resultado se comparado com as features individuais.
 # A tendência já observada se manteve, que o descritor de textura foi
 # o mais eficiente, seguido do de cor e por último o combinado empatado com
 # o de forma. O descritor combinado acabou se igualando ao descritor 
-# menos informativo.
+# menos informativo, em termos isolados.
 
 # (e) 
 
@@ -399,8 +388,8 @@ lista_analises_regia <- list(concat_regia_analyse, s_regia_analyse_para_comparac
 # seu resultado está igual ao obtido para para o descritor de forma. O que
 # indica que este descritor é muito mais influente na qualidade do resultado
 # do que os demais, tendo um maior poder informativo ao se utilizar features
-# combinadas. Esse resultado se justifica olhar as imagens de cada
-# uma das espécies. Estar possuem formas muito distintas entre si. Esse 
+# combinadas. Esse resultado se justifica ao olhar as imagens de cada
+# uma das espécies. Estas possuem formas muito distintas entre si. Esse 
 # resultado em um primeiro momento parece estranho, pois isoladamente, foi
 # o descritor de pior resulado. Isso indica que de forma isolada este não é
 # capaz de causar diferenciação entre as amostras, mas ao se combinar
@@ -421,19 +410,18 @@ lista_analises_regia <- list(concat_regia_analyse, s_regia_analyse_para_comparac
 #----------------------------------------------------------------#
 
 # Definindo a consulta (mesmo índice da Questão 2)
-consulta_index <- 4
-consulta <- names(imagens)[consulta_index]
+consulta_regia
 
 # calculando as distancias, descritor:  histograma de cor 
-dist_hist_q4 <- get_distance_vector(features_c, consulta) 
+dist_hist_q4 <- get_distance_vector(features_c, consulta_regia) 
 r_hist_q4 <- order(dist_hist_q4)
   
 # calculando as distancias, descritor:  textura 
-dist_text_q4 <- get_distance_vector(features_t, consulta) 
+dist_text_q4 <- get_distance_vector(features_t, consulta_regia) 
 r_text_q4 <- order(dist_text_q4)
   
 # calculando as distancias, descritor:  forma 
-dist_forma_q4 <- get_distance_vector(features_s, consulta) 
+dist_forma_q4 <- get_distance_vector(features_s, consulta_regia) 
 r_forma_q4 <- order(dist_forma_q4)
   
 # calculando e analisando rankings combmax
@@ -454,30 +442,31 @@ r_borda_q4
 
   
 # analisar resultados
-analyse_rankings(r_combmax_q4, ground_truth_biloba)
-analyse_rankings(r_combmin_q4, ground_truth_biloba)
-analyse_rankings(r_combsum_q4, ground_truth_biloba)
-analyse_rankings(r_borda_q4, ground_truth_biloba)
+analyse_rankings(r_combmax_q4, ground_truth_regia)
+analyse_rankings(r_combmin_q4, ground_truth_regia)
+analyse_rankings(r_combsum_q4, ground_truth_regia)
+analyse_rankings(r_borda_q4, ground_truth_regia)
   
 #----------------------------------------------------------------#
 # Questao 4 - RESPONDA:                   
 # (i) 
-# Para a consulta selecionada (4), o método combsum retornou o melhor ranking.
+# Para a consulta selecionada (regia), o método combsum retornou o melhor ranking.
 # Observando os resultados é possível notar um bom equilíbro entre precisão e o
-# recall. Para o top 5 e top 10 o desempenho é muito melhor em comparação com os outros,
-# tendo uma precisão de 1.0 e 0.9 e um recall de 0.5 e 0.9, respectivamente. Ao comparar
-# os resultados para os top 15 e 20 os resultados são parecidos, mas os de top 5 e 10
-# demontram como esse método é capaz de retornar melhores resultados de forma "mais rápida".
+# recall. Para o top 5 e top 10 o desempenho é melhor em comparação com os outros,
+# tendo uma precisão de 0.8 e 0.7 e um recall de 0.4 e 0.7, respectivamente. O método
+# combMax teve uma performance muito parecida ao comparar os resultados para os top 15
+# e 20 os resultados, mas os de top 5 e 10 demontram como esse método não foi capaz 
+# de retornar melhores resultados, sendo o combSum o que retornou itens corretor de forma "mais rápida".
 # 
 # (j)
 # 
 consultas <- list(
-list(ground_truth_biloba, list(r_combmax_q4, r_combmin_q4, r_combsum_q4, r_borda_q4))
+list(ground_truth_regia, list(r_combmax_q4, r_combmin_q4, r_combsum_q4, r_borda_q4))
 )
-df_combmax <- generate_df_11_points(list(list(ground_truth_biloba, r_combmax_q4)))
-df_combmin <- generate_df_11_points(list(list(ground_truth_biloba, r_combmin_q4)))
-df_combsum <- generate_df_11_points(list(list(ground_truth_biloba, r_combsum_q4)))
-df_borda   <- generate_df_11_points(list(list(ground_truth_biloba, r_borda_q4)))
+df_combmax <- generate_df_11_points(list(list(ground_truth_regia, r_combmax_q4)))
+df_combmin <- generate_df_11_points(list(list(ground_truth_regia, r_combmin_q4)))
+df_combsum <- generate_df_11_points(list(list(ground_truth_regia, r_combsum_q4)))
+df_borda   <- generate_df_11_points(list(list(ground_truth_regia, r_borda_q4)))
 
 df_metodos <- rbind(
   df_combmax, df_combmin, df_combsum, df_borda
@@ -488,11 +477,9 @@ metodos <- c("CombMAX", "CombMIN", "CombSUM", "BORDA")
 plot_precision_x_recall_11_points_t2(df_metodos, metodos, "Curva Precisão x Revocação - Métodos de Agregação")
 
 # Ao observar o gráfico obtido, é possível confirmar o que foi constato na questão anterior,
-# sendo o método CombMax o de melhor desempenho. Este método se mantém com Precisão igual a 1
-# até uma revocação igual a 0.9, monstrando-se um método capaz de retornar de forma "rápida"
-# os itens de interesse dado a consulta. O segundo em termos de desempenho foi o CombSum,
-# que teve uma queda no desempenho no sétimo item buscado. O pior método foi o BORDA,
-# que já teve queda de desempenho nod valores de revocação de 0.4, 0.5, 0.7 e 1.
+# sendo o método CombSum o de melhor desempenho. Porém agora é possível notar a similaridade
+# entre o CombSum eo CombMax. Ambos só diferem em precisão para uma revocação de 0.6. Para
+# os demais pontos os métodos são equivalentes.
 
 
 # (k)
