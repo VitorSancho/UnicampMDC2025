@@ -225,29 +225,31 @@ s_regia_analyse <- analyse_rankings(ranking_s_regia, ground_truth_regia)
 #############################################
 
 ## IMPORTANTE: para printar corretamente, precisa aumentar o tamanho da janela de plot 
-print_top_k(consulta_europaea, ranking_c_europaea, 10)
-print_top_k(consulta_europaea, ranking_t_europaea, 10)
-print_top_k(consulta_europaea, ranking_s_europaea, 10)
+print_top_k(consulta_regia, ranking_c_regia, 10)
+print_top_k(consulta_regia, ranking_t_regia, 10)
+print_top_k(consulta_regia, ranking_s_regia, 10)
 
-c_europaea_analyse
-t_europaea_analyse
-s_europaea_analyse
+c_regia_analyse
+t_regia_analyse
+s_regia_analyse
 
-#testando para encontrar K onde descritor Textura entrega Recall == 1
-recall(ground_truth_europaea, ranking_t_europaea, 12)
-recall(ground_truth_europaea, ranking_t_europaea, 13)
 
 #############################################
 # (e) 
 #
-# Ao analisar a consulta com a imagem europaea_01.jpg, podemos perceber visualmente
-# que o descritor que performa melhor é o de forma. Intuitivamente, podemos perceber
-# que este descritor tem maior facilidade pois a folha tem um formato alongado, bem 
-# característico, dentre as 5 espécies analisadas. Ao analisar as métricas de avaliação
-# para os 3 descritores, o resultado matemático corrobora com a intuição, com o descritor
-# de forma sendo o único a conseguir precisão média 1 para todos os top-K, além de entregar
-# Recall=1 desde o top-10, feito que os descritores de cor e textura só conseguiram nos tops
-# 20 e 13, respectivamente.
+# Ao analisar a consulta com a imagem regia_07.jpg, é possivel notar que o descritor de
+# textura é muito superior aos outros, trazendo uma precisão média de 0.8 para K = 20, e
+# precisão 0.8 em K = 5. Isso mostra que este descritor é eficiente em recuperar imagens 
+# relevantes no topo do ranking. O descritor de cor também apresenta uma performance próxima,
+# com precisão igual para K=5. No entanto, ele passa a ter dificuldade para esta consulta, pois
+# confunde-se muito com as cores da espécie Europaea. A espécie Regia visivelmente tem uma textura
+# bem característica em suas folhas, explicando a performance do descritor de textura. Por fim, 
+# podemos ver que o descritor de forma é muito ruim, não conseguindo passar de precisão média 0.5 
+# para nenhum dos top-K analisados. Numa análise visual do conjunto de imagens, podemos entender 
+# intuitivamente o motivo para este comportamento, pois o formato da espécie Regia é bem largo, 
+# fazendo com que o modelo a confunda com as especies Biloba e Monogyna. Enquanto o melhor modelo (textura)
+# trouxe F1-Score = 0.66 e AP = 0.8 para K=20, o descritor de forma trouxe F1-Score = 0.26 e AP = 0.21,
+# mostrando-se expressivamente melhor.
 #                                         
 # ###########################################
 
