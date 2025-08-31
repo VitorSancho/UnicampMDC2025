@@ -113,7 +113,8 @@ rownames(features_c) <- names(imagens)
 features_t <- t(sapply(imagens, lbp_desc))
 rownames(features_t) <- names(imagens)
 
-features_s <- t(sapply(imagens, Momentos))
+#features_s <- t(sapply(imagens, Momentos))
+features_s <- read.csv("features_s.csv")
 rownames(features_s) <- names(imagens)
 
 #----------------------------------------------------------------#
