@@ -239,14 +239,15 @@ recall(ground_truth_europaea, ranking_t_europaea, 13)
 
 #############################################
 # (e) 
-#  Ao analisar a consulta com a imagem europaea_01.jpg, podemos perceber visualmente
-#  que o descritor que performa melhor é o de forma. Intuitivamente, podemos perceber
-#  que este descritor tem maior facilidade pois a folha tem um formato alongado, bem 
-#  característico, dentre as 5 espécies analisadas. Ao analisar as métricas de avaliação
-#  para os 3 descritores, o resultado matemático corrobora com a intuição, com o descritor
-#  de forma sendo o único a conseguir precisão média 1 para todos os top-K, além de entregar
-#  Recall=1 desde o top-10, feito que os descritores de cor e textura só conseguiram nos tops
-#  20 e 13, respectivamente.
+#
+# Ao analisar a consulta com a imagem europaea_01.jpg, podemos perceber visualmente
+# que o descritor que performa melhor é o de forma. Intuitivamente, podemos perceber
+# que este descritor tem maior facilidade pois a folha tem um formato alongado, bem 
+# característico, dentre as 5 espécies analisadas. Ao analisar as métricas de avaliação
+# para os 3 descritores, o resultado matemático corrobora com a intuição, com o descritor
+# de forma sendo o único a conseguir precisão média 1 para todos os top-K, além de entregar
+# Recall=1 desde o top-10, feito que os descritores de cor e textura só conseguiram nos tops
+# 20 e 13, respectivamente.
 #                                         
 # ###########################################
 
@@ -280,9 +281,10 @@ MAP_shape <- map(shape_map_list, 10) ## 0.391
 
 ########################################
 # (f) 
-#  Com base na métrica de média das precisões médias em top 10, o descritor de cor obteve
-#  melhor performance, atingindo uma MAP de 0.66. Para as 5 consultas, este descritor
-#  foi o que teve a maior capacidade, em média, de retornar resultados relevantes no topo do ranking.
+#
+# Com base na métrica de média das precisões médias em top 10, o descritor de cor obteve
+# melhor performance, atingindo uma MAP de 0.66. Para as 5 consultas, este descritor
+# foi o que teve a maior capacidade, em média, de retornar resultados relevantes no topo do ranking.
 #                                         
 ######################################
 #
@@ -321,16 +323,17 @@ plot_precision_x_recall_11_points_t2(rbind(df_c_11_points, df_t_11_points, df_s_
 #
 #
 # (g) 
-#  Analisando as curvas geradas, o descritor de cor se mostra muito melhor que os outros,
-#  para niveis baixos de revocação. Conforme chegamos em niveis de revocação mais altos,
-#  o descritor de textura atinge uma precisão média bem próxima, mas cai ao atingir revocação = 1.
-#  Ao final, o descritor de cor consegue uma precisão média de 0.65, enquanto os descritores
-#  textura e forma atingem 0.51 e 0.41, respectivamente, mostrando uma maior capacidade da cor
-#  em caracterizar os elementos do conjunto em consultas para múltiplas espécies. Este resultado
-#  corrobora com a quantidade de features em cada descritor, dado que o descritor de forma tem
-#  apenas 9 features, o de textura (LBP uniforme) tem 59 e o de cor tem 765 (255*3). Isto faz com que
-#  a característica de cor consiga codificar mais nuances do conjunto de dados, trazendo também um
-#  resultado agregado mais preciso.
+#
+# Analisando as curvas geradas, o descritor de cor se mostra muito melhor que os outros,
+# para niveis baixos de revocação. Conforme chegamos em niveis de revocação mais altos,
+# o descritor de textura atinge uma precisão média bem próxima, mas cai ao atingir revocação = 1.
+# Ao final, o descritor de cor consegue uma precisão média de 0.65, enquanto os descritores
+# textura e forma atingem 0.51 e 0.41, respectivamente, mostrando uma maior capacidade da cor
+# em caracterizar os elementos do conjunto em consultas para múltiplas espécies. Este resultado
+# corrobora com a quantidade de features em cada descritor, dado que o descritor de forma tem
+# apenas 9 features, o de textura (LBP uniforme) tem 59 e o de cor tem 765 (255*3). Isto faz com que
+# a característica de cor consiga codificar mais nuances do conjunto de dados, trazendo também um
+# resultado agregado mais preciso.
 #                                         
 #                                         
 #                                         
@@ -364,8 +367,9 @@ concat_regia_analyse    <- analyse_rankings(ranking_concat_regia, ground_truth_r
 
 #----------------------------------------------------------------#
 # Questao 3 - RESPONDA:  
-# (d) 
+# #################################################### 
 library(tidyverse)
+
 s_regia_analyse_para_comparacao <- s_regia_analyse 
 names(s_regia_analyse_para_comparacao) <- c("top ", "Precisao_s", "Recall_s", "F1_s", "AP_s")
 t_regia_analyse_para_comparacao <- t_regia_analyse
@@ -373,6 +377,14 @@ names(t_regia_analyse_para_comparacao) <- c("top ","Precisao_t", "Recall_t", "F1
 c_regia_analyse_para_comparacao <- c_regia_analyse
 names(c_regia_analyse_para_comparacao) <- c("top ","Precisao_c", "Recall_c", "F1_c", "AP_c")
 concat_regia_analyse
+
+
+lista_analises_regia <- list(concat_regia_analyse, s_regia_analyse_para_comparacao, t_regia_analyse_para_comparacao, c_regia_analyse_para_comparacao)
+
+#
+# (d)
+#
+# Utilizamos as consultas de biloba e regia para realizar a comparação
 
 # Utilizamos as consultas de regia para realizar a comparação
 # de desempenho entre os descritores isolados e o combinado.
@@ -384,7 +396,7 @@ concat_regia_analyse
 # menos informativo, em termos isolados.
 
 # (e) 
-
+#
 # Ao analisar o resultado do descritor combinado é possível notar que
 # seu resultado está igual ao obtido para para o descritor de forma. O que
 # indica que este descritor é muito mais influente na qualidade do resultado
@@ -396,6 +408,7 @@ concat_regia_analyse
 # capaz de causar diferenciação entre as amostras, mas ao se combinar
 # multiplas features, este foi o que teve mais poder de diferenciação
 # entre as amostras.
+
 
 # (f)
 df_concat_11_points <- generate_df_11_points(
