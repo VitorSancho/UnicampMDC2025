@@ -382,11 +382,11 @@ analyse_rankings(r_borda_q4, ground_truth_biloba)
 # Questao 4 - RESPONDA:                   
 # (i) 
 # Para a consulta selecionada (4), o método combsum retornou o melhor ranking.
-# Observando os resultados é possível notas um bom equilíbro entre precião e o
+# Observando os resultados é possível notar um bom equilíbro entre precisão e o
 # recall. Para o top 5 e top 10 o desempenho é muito melhor em comparação com os outros,
 # tendo uma precisão de 1.0 e 0.9 e um recall de 0.5 e 0.9, respectivamente. Ao comparar
 # os resultados para os top 15 e 20 os resultados são parecidos, mas os de top 5 e 10
-# demontram como esse método é capaz de retornar melhor resultados de forma "mais rápida".
+# demontram como esse método é capaz de retornar melhores resultados de forma "mais rápida".
 # 
 # (j)
 # 
@@ -407,8 +407,8 @@ metodos <- c("CombMAX", "CombMIN", "CombSUM", "BORDA")
 plot_precision_x_recall_11_points_t2(df_metodos, metodos, "Curva Precisão x Revocação - Métodos de Agregação")
 
 # Ao observar o gráfico obtido, é possível confirmar o que foi constato na questão anterior,
-# sendo o método CombMax o de melhor desempenho. Esta método se mantém com Precisão igual a 1
-# até uma revocação igual a 0.9, monstando-se um método capaz de retornar de forma "rápida"
+# sendo o método CombMax o de melhor desempenho. Este método se mantém com Precisão igual a 1
+# até uma revocação igual a 0.9, monstrando-se um método capaz de retornar de forma "rápida"
 # os itens de interesse dado a consulta. O segundo em termos de desempenho foi o CombSum,
 # que teve uma queda no desempenho no sétimo item buscado. O pior método foi o BORDA,
 # que já teve queda de desempenho nod valores de revocação de 0.4, 0.5, 0.7 e 1.
