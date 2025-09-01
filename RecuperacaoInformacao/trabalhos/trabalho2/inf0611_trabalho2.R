@@ -111,14 +111,14 @@ Momentos <- function(img){
 features_c <- t(sapply(names(imagens), hist_cor_desc))
 rownames(features_c) <- names(imagens)
 
-#features_t <- t(sapply(imagens, lbp_desc))
+features_t <- t(sapply(imagens, lbp_desc))
 # pegando de csv para evitar tempo de processamento
-features_t <- read.csv("features_t.csv")
+# features_t <- read.csv("features_t.csv")
 rownames(features_t) <- names(imagens)
 
-#features_s <- t(sapply(imagens, Momentos))
+features_s <- t(sapply(imagens, Momentos))
 # pegando de csv para evitar tempo de processamento
-features_s <- read.csv("features_s.csv")
+# features_s <- read.csv("features_s.csv")
 rownames(features_s) <- names(imagens)
 
 #----------------------------------------------------------------#
