@@ -450,6 +450,7 @@ plot_precision_x_recall_11_points_t2(rbind(df_c_11_points, df_t_11_points, df_s_
 consulta_regia
 
 # funcoes auxiliares
+####
 get_combsum <- function(features_list, query){
   distances <- list()
   for(feature in features_list){
@@ -474,7 +475,16 @@ get_combmax <- function(features_list, query){
   
   names(imagens)[do.call(combmax, distances)]
 }
+get_bordacount <- function(features_list, query){
+  rankings <- list()
+  for(feature in features_list){
+    ordered_dist <- order(get_distance_vector(feature, query))
+    rankings <- c(rankings, list(ordered_dist))
+  }
 
+  names(imagens)[do.call(bordacount, rankings)]
+}
+####
   
 # calculando e analisando rankings combmax
 r_combmax_q4 <- get_combmax(list(features_c, features_t, features_s), consulta_regia)
@@ -489,7 +499,7 @@ r_combsum_q4 <- get_combsum(list(features_c, features_t, features_s), consulta_r
 r_combsum_q4
 
 # calculando e analisando rankings borda
-r_borda_q4 <- names(imagens)[bordacount(r_hist_q4, r_text_q4, r_forma_q4)]
+r_borda_q4 <- get_bordacount(list(features_c, features_t, features_s), consulta_regia)
 r_borda_q4
 
   
