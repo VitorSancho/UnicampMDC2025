@@ -382,21 +382,21 @@ concat_regia_analyse
 
 
 lista_analises_regia <- list(concat_regia_analyse, s_regia_analyse_para_comparacao, t_regia_analyse_para_comparacao, c_regia_analyse_para_comparacao)
-
+# ############################################
 #
 # (d)
 #
-# Utilizamos as consultas de biloba e regia para realizar a comparação
-
-# Utilizamos as consultas de regia para realizar a comparação
+# Utilizamos a consulta de regia para realizar a comparação
 # de desempenho entre os descritores isolados e o combinado.
-# Comparando os resultados observa-se que a combinação entre os descritores
-# teve uma piora no resultado se comparado com as features individuais.
+# Comparando os resultados, observa-se que a combinação entre os descritores
+# causou uma piora no resultado se comparado com as features individuais.
 # A tendência já observada se manteve, que o descritor de textura foi
 # o mais eficiente, seguido do de cor e por último o combinado empatado com
 # o de forma. O descritor combinado acabou se igualando ao descritor 
 # menos informativo, em termos isolados.
-
+#
+# ####################################################
+#
 # (e) 
 #
 # Ao analisar o resultado do descritor combinado é possível notar que
@@ -411,8 +411,8 @@ lista_analises_regia <- list(concat_regia_analyse, s_regia_analyse_para_comparac
 # multiplas features, este foi o que teve mais poder de diferenciação
 # entre as amostras.
 
-
-# (f)
+# ######################################################
+#
 df_concat_11_points <- generate_df_11_points(
   list(
     list(ground_truth_biloba, ranking_concat_biloba),
@@ -425,14 +425,16 @@ df_concat_11_points <- generate_df_11_points(
 
 dev.off()
 par(mfrow=c(1,1))
-plot_precision_x_recall_11_points_t2(rbind(df_c_11_points, df_t_11_points, df_s_11_points, df_concat_11_points), c("Cor", "Textura", "Forma", "Combinação"), "Curva PR - Precisão Média Interpolada em 11 pontos")
-
+plot_precision_x_recall_11_points_t2(rbind(df_c_11_points, df_t_11_points, df_s_11_points, df_concat_11_points), c("Cor", "Textura", "Forma", "Concatenado"), "Curva PR - Precisão Média Interpolada em 11 pontos (+ Concatenado)")
+#
+# ##########################################
+# 
+# (f)
 # Observando o gráfico é possível confirmar o que foi constatado nos itens anteriores.
-# Nota-se que o comportamento da curva do descritor de forma e da combinação de 
-# descritores é exatamento igual para os 11 pontos plotados. Ou seja, o descritor
-# combinado assumiu o valor do descritor de forma, sendo este o descritor mais
-# "forte" dentro da combinação de descritores realizada
-
+# Nota-se que o comportamento da curva do descritor de forma e da concatenação de 
+# descritores é exatamente igual para os 11 pontos plotados. Ou seja, o descritor
+# concatenado assumiu o valor do descritor de forma, sendo este o descritor mais
+# "forte" dentro da combinação de descritores realizada.
 # 
 # 
 #----------------------------------------------------------------#
@@ -447,28 +449,43 @@ plot_precision_x_recall_11_points_t2(rbind(df_c_11_points, df_t_11_points, df_s_
 # Definindo a consulta (mesmo índice da Questão 2)
 consulta_regia
 
-# calculando as distancias, descritor:  histograma de cor 
-dist_hist_q4 <- get_distance_vector(features_c, consulta_regia) 
-r_hist_q4 <- order(dist_hist_q4)
+# funcoes auxiliares
+get_combsum <- function(features_list, query){
+  distances <- list()
+  for(feature in features_list){
+    distances <- c(distances, list(get_distance_vector(feature, query)))
+  }
+
+  names(imagens)[do.call(combsum, distances)]
+}
+get_combmin <- function(features_list, query){
+  distances <- list()
+  for(feature in features_list){
+    distances <- c(distances, list(get_distance_vector(feature, query)))
+  }
   
-# calculando as distancias, descritor:  textura 
-dist_text_q4 <- get_distance_vector(features_t, consulta_regia) 
-r_text_q4 <- order(dist_text_q4)
+  names(imagens)[do.call(combmin, distances)]
+}
+get_combmax <- function(features_list, query){
+  distances <- list()
+  for(feature in features_list){
+    distances <- c(distances, list(get_distance_vector(feature, query)))
+  }
   
-# calculando as distancias, descritor:  forma 
-dist_forma_q4 <- get_distance_vector(features_s, consulta_regia) 
-r_forma_q4 <- order(dist_forma_q4)
+  names(imagens)[do.call(combmax, distances)]
+}
+
   
 # calculando e analisando rankings combmax
-r_combmax_q4 <- names(imagens)[combmax(dist_hist_q4, dist_text_q4, dist_forma_q4)]
+r_combmax_q4 <- get_combmax(list(features_c, features_t, features_s), consulta_regia)
 r_combmax_q4
 
 # calculando e analisando rankings combsum
-r_combmin_q4 <- names(imagens)[combmin(dist_hist_q4, dist_text_q4, dist_forma_q4)]
+r_combmin_q4 <- get_combmin(list(features_c, features_t, features_s), consulta_regia)
 r_combmin_q4
 
 # calculando e analisando rankings combsum
-r_combsum_q4 <- names(imagens)[combsum(dist_hist_q4, dist_text_q4, dist_forma_q4)]
+r_combsum_q4 <- get_combsum(list(features_c, features_t, features_s), consulta_regia)
 r_combsum_q4
 
 # calculando e analisando rankings borda
@@ -486,18 +503,17 @@ analyse_rankings(r_borda_q4, ground_truth_regia)
 # Questao 4 - RESPONDA:                   
 # (i) 
 # Para a consulta selecionada (regia), o método combsum retornou o melhor ranking.
-# Observando os resultados é possível notar um bom equilíbro entre precisão e o
+# Observando os resultados é possível notar um bom equilíbrio entre precisão e o
 # recall. Para o top 5 e top 10 o desempenho é melhor em comparação com os outros,
 # tendo uma precisão de 0.8 e 0.7 e um recall de 0.4 e 0.7, respectivamente. O método
 # combMax teve uma performance muito parecida ao comparar os resultados para os top 15
-# e 20 os resultados, mas os de top 5 e 10 demontram como esse método não foi capaz 
-# de retornar melhores resultados, sendo o combSum o que retornou itens corretor de forma "mais rápida".
+# e 20 os resultados, mas os de top 5 e 10 demonstram como esse método não foi capaz 
+# de retornar melhores resultados desde o início, sendo o combSum o que retornou 
+# itens corretos de forma "mais rápida".
 # 
-# (j)
+# #################################################
 # 
-consultas <- list(
-list(ground_truth_regia, list(r_combmax_q4, r_combmin_q4, r_combsum_q4, r_borda_q4))
-)
+
 df_combmax <- generate_df_11_points(list(list(ground_truth_regia, r_combmax_q4)))
 df_combmin <- generate_df_11_points(list(list(ground_truth_regia, r_combmin_q4)))
 df_combsum <- generate_df_11_points(list(list(ground_truth_regia, r_combsum_q4)))
@@ -509,20 +525,75 @@ df_metodos <- rbind(
 
 metodos <- c("CombMAX", "CombMIN", "CombSUM", "BORDA")
 
-plot_precision_x_recall_11_points_t2(df_metodos, metodos, "Curva Precisão x Revocação - Métodos de Agregação")
+dev.off()
+par(mfrow=c(1,1))
+plot_precision_x_recall_11_points_t2(df_metodos, metodos, "Curva PR - Precisão Média Interpolada em 11 pontos (Agregação de Ranking)")
 
-# Ao observar o gráfico obtido, é possível confirmar o que foi constato na questão anterior,
-# sendo o método CombSum o de melhor desempenho. Porém agora é possível notar a similaridade
-# entre o CombSum eo CombMax. Ambos só diferem em precisão para uma revocação de 0.6. Para
-# os demais pontos os métodos são equivalentes.
+# ##############################################
+#
+# (j)
+# Ao observar o gráfico obtido, é possível confirmar o que foi constatado na questão anterior,
+# sendo o método CombSum o de melhor desempenho. Graficamente, é possível notar ainda mais
+# a similaridade entre o CombSum e o CombMax. Ambos só diferem em precisão para uma revocação de 0.6,
+# sendo equivalentes nos demais pontos da curva.
 
+##################################################
 
+## calculo de MAP para combsum e concatenado
+ranking_combsum_biloba <- get_combsum(list(features_c, features_t, features_s), consulta_biloba)
+ranking_combsum_regia <- get_combsum(list(features_c, features_t, features_s), consulta_regia)
+ranking_combsum_europaea <- get_combsum(list(features_c, features_t, features_s), consulta_europaea)
+ranking_combsum_ilex <- get_combsum(list(features_c, features_t, features_s), consulta_ilex)
+ranking_combsum_monogyna <- get_combsum(list(features_c, features_t, features_s), consulta_monogyna)
+
+concat_map_list <- list(
+  list(ground_truth_biloba, ranking_concat_biloba),
+  list(ground_truth_europaea, ranking_concat_europaea),
+  list(ground_truth_ilex, ranking_concat_ilex),
+  list(ground_truth_monogyna, ranking_concat_monogyna),
+  list(ground_truth_regia, ranking_concat_regia)
+)
+
+combsum_map_list <- list(
+  list(ground_truth_biloba, ranking_combsum_biloba),
+  list(ground_truth_europaea, ranking_combsum_europaea),
+  list(ground_truth_ilex, ranking_combsum_ilex),
+  list(ground_truth_monogyna, ranking_combsum_monogyna),
+  list(ground_truth_regia, ranking_combsum_regia)
+)
+
+# reutilizando MAPs já calculadas
+MAP_color <- map(color_map_list, 10) ## 0.669
+MAP_texture <- map(texture_map_list, 10) ## 0.492
+MAP_shape <- map(shape_map_list, 10) ## 0.391
+
+# novas MAP
+MAP_concat <- map(concat_map_list, 10) ## 0.391
+MAP_combsum <- map(combsum_map_list, 10) ## 0.699
+
+# ######################################################
+#
 # (k)
-# 
-# 
+# Adicionando os descritores concatenado e CombSum à avaliação por média de precisões
+# médias, o CombSum agora passa a ser marginalmente melhor que o descritor de cor, apresentando
+# uma MAP de 0.699.
+#
+# ########################################################
+
+df_metodos_final <- rbind(
+  df_c_11_points, df_t_11_points, df_s_11_points, df_concat_11_points, df_combsum
+)
+
+
+metodos_final <- c("Cor", "Textura", "Forma", "Concatenado", "CombSUM")
+
+dev.off()
+par(mfrow=c(1,1))
+plot_precision_x_recall_11_points_t2(df_metodos_final, metodos_final, "Curva PR - Precisão Média Interpolada em 11 pontos (Todos)")
+
+# #########################################################
 #
 # (l)
 # 
-#
 #
 #----------------------------------------------------------------#
