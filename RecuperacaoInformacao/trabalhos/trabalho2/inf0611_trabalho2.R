@@ -485,21 +485,22 @@ get_bordacount <- function(features_list, query){
   names(imagens)[do.call(bordacount, rankings)]
 }
 ####
+features_base <- list(features_c, features_t, features_s)
   
 # calculando e analisando rankings combmax
-r_combmax_q4 <- get_combmax(list(features_c, features_t, features_s), consulta_regia)
+r_combmax_q4 <- get_combmax(features_base, consulta_regia)
 r_combmax_q4
 
 # calculando e analisando rankings combsum
-r_combmin_q4 <- get_combmin(list(features_c, features_t, features_s), consulta_regia)
+r_combmin_q4 <- get_combmin(features_base, consulta_regia)
 r_combmin_q4
 
 # calculando e analisando rankings combsum
-r_combsum_q4 <- get_combsum(list(features_c, features_t, features_s), consulta_regia)
+r_combsum_q4 <- get_combsum(features_base, consulta_regia)
 r_combsum_q4
 
 # calculando e analisando rankings borda
-r_borda_q4 <- get_bordacount(list(features_c, features_t, features_s), consulta_regia)
+r_borda_q4 <- get_bordacount(features_base, consulta_regia)
 r_borda_q4
 
   
@@ -524,10 +525,43 @@ analyse_rankings(r_borda_q4, ground_truth_regia)
 # #################################################
 # 
 
-df_combmax <- generate_df_11_points(list(list(ground_truth_regia, r_combmax_q4)))
-df_combmin <- generate_df_11_points(list(list(ground_truth_regia, r_combmin_q4)))
-df_combsum <- generate_df_11_points(list(list(ground_truth_regia, r_combsum_q4)))
-df_borda   <- generate_df_11_points(list(list(ground_truth_regia, r_borda_q4)))
+df_combmax <- generate_df_11_points(
+  list(
+    list(ground_truth_regia, get_combmax(features_base, consulta_regia)),
+    list(ground_truth_biloba, get_combmax(features_base, consulta_biloba)),
+    list(ground_truth_ilex, get_combmax(features_base, consulta_ilex)),
+    list(ground_truth_europaea, get_combmax(features_base, consulta_europaea)),
+    list(ground_truth_monogyna, get_combmax(features_base, consulta_monogyna))
+  )
+)
+df_combsum <- generate_df_11_points(
+  list(
+    list(ground_truth_regia, get_combsum(features_base, consulta_regia)),
+    list(ground_truth_biloba, get_combsum(features_base, consulta_biloba)),
+    list(ground_truth_ilex, get_combsum(features_base, consulta_ilex)),
+    list(ground_truth_europaea, get_combsum(features_base, consulta_europaea)),
+    list(ground_truth_monogyna, get_combsum(features_base, consulta_monogyna))
+  )
+)
+
+df_combmin <- generate_df_11_points(
+  list(
+    list(ground_truth_regia, get_combmin(features_base, consulta_regia)),
+    list(ground_truth_biloba, get_combmin(features_base, consulta_biloba)),
+    list(ground_truth_ilex, get_combmin(features_base, consulta_ilex)),
+    list(ground_truth_europaea, get_combmin(features_base, consulta_europaea)),
+    list(ground_truth_monogyna, get_combmin(features_base, consulta_monogyna))
+  )
+)
+df_borda <- generate_df_11_points(
+  list(
+    list(ground_truth_regia, get_bordacount(features_base, consulta_regia)),
+    list(ground_truth_biloba, get_bordacount(features_base, consulta_biloba)),
+    list(ground_truth_ilex, get_bordacount(features_base, consulta_ilex)),
+    list(ground_truth_europaea, get_bordacount(features_base, consulta_europaea)),
+    list(ground_truth_monogyna, get_bordacount(features_base, consulta_monogyna))
+  )
+)
 
 df_metodos <- rbind(
   df_combmax, df_combmin, df_combsum, df_borda
@@ -544,17 +578,21 @@ plot_precision_x_recall_11_points_t2(df_metodos, metodos, "Curva PR - Precisão 
 # (j)
 # Ao observar o gráfico obtido, é possível confirmar o que foi constatado na questão anterior,
 # sendo o método CombSum o de melhor desempenho. Graficamente, é possível notar ainda mais
-# a similaridade entre o CombSum e o CombMax. Ambos só diferem em precisão para uma revocação de 0.6,
-# sendo equivalentes nos demais pontos da curva.
+# a similaridade entre o CombSum e o CombMax. Ambos diferem em precisão para alguns poucos
+# níveis de revocação, mostrando uma consistencia maior do CombSum em manter a precisão mais elevada.
+# O método BORDA foi o pior absoluto, o que talvez possa ser uma consequencia do fato de considerar
+# posição absoluta nos rankings e esta métrica oscilar muito para cada tipo de consulta, dado que estamos
+# lidando com especies diferentes e vimos que os descritores individuais performam de forma drasticamente
+# diferente para cada espécie.
 
 ##################################################
 
 ## calculo de MAP para combsum e concatenado
-ranking_combsum_biloba <- get_combsum(list(features_c, features_t, features_s), consulta_biloba)
-ranking_combsum_regia <- get_combsum(list(features_c, features_t, features_s), consulta_regia)
-ranking_combsum_europaea <- get_combsum(list(features_c, features_t, features_s), consulta_europaea)
-ranking_combsum_ilex <- get_combsum(list(features_c, features_t, features_s), consulta_ilex)
-ranking_combsum_monogyna <- get_combsum(list(features_c, features_t, features_s), consulta_monogyna)
+ranking_combsum_biloba <- get_combsum(features_base, consulta_biloba)
+ranking_combsum_regia <- get_combsum(features_base, consulta_regia)
+ranking_combsum_europaea <- get_combsum(features_base, consulta_europaea)
+ranking_combsum_ilex <- get_combsum(features_base, consulta_ilex)
+ranking_combsum_monogyna <- get_combsum(features_base, consulta_monogyna)
 
 concat_map_list <- list(
   list(ground_truth_biloba, ranking_concat_biloba),
@@ -604,6 +642,13 @@ plot_precision_x_recall_11_points_t2(df_metodos_final, metodos_final, "Curva PR 
 # #########################################################
 #
 # (l)
-# 
+# Ao analisar a nova curva, agora combinando todos os métodos, podemos ver que o CombSum
+# se mantém mais eficiente que os outros métodos por quase toda a curva de revocação, atestando
+# uma maior confiabilidade e capacidade de retornar valores relevantes mais rápido. No entanto, 
+# se uma revocação extremamente alta (acima de 0.9, por exemplo) for importante para a aplicação,
+# o descritor de cor ainda é o que vence no resultado final, já que o método CombSum apresenta
+# um declínio em sua precisão média interpolada para valores de revocação mais altos que 0.9.
 #
 #----------------------------------------------------------------#
+
+
