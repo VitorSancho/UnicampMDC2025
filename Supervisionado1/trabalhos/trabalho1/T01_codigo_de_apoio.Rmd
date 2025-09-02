@@ -1,0 +1,197 @@
+---
+title: INF0615 -- Aprendizado de Máquina Supervisionado I
+output: pdf_document
+subtitle: Trabalho 1 - Predição de Calorias
+author: 
+  - Nome completo Integrante 1
+  - Nome completo Integrante 2
+  - Nome completo Integrante 3
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(
+  echo    = TRUE,   # Exibir código nos chunks
+  error   = FALSE,  # Ocultar mensagens de erro
+  message = FALSE,  # Ocultar mensagens informativas
+  warning = FALSE,  # Ocultar avisos
+  tidy    = FALSE   # Não reformatar automaticamente o código
+)
+
+options(digits = 4) # Definição do número de casas decimais padrão
+```
+
+Neste primeiro trabalho, exploraremos a predição de calorias que um indivíduo gastou durante um exercício, utilizando regressão linear. O conjunto de dados está disponível na página da disciplina no Moodle (arquivo `T01_SPLIT_set.csv`).
+
+# Função de apoio
+
+```{r}
+# A funcao abaixo auxilia na escrita dos modelos polinomiais. 
+# Parametros:
+#  "real_feature_names": conjunto de features continuas que sera considerado na
+#                        criacao do modelo polinomial.
+#
+#  "categorical_feature_names": conjunto de features categoricas que sera 
+#                               considerado na  criacao do modelo polinomial. Se
+#                                voces desejarem um modelo sem variaveis categoricas
+#                               basta nao passar nenhum valor para este parametro
+#                               na chamada da funcao
+#                       
+# "degree": numero inteiro que indica ate qual grau polinomial as features continuas
+#           em "real_feature_names" serao elevadas. 
+#
+# A funcao retorna a hipotese ja definida para realizar o treinamento do modelo. 
+# Uma ilustracao de uma funcao similar aparece no Ex02.R na linha 490
+
+getHypothesis <- function(real_feature_names, categorical_feature_names=F, target="Calorias", degree=3){
+    
+    hypothesis_string <- paste("hypothesis <- formula(", target, " ~ ")
+    for(d in 1:degree){
+        for(i in 1:length(real_feature_names)){
+            hypothesis_string <- paste(hypothesis_string, 
+                                       "I(", real_feature_names[i], "^", d, ") + ",
+                                       sep = "")
+        }
+    }
+    
+    if(typeof(categorical_feature_names) != "logical"){
+        for(i in 1:length(categorical_feature_names)){
+            hypothesis_string <- paste(hypothesis_string, 
+                                       categorical_feature_names[i], " + ",
+                                       sep = "")
+        } 
+    }
+    
+    
+    hypothesis_string <- substr(hypothesis_string, 1, nchar(hypothesis_string)-3)
+    hypothesis_string <- paste(hypothesis_string, ")")
+    hypothesis <- eval(parse(text=hypothesis_string))
+    return(hypothesis)
+}
+```
+
+# Tarefa 0 -- Configurando o ambiente
+
+Carregue as bibliotecas necessárias e defina uma semente aleatória para garantir a reprodutibilidade dos experimentos.
+
+```{r atv0-code}
+# Adicione as bibliotecas necessárias
+# library()
+
+# set.seed()
+```
+
+# Tarefa 1 -- Inspeção de Dados e Normalização
+
+Carreguem e inspecionem o conjunto de dados. Além disso, prepare os dados corretamente para utilizá-los como entrada para um modelo de regressão linear.
+
+```{r atv1-code}
+# Carregue o conjunto de dados
+
+# Sumário da base
+
+# Normalização
+```
+
+1.1 -- Quantas amostras existem no conjunto de dados? Como vocês lidarão com features categóricas, caso existam?
+
+1.2 -- Existem amostras com valores ausentes? Como vocês pretendem tratar esses casos?
+
+1.3 -- Há alguma característica dos dados que pode impactar o desempenho do modelo?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->\
+<!-- Fim da resposta -->
+
+# Tarefa 2 -- Modelo Baseline
+
+Treinem um modelo baseline de regressão linear utilizando **todas as features disponíveis**.
+
+```{r atv2-code}
+# Treinamento    
+
+# Avaliação do Modelo
+```
+
+2.1 -- O modelo baseline foi suficiente para resolver o problema? Quais métricas de avaliação vocês utilizaram para justificar a resposta?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Tarefa 3 -- Combinação de Features
+
+Implementem soluções alternativas baseadas em regressão linear através da combinação das features existentes para melhorar o resultado do *baseline*. Comparem suas soluções reportando os erros no **conjunto validação**. Vocês podem solicitar ajuda de uma LLM (Maritca AI, ChatGPT, DeepSeek, etc) se preferirem.
+
+**Lembrem-se que as features categóricas podem ser incluída no modelo mas fora do processo de combinação**. Vejam o Ex01.R como referência.
+
+```{r atv3-code}
+# Hipóteses alternativas
+
+# Treinamento
+
+# Métricas de avaliação
+
+# Curva de viés e variância
+```
+
+3.1 -- Quais foram os critérios utilizados para selecionar as combinações de features?
+
+3.2 -- Alguma combinação gerou um impacto positivo ou negativo significativo no desempenho do modelo? Por quê?
+
+3.3 -- Existe alguma relação entre viés e variância no seu modelo ao modificar as combinações de features?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Tarefa 4 -- Modelos Polinomiais
+
+Implementem soluções alternativas baseadas em regressão linear aumentando os graus das features (regressão com polinômios) para melhorar o resultado obtido no baseline. Plotem o erro no conjunto de treinamento e validação pelo grau do polinômio.
+
+```{r atv4-code}
+# Hipóteses polinomiais
+
+# Treinamento
+
+# Métricas de avaliação
+
+# Curva de viés e variância
+```
+
+4.1 -- Como o grau do polinômio afetou o desempenho do modelo?
+
+4.2 -- Houve um ponto ótimo onde o erro foi minimizado? Como vocês identificaram esse ponto?
+
+4.3 -- Em quais regiões da curva de viés e variância foi possível identificar underfitting e overfitting?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Tarefa 5 -- Conjunto de Teste
+
+Após identificar o melhor modelo, utilizem-no para fazer previsões no conjunto de teste e avaliem o seu desempenho.
+
+```{r atv5-code}
+# Predição
+
+# Métricas de avaliação
+```
+
+5.1 -- Qual foi o critério adotado para definir o melhor modelo?
+
+5.2 -- Como os resultados no conjunto de teste se comparam aos obtidos no conjunto de validação? Houve algum indício degradação ou melhora do modelo?
+
+5.3 -- Expliquem a diferença entre os modelos e o porquê que estas diferenças levaram a resultados piores ou melhores.
+
+5.4 -- Considerando as diferentes abordagens testadas, quais estratégias poderiam ser aplicadas para melhorar ainda mais o desempenho do modelo?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Observações Finais
+
+Justifiquem suas escolhas com base em evidências (métricas, gráficos, hipóteses teóricas).
+
+A clareza na comunicação dos resultados é mais importante do que a qualidade do modelo!
