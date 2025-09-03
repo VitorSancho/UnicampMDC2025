@@ -50,7 +50,57 @@ paste("Foram removidos",nrow(dados_treino) - nrow(dados_treino_sem_NAs)," regist
 paste("Versão final após limpeza dos dados possui",nrow(dados_treino_sem_NAs),"registros",sep=" ")
 
 ```
-Ao observar o conjunto de dados, nos chama atenção o tipo de dado das features Idade e Gênero.
+Um outro ponto a se analisar é a distribuição de cada uma das features. É importante obsevar isso pois caso existam features com muito desbalanceadas isso pode interferir na performance do modelo treinado. Além disso, essa observação nos permite realizar correções no modelo de forma a balancear esses valores.
+A distribuição de cada uma das features pode ser vista abaixo:
+
+```{r}
+library(ggplot2)
+
+# Histograma da altura
+ggplot(dados_treino_sem_NAs, aes(x = Altura)) +
+  geom_histogram(binwidth = 5, fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição da altura", x = "Altura (cm)", y = "Frequência")
+
+# Histograma do peso
+ggplot(dados_treino_sem_NAs, aes(x = Peso)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição do peso", x = "Peso (kg)", y = "Densidade")
+
+# Histograma do duração do exercício
+ggplot(dados_treino_sem_NAs, aes(x = Duracao)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição do duração do exercício", x = "Duração", y = "Densidade")
+
+# Histograma do batimetno cardiaco
+ggplot(dados_treino_sem_NAs, aes(x = Batimento.Cardiaco)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição do batimento cardiaco", x = "Duração", y = "Densidade")
+
+# Histograma da temperatura corporal
+ggplot(dados_treino_sem_NAs, aes(x = Temperatura.Corporal)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição da temperatura corporal", x = "Duração", y = "Densidade")
+
+ggplot(dados_treino_sem_NAs, aes(x = Genero, fill = Genero)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Gênero", x = "Gênero", y = "Contagem")
+
+ggplot(dados_treino_sem_NAs, aes(x = Idade, fill = Idade)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Faixa Etária", x = "Idade", y = "Contagem")
+
+```
+
+É possível notar que a distribuição das features de altura, peso e batimento cardíaco se assemelha muito com uma gaussiana. A de temperatura corporal é uma gaussiana com Skew positivo, ou seja, com uma cauda longa à esquerda do valor da mediana dos dados. Para a feature de duração de exercícios temos quase uma distribuição uniforme dos valores, sendo a única exceção os extremos superiores e inferiores dos dados, que possuem um valor de frequência prómixo a metade dos demais. A distribuição da feature de gênero nos indica que os dois valores presenter no dataset possuem uma contagem muito próxima, não demonstrando qualquer desbalanceamento entre essas classes. Já a feature de idade mostra um decaimento na contagem de registros conforme a faixa de idade aumenta, indicando que o total de registros contidos das faixas de 20-29 e 30-39 anos é quase igual a soma das demais faixas.
+
+Ao observar o conjunto de dados e as distribuições plotadas acima nos chama atenção o tipo de dado das features Idade e Gênero.
 Podemos ver uma amostra destas abaixo:
 
 ```{r}
@@ -61,7 +111,26 @@ paste("Amostra de dados de genero:")
 head(dados_treino_sem_NAs$Genero)
 paste("###################################################################")
 ```
-Diferentemente das demais features, como podemos ver acima, essas são categóricas, possuindo então valores discretos. 
+Como podemos ver acima, essas features possuem valores discretos, sendo classificadas como features categóricas. 
+Dado essa característica será necessário alterar os valores para essas features de forma que tenham valores numéricos.
+Esse processo é denominado one-hot-encoding e é executado abaixo para as features categóricas do dataset.
+
+
+```{r}
+dados_para_encoding <- dados_treino_sem_NAs
+idade_one_hot_encoding <- model.matrix(~dados_para_encoding$Idade - 1, data = dados_para_encoding)
+dados_para_encoding <- cbind(dados_para_encoding, idade_one_hot_encoding)
+
+genero_one_hot_encoding <- model.matrix(~dados_para_encoding$Genero - 1, data = dados_para_encoding)
+dados_para_encoding <- cbind(dados_para_encoding, genero_one_hot_encoding)
+
+dados_para_encoding$Idade <- NULL
+dados_para_encoding$Genero <- NULL
+
+head(dados_para_encoding, 20)
+```
+
+Foi realizado um ajuste de forma que, para cada valor que as features categóricas podem assumir, foi criada uma feature a mais no dataset. Essas colunas podem assumir o valor 1 quando o registro assume o valor da respectiva categoria, ou 0 quando não assumem o valor da nova feature. Após essas análises e ajustes podemos prosseguir para o treinamento do modelo baseline. 
 
 ## 02 - Treinamento de modelo baseline
 
