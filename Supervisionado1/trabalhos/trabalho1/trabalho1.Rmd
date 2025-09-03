@@ -1,0 +1,68 @@
+---
+title: INF0615 -- Aprendizado Supervisionado I
+output: pdf_document
+subtitle: Trabalho 1
+nomes: Vitor de Oliveira Fernandez Araujo e Vitor Sancho Cardoso
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(
+  echo = TRUE,      # Exibir código nos chunks
+  error = FALSE,    # Ocultar mensagens de erro
+  message = FALSE,  # Ocultar mensagens informativas
+  warning = FALSE,  # Ocultar avisos
+  tidy = FALSE      # Não reformatar automaticamente o código
+)
+
+options(digits = 3) # Definição do número de casas decimais padrão
+```
+
+## 01 - Análise exploratória dos dados
+
+Inicialmente é necessário fazer a importação do conjunto de dados que será utilizado no treino do nosso modelo de regressão:
+
+```{r}
+dados_treino <- read.csv("T01_train_set.csv")
+dados_validacao <- read.csv("T01_valid_set.csv")
+
+paste("O dataframe de treino possui",nrow(dados_treino),"registros",sep=" ")
+paste("###################################################################")
+paste("summary:")
+summary(dados_treino)
+paste("###################################################################")
+```
+Ao executar o summary é possível identificar que o conjunto de dados é composto por registros associados à prática de atividade física para uma pessoa. Os registros contêm dados sobe características da pessoa e indicadores da atividade física realizada. Cada registro possui 7 features: Gênero, Altura, Peso, Duração do exercício, Batimento Cardíaco, Temperatura Corporal e Idade. Por fim, cada registro possui seu valor de Calorias consumidas. Essa última coluna será utilizada como ground thruth de nosso conjunto de dados.
+
+Além disso, o summary nos indica a presença de itens inválidos no conjunto de dados. Esses são determinados a partir da presença de NA em uma ou mais features do registro. Esses valores são removidos abaixo:
+
+```{r}
+dados_treino_sem_NAs <- dados_treino[!is.na(dados_treino$Genero) & !is.na(dados_treino$Altura) & !is.na(dados_treino$Peso) & !is.na(dados_treino$Batimento.Cardiaco) & !is.na(dados_treino$Idade),]
+
+
+paste("###################################################################")
+paste("summary após a remoção de regitros com NA:")
+summary(dados_treino_sem_NAs)
+
+paste("###################################################################")
+paste("Foram removidos",nrow(dados_treino) - nrow(dados_treino_sem_NAs)," registros inválidos", sep=" ")
+
+paste("Versão final após limpeza dos dados possui",nrow(dados_treino_sem_NAs),"registros",sep=" ")
+
+```
+Ao observar o conjunto de dados, nos chama atenção o tipo de dado das features Idade e Gênero.
+Podemos ver uma amostra destas abaixo:
+
+```{r}
+paste("Amostra de dados de idade:")
+head(dados_treino_sem_NAs$Idade)
+paste("###################################################################")
+paste("Amostra de dados de genero:")
+head(dados_treino_sem_NAs$Genero)
+paste("###################################################################")
+```
+Diferentemente das demais features, como podemos ver acima, essas são categóricas, possuindo então valores discretos. 
+
+## 02 - Treinamento de modelo baseline
+
+
