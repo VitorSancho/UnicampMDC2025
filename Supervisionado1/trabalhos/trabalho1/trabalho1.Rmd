@@ -256,3 +256,90 @@ Agora que já fizemos todos o tratamento dos dados, passando pela remoção de r
 ## 03 - Treinamento de modelo baseline
 
 
+```{r}
+# Treinando o modelo de regressão linear com as variáveis contínuas
+baseline <- lm(formula = Calorias ~ Altura + Peso
+               + Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+               Idade20_29 +
+                 Idade30_39 +
+                 Idade40_49 +
+                 Idade50_59 +
+                  Idade60_69 +
+                 Idade70_79 +
+                 Generofeminino + 
+                 Generomasculino
+               ,data=treino_normalizado)
+
+# Exibindo o resumo do modelo ajustado
+summary(baseline)
+```
+
+
+```{r}
+# Realizando previsões nos dados de treino e validação
+train_pred <- predict(baseline, treino_normalizado)
+valid_pred <- predict(baseline, validacao_normalizado)
+```
+
+
+
+```{r}
+# Função para calcular o MAE
+MAE <- function(preds, labels) {
+  mae_values <- sum(abs(preds - labels)) / length(preds)
+  return(mae_values)
+}
+
+# Função para calcular o MSE
+MSE <- function(preds, labels) {
+  mse_values <- sum((preds - labels)^2) / length(preds)
+  return(mse_values)
+}
+
+# Função para calcular o R²
+R2 <- function(pred, true) {
+  rss <- sum((pred - true)^2)
+  tss <- sum((true - mean(true))^2)
+  r2 <- 1 - rss / tss
+  return(r2)
+}
+```
+
+
+
+
+```{r}
+# Calculando as métricas para o conjunto de treino
+mae_train <- MAE(train_pred, treino_normalizado$Calorias)
+mse_train <- MSE(train_pred, treino_normalizado$Calorias)
+r2_train  <- R2(train_pred, treino_normalizado$Calorias)
+
+# Calculando as métricas para o conjunto de validação
+mae_valid <- MAE(valid_pred, validacao_normalizado$Calorias)
+mse_valid <- MSE(valid_pred, validacao_normalizado$Calorias)
+r2_valid  <- R2(valid_pred, validacao_normalizado$Calorias)
+
+
+# Organizando os resultados em um dataframe
+results_baseline <- data.frame(
+  Metric = c("MAE", "MSE", "R2"),
+  Train = c(mae_train, mse_train, r2_train),
+  Valid = c(mae_valid, mse_valid, r2_valid)
+)
+
+# Formatando os resultados para melhor leitura
+results_baseline$Train <- as.numeric(results_baseline$Train)
+results_baseline$Valid <- as.numeric(results_baseline$Valid)
+
+# Evitando notação científica na exibição dos resultados
+results_baseline$Train <- format(results_baseline$Train, scientific = FALSE)
+results_baseline$Valid <- format(results_baseline$Valid, scientific = FALSE)
+
+# Exibindo os resultados
+results_baseline
+```
+
+
+## 04 Combinando as features
+
+Para melhorar o desempenho do modelo podemos realizar um estudo de correlação entre as features do dataset.
