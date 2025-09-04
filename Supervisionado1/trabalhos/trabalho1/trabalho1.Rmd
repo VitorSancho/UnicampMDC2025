@@ -221,6 +221,38 @@ head(dados_para_encoding_validacao, 20)
 
 Foi realizado um ajuste de forma que, para cada valor que as features categóricas podem assumir, foi criada uma feature a mais no dataset. Essas colunas podem assumir o valor 1 quando o registro assume o valor da respectiva categoria, ou 0 quando não assumem o valor da nova feature. Após essas análises e ajustes podemos prosseguir para o treinamento do modelo baseline. 
 
-## 02 - Treinamento de modelo baseline
+## 02 - Normalização das features
+
+Para o treinamento do modelo baseline iremos aplicar a normalização Min-Max. A normalização será aplicada somente para as 6 primeiras colunas dos datasets de treino e de validação, as demais features foram geradas no one hot encoding e somente podem assumir os valores 0 ou 1.
+
+```{r}
+# Calculando os valores mínimos e máximos de cada variável
+min_features <- apply(dados_para_encoding_treino[, 1:6], 2, min)
+max_features <- apply(dados_para_encoding_treino[, 1:6], 2, max)
+diff         <- max_features - min_features
+
+print("Valores mínimos")
+print(min_features)
+print("Valores máximos")
+print(max_features)
+print("Diferença entre máximos e mínimos")
+print(diff)
+```
+
+```{r}
+# Aplicando a normalização Min-Max nos dados de treino e validação
+treino_normalizado <- dados_para_encoding_treino
+validacao_normalizado <- dados_para_encoding_validacao
+
+treino_normalizado[, 1:6] <- sweep(treino_normalizado[, 1:6], 2, min_features, "-")
+treino_normalizado[, 1:6] <- sweep(treino_normalizado[, 1:6], 2, diff, "/")
+
+validacao_normalizado[, 1:6] <- sweep(validacao_normalizado[, 1:6], 2, min_features, "-")
+validacao_normalizado[, 1:6] <- sweep(validacao_normalizado[, 1:6], 2, diff, "/")
+```
+
+Agora que já fizemos todos o tratamento dos dados, passando pela remoção de registros inválidos até a normalização, utilizando o método de Min-Max, podemos iniciar o treinamento do modelo.
+
+## 03 - Treinamento de modelo baseline
 
 
