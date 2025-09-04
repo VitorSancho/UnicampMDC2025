@@ -26,10 +26,17 @@ Inicialmente é necessário fazer a importação do conjunto de dados que será 
 dados_treino <- read.csv("T01_train_set.csv")
 dados_validacao <- read.csv("T01_valid_set.csv")
 
-paste("O dataframe de treino possui",nrow(dados_treino),"registros",sep=" ")
+paste("O dataframe de TREINO possui",nrow(dados_treino),"registros",sep=" ")
 paste("###################################################################")
-paste("summary:")
+paste("summary TREINO:")
 summary(dados_treino)
+paste("###################################################################")
+paste("O dataframe de VALIDAÇÃO possui",nrow(dados_validacao),"registros",sep=" ")
+paste("###################################################################")
+paste("summary VALIDAÇÃO:")
+summary(dados_validacao)
+
+
 paste("###################################################################")
 ```
 Ao executar o summary é possível identificar que o conjunto de dados é composto por registros associados à prática de atividade física para uma pessoa. Os registros contêm dados sobe características da pessoa e indicadores da atividade física realizada. Cada registro possui 7 features: Gênero, Altura, Peso, Duração do exercício, Batimento Cardíaco, Temperatura Corporal e Idade. Por fim, cada registro possui seu valor de Calorias consumidas. Essa última coluna será utilizada como ground thruth de nosso conjunto de dados.
@@ -49,7 +56,22 @@ paste("Foram removidos",nrow(dados_treino) - nrow(dados_treino_sem_NAs)," regist
 
 paste("Versão final após limpeza dos dados possui",nrow(dados_treino_sem_NAs),"registros",sep=" ")
 
+paste("###################################################################")
+
+dados_validacao_sem_NAs <- dados_validacao[!is.na(dados_validacao$Duracao) & !is.na(dados_validacao$Temperatura.Corporal)& !is.na(dados_validacao$Peso),]
+
+
+paste("###################################################################")
+paste("summary após a remoção de regitros com NA:")
+summary(dados_validacao_sem_NAs)
+
+paste("###################################################################")
+paste("Foram removidos",nrow(dados_validacao) - nrow(dados_validacao_sem_NAs)," registros inválidos do dataset de VALIDAÇÃO", sep=" ")
+
+paste("Versão final após limpeza dos dados possui",nrow(dados_validacao_sem_NAs),"registros",sep=" ")
+paste("###################################################################")
 ```
+
 Um outro ponto a se analisar é a distribuição de cada uma das features. É importante obsevar isso pois caso existam features com muito desbalanceadas isso pode interferir na performance do modelo treinado. Além disso, essa observação nos permite realizar correções no modelo de forma a balancear esses valores.
 A distribuição de cada uma das features pode ser vista abaixo:
 
@@ -100,6 +122,52 @@ ggplot(dados_treino_sem_NAs, aes(x = Idade, fill = Idade)) +
 
 É possível notar que a distribuição das features de altura, peso e batimento cardíaco se assemelha muito com uma gaussiana. A de temperatura corporal é uma gaussiana com Skew positivo, ou seja, com uma cauda longa à esquerda do valor da mediana dos dados. Para a feature de duração de exercícios temos quase uma distribuição uniforme dos valores, sendo a única exceção os extremos superiores e inferiores dos dados, que possuem um valor de frequência prómixo a metade dos demais. A distribuição da feature de gênero nos indica que os dois valores presenter no dataset possuem uma contagem muito próxima, não demonstrando qualquer desbalanceamento entre essas classes. Já a feature de idade mostra um decaimento na contagem de registros conforme a faixa de idade aumenta, indicando que o total de registros contidos das faixas de 20-29 e 30-39 anos é quase igual a soma das demais faixas.
 
+Abaixo podemos ver os mesmos gráficos para o conjunto de validação. É possível notar o mesmo comportamento para cada feature já analisada acima.
+
+```{r}
+library(ggplot2)
+
+# Histograma da altura
+ggplot(dados_validacao_sem_NAs, aes(x = Altura)) +
+  geom_histogram(binwidth = 5, fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição da altura", x = "Altura (cm)", y = "Frequência")
+
+# Histograma do peso
+ggplot(dados_validacao_sem_NAs, aes(x = Peso)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição do peso", x = "Peso (kg)", y = "Densidade")
+
+# Histograma do duração do exercício
+ggplot(dados_validacao_sem_NAs, aes(x = Duracao)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição do duração do exercício", x = "Duração", y = "Densidade")
+
+# Histograma do batimetno cardiaco
+ggplot(dados_validacao_sem_NAs, aes(x = Batimento.Cardiaco)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição do batimento cardiaco", x = "Duração", y = "Densidade")
+
+# Histograma da temperatura corporal
+ggplot(dados_validacao_sem_NAs, aes(x = Temperatura.Corporal)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição da temperatura corporal", x = "Duração", y = "Densidade")
+
+ggplot(dados_validacao_sem_NAs, aes(x = Genero, fill = Genero)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Gênero", x = "Gênero", y = "Contagem")
+
+ggplot(dados_validacao_sem_NAs, aes(x = Idade, fill = Idade)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Faixa Etária", x = "Idade", y = "Contagem")
+
+```
 Ao observar o conjunto de dados e as distribuições plotadas acima nos chama atenção o tipo de dado das features Idade e Gênero.
 Podemos ver uma amostra destas abaixo:
 
@@ -117,17 +185,38 @@ Esse processo é denominado one-hot-encoding e é executado abaixo para as featu
 
 
 ```{r}
-dados_para_encoding <- dados_treino_sem_NAs
-idade_one_hot_encoding <- model.matrix(~dados_para_encoding$Idade - 1, data = dados_para_encoding)
-dados_para_encoding <- cbind(dados_para_encoding, idade_one_hot_encoding)
+paste("#####################################################")
+paste("One hot encoding para conjunto de TREINO")
+dados_para_encoding_treino <- dados_treino_sem_NAs
+idade_one_hot_encoding <- model.matrix(~dados_para_encoding_treino$Idade - 1, data = dados_para_encoding_treino)
+dados_para_encoding_treino <- cbind(dados_para_encoding_treino, idade_one_hot_encoding)
 
-genero_one_hot_encoding <- model.matrix(~dados_para_encoding$Genero - 1, data = dados_para_encoding)
-dados_para_encoding <- cbind(dados_para_encoding, genero_one_hot_encoding)
+genero_one_hot_encoding <- model.matrix(~dados_para_encoding_treino$Genero - 1, data = dados_para_encoding_treino)
+dados_para_encoding_treino <- cbind(dados_para_encoding_treino, genero_one_hot_encoding)
 
-dados_para_encoding$Idade <- NULL
-dados_para_encoding$Genero <- NULL
+dados_para_encoding_treino$Idade <- NULL
+dados_para_encoding_treino$Genero <- NULL
 
-head(dados_para_encoding, 20)
+
+paste("#####################################################")
+paste("One hot encoding para conjunto de VALIDAÇÃO")
+
+dados_para_encoding_validacao <- dados_validacao_sem_NAs
+idade_one_hot_encoding <- model.matrix(~dados_para_encoding_validacao$Idade - 1, data = dados_para_encoding_validacao)
+dados_para_encoding_validacao <- cbind(dados_para_encoding_validacao, idade_one_hot_encoding)
+
+genero_one_hot_encoding <- model.matrix(~dados_para_encoding_validacao$Genero - 1, data = dados_para_encoding_validacao)
+dados_para_encoding_validacao <- cbind(dados_para_encoding_validacao, genero_one_hot_encoding)
+
+dados_para_encoding_validacao$Idade <- NULL
+dados_para_encoding_validacao$Genero <- NULL
+
+
+paste("#####################################################")
+paste("Amostra dos dados de TREINO")
+head(dados_para_encoding_treino, 20)
+paste("Amostra dos dados de VALIDAÇÃO")
+head(dados_para_encoding_validacao, 20)
 ```
 
 Foi realizado um ajuste de forma que, para cada valor que as features categóricas podem assumir, foi criada uma feature a mais no dataset. Essas colunas podem assumir o valor 1 quando o registro assume o valor da respectiva categoria, ou 0 quando não assumem o valor da nova feature. Após essas análises e ajustes podemos prosseguir para o treinamento do modelo baseline. 
