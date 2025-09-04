@@ -343,3 +343,31 @@ results_baseline
 ## 04 Combinando as features
 
 Para melhorar o desempenho do modelo podemos realizar um estudo de correlação entre as features do dataset.
+Abaixo é possível observar a matriz de correlação entre as features do data set.
+
+```{r}
+# Calculando a matriz de correlação
+correlation <- cor(treino_normalizado[, 1:8])
+print(correlation)
+```
+Ao observar os dados é possível notar que existe uma correçãoa forte entre as features Altura e Peso, tornando-as candidatas para uma combinação.
+Porém é importante também realizar uma analise visual da correlação, pois ela permite observar mais features que podem ser combinadas:
+
+
+```{r}
+# install.packages("corrplot")
+library(corrplot)
+# Visualizando a matriz de correlação com um heatmap
+# par(mar = c(2, 2, 2, 2))  # Ajusta as margens do gráfico
+# par(cex = 1.2)            # Ajusta o tamanho do texto
+
+# dev.new(width = 15, height = 15, unit = "in", noRStudioGD = TRUE)
+
+corrplot(correlation, method = "color", type = "upper",
+         addCoef.col = "black", tl.col = "black", tl.srt = 45, number.cex = 1)
+```
+No plot acima é possível notar que mais fatures podem ser combinadas, pois possuem um relativa correlação. As features Duração e Temperatura.Corporal tem uma grau de correção de 0.90. O valor de correlação de 0.85 é observado entre Duração e Batimento.Cardiado, e 0.77 entre Batimento.Cardiaco e Temperatura.Corporal. Essas três são grande candidatas a serem combinadas numa só, além de ser possível combinar um par delas em somente uma.
+
+
+
+
