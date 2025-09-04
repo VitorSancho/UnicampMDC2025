@@ -188,29 +188,29 @@ Esse processo é denominado one-hot-encoding e é executado abaixo para as featu
 paste("#####################################################")
 paste("One hot encoding para conjunto de TREINO")
 dados_para_encoding_treino <- dados_treino_sem_NAs
-idade_one_hot_encoding <- model.matrix(~dados_para_encoding_treino$Idade - 1, data = dados_para_encoding_treino)
+idade_one_hot_encoding <- model.matrix(~Idade - 1, data = dados_para_encoding_treino)
 dados_para_encoding_treino <- cbind(dados_para_encoding_treino, idade_one_hot_encoding)
 
-genero_one_hot_encoding <- model.matrix(~dados_para_encoding_treino$Genero - 1, data = dados_para_encoding_treino)
+genero_one_hot_encoding <- model.matrix(~Genero - 1, data = dados_para_encoding_treino)
 dados_para_encoding_treino <- cbind(dados_para_encoding_treino, genero_one_hot_encoding)
 
 dados_para_encoding_treino$Idade <- NULL
 dados_para_encoding_treino$Genero <- NULL
-
+colnames(dados_para_encoding_treino) <- gsub("-", "_", colnames(dados_para_encoding_treino))
 
 paste("#####################################################")
 paste("One hot encoding para conjunto de VALIDAÇÃO")
 
 dados_para_encoding_validacao <- dados_validacao_sem_NAs
-idade_one_hot_encoding <- model.matrix(~dados_para_encoding_validacao$Idade - 1, data = dados_para_encoding_validacao)
+idade_one_hot_encoding <- model.matrix(~Idade - 1, data = dados_para_encoding_validacao)
 dados_para_encoding_validacao <- cbind(dados_para_encoding_validacao, idade_one_hot_encoding)
 
-genero_one_hot_encoding <- model.matrix(~dados_para_encoding_validacao$Genero - 1, data = dados_para_encoding_validacao)
+genero_one_hot_encoding <- model.matrix(~Genero - 1, data = dados_para_encoding_validacao)
 dados_para_encoding_validacao <- cbind(dados_para_encoding_validacao, genero_one_hot_encoding)
 
 dados_para_encoding_validacao$Idade <- NULL
 dados_para_encoding_validacao$Genero <- NULL
-
+colnames(dados_para_encoding_validacao) <- gsub("-", "_", colnames(dados_para_encoding_validacao))
 
 paste("#####################################################")
 paste("Amostra dos dados de TREINO")
