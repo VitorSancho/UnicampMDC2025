@@ -1,8 +1,10 @@
 ---
 title: INF0615 -- Aprendizado Supervisionado I
 output: pdf_document
-subtitle: Trabalho 1
-nomes: Vitor de Oliveira Fernandez Araujo e Vitor Sancho Cardoso
+subtitle: Trabalho 1 - Predição de Calorias Queimadas
+author: 
+  - Vitor de Oliveira Fernandez Araujo
+  - Vitor Sancho Cardoso
 ---
 
 ```{r setup, include = FALSE}
@@ -39,7 +41,7 @@ summary(dados_validacao)
 
 paste("###################################################################")
 ```
-Ao executar o summary é possível identificar que o conjunto de dados é composto por registros associados à prática de atividade física para uma pessoa. Os registros contêm dados sobe características da pessoa e indicadores da atividade física realizada. Cada registro possui 7 features: Gênero, Altura, Peso, Duração do exercício, Batimento Cardíaco, Temperatura Corporal e Idade. Por fim, cada registro possui seu valor de Calorias consumidas. Essa última coluna será utilizada como ground thruth de nosso conjunto de dados.
+Ao executar o summary é possível identificar que o conjunto de dados é composto por registros associados à prática de atividade física para uma pessoa. Os registros contêm dados sobre características da pessoa e indicadores da atividade física realizada. Cada registro possui 7 features: Gênero, Altura, Peso, Duração do exercício, Batimento Cardíaco, Temperatura Corporal e Idade. Por fim, cada registro possui seu valor de Calorias consumidas. Essa última coluna será utilizada como ground truth de nosso conjunto de dados.
 
 Além disso, o summary nos indica a presença de itens inválidos no conjunto de dados. Esses são determinados a partir da presença de NA em uma ou mais features do registro. Esses valores são removidos abaixo:
 
@@ -72,7 +74,7 @@ paste("Versão final após limpeza dos dados possui",nrow(dados_validacao_sem_NA
 paste("###################################################################")
 ```
 
-Um outro ponto a se analisar é a distribuição de cada uma das features. É importante obsevar isso pois caso existam features com muito desbalanceadas isso pode interferir na performance do modelo treinado. Além disso, essa observação nos permite realizar correções no modelo de forma a balancear esses valores.
+Um outro ponto a se analisar é a distribuição de cada uma das features. É importante observar isso pois, caso existam features com valores muito desbalanceados, isso pode interferir na performance do modelo treinado. Além disso, essa observação nos permite realizar correções no modelo de forma a balancear esses valores.
 A distribuição de cada uma das features pode ser vista abaixo:
 
 ```{r}
@@ -120,7 +122,7 @@ ggplot(dados_treino_sem_NAs, aes(x = Idade, fill = Idade)) +
 
 ```
 
-É possível notar que a distribuição das features de altura, peso e batimento cardíaco se assemelha muito com uma gaussiana. A de temperatura corporal é uma gaussiana com Skew positivo, ou seja, com uma cauda longa à esquerda do valor da mediana dos dados. Para a feature de duração de exercícios temos quase uma distribuição uniforme dos valores, sendo a única exceção os extremos superiores e inferiores dos dados, que possuem um valor de frequência prómixo a metade dos demais. A distribuição da feature de gênero nos indica que os dois valores presenter no dataset possuem uma contagem muito próxima, não demonstrando qualquer desbalanceamento entre essas classes. Já a feature de idade mostra um decaimento na contagem de registros conforme a faixa de idade aumenta, indicando que o total de registros contidos das faixas de 20-29 e 30-39 anos é quase igual a soma das demais faixas.
+É possível notar que a distribuição das features de altura, peso e batimento cardíaco se assemelham muito com uma gaussiana. A de temperatura corporal é uma gaussiana com Assimetria positiva, ou seja, com uma cauda longa à esquerda do valor da mediana dos dados. Para a feature de duração de exercícios temos quase uma distribuição uniforme dos valores, sendo a única exceção os extremos superiores e inferiores dos dados, que possuem um valor de frequência prómixo a metade dos demais. A distribuição da feature de gênero nos indica que os dois valores presenter no dataset possuem uma contagem muito próxima, não demonstrando qualquer desbalanceamento entre essas classes. Já a feature de idade mostra um decaimento na contagem de registros conforme a faixa de idade aumenta, indicando que o total de registros contidos das faixas de 20-29 e 30-39 anos é quase igual a soma das demais faixas.
 
 Abaixo podemos ver os mesmos gráficos para o conjunto de validação. É possível notar o mesmo comportamento para cada feature já analisada acima.
 
@@ -249,7 +251,17 @@ treino_normalizado[, 1:6] <- sweep(treino_normalizado[, 1:6], 2, diff, "/")
 
 validacao_normalizado[, 1:6] <- sweep(validacao_normalizado[, 1:6], 2, min_features, "-")
 validacao_normalizado[, 1:6] <- sweep(validacao_normalizado[, 1:6], 2, diff, "/")
+
 ```
+
+Ao visualizar o resultado da normalização aplicada, esperamos que os valores das colunas normalizadas estejam compreendidos entre 0 e 1. É, também, importante notar o uso das informações de máximo e mínimo extraídos do **conjunto de treino**,  para realizar a normalização do conjunto de validação.
+```{r}
+
+summary(treino_normalizado[,1:6])
+summary(validacao_normalizado[,1:6])
+
+```
+
 
 Agora que já fizemos todos o tratamento dos dados, passando pela remoção de registros inválidos até a normalização, utilizando o método de Min-Max, podemos iniciar o treinamento do modelo.
 
@@ -273,16 +285,6 @@ baseline <- lm(formula = Calorias ~ Altura + Peso
 # Exibindo o resumo do modelo ajustado
 summary(baseline)
 ```
-
-
-```{r}
-# Realizando previsões nos dados de treino e validação
-train_pred <- predict(baseline, treino_normalizado)
-valid_pred <- predict(baseline, validacao_normalizado)
-```
-
-
-
 ```{r}
 # Função para calcular o MAE
 MAE <- function(preds, labels) {
@@ -309,50 +311,51 @@ R2 <- function(pred, true) {
 
 
 ```{r}
-# Calculando as métricas para o conjunto de treino
-mae_train <- MAE(train_pred, treino_normalizado$Calorias)
-mse_train <- MSE(train_pred, treino_normalizado$Calorias)
-r2_train  <- R2(train_pred, treino_normalizado$Calorias)
 
-# Calculando as métricas para o conjunto de validação
-mae_valid <- MAE(valid_pred, validacao_normalizado$Calorias)
-mse_valid <- MSE(valid_pred, validacao_normalizado$Calorias)
-r2_valid  <- R2(valid_pred, validacao_normalizado$Calorias)
+model_metrics <- function(train_set, validation_set, model){
+  # Realizando previsões nos dados de treino e validação
+  train_pred <- predict(model, train_set)
+  valid_pred <- predict(model, validation_set)
+  
+  # Calculando as métricas para o conjunto de treino
+  mae_train <- MAE(train_pred, train_set$Calorias)
+  mse_train <- MSE(train_pred, train_set$Calorias)
+  r2_train  <- R2(train_pred, train_set$Calorias)
+  
+  # Calculando as métricas para o conjunto de validação
+  mae_valid <- MAE(valid_pred, validation_set$Calorias)
+  mse_valid <- MSE(valid_pred, validation_set$Calorias)
+  r2_valid  <- R2(valid_pred, validation_set$Calorias)
+  
+  
+  # Organizando os resultados em um dataframe
+  results_baseline <- data.frame(
+    Metric = c("MAE", "MSE", "R2"),
+    Train = c(mae_train, mse_train, r2_train),
+    Valid = c(mae_valid, mse_valid, r2_valid)
+  )
+  
+  # Formatando os resultados para melhor leitura
+  results_baseline$Train <- as.numeric(results_baseline$Train)
+  results_baseline$Valid <- as.numeric(results_baseline$Valid)
+  
+  # Evitando notação científica na exibição dos resultados
+  results_baseline$Train <- format(results_baseline$Train, scientific = FALSE)
+  results_baseline$Valid <- format(results_baseline$Valid, scientific = FALSE)
+  
+  # Exibindo os resultados
+  results_baseline
+}
 
-
-# Organizando os resultados em um dataframe
-results_baseline <- data.frame(
-  Metric = c("MAE", "MSE", "R2"),
-  Train = c(mae_train, mse_train, r2_train),
-  Valid = c(mae_valid, mse_valid, r2_valid)
-)
-
-# Formatando os resultados para melhor leitura
-results_baseline$Train <- as.numeric(results_baseline$Train)
-results_baseline$Valid <- as.numeric(results_baseline$Valid)
-
-# Evitando notação científica na exibição dos resultados
-results_baseline$Train <- format(results_baseline$Train, scientific = FALSE)
-results_baseline$Valid <- format(results_baseline$Valid, scientific = FALSE)
-
-# Exibindo os resultados
-results_baseline
+model_metrics(treino_normalizado, validacao_normalizado, baseline)
 ```
 
+Com base nas métricas de avaliação do modelo, podemos ver que capturamos cerca de 96% da variabilidade do dos dados com o modelo, e o comportamento dos erros foi estável (MSE baixo, significando erros pequenos, em média). Nas próximas seções, iremos estudar como utilizar as features presentes de forma a tentar melhorar estas métricas.
 
 ## 04 Combinando as features
 
 Para melhorar o desempenho do modelo podemos realizar um estudo de correlação entre as features do dataset.
-Abaixo é possível observar a matriz de correlação entre as features do data set.
-
-```{r}
-# Calculando a matriz de correlação
-correlation <- cor(treino_normalizado[, 1:8])
-print(correlation)
-```
-Ao observar os dados é possível notar que existe uma correçãoa forte entre as features Altura e Peso, tornando-as candidatas para uma combinação.
-Porém é importante também realizar uma analise visual da correlação, pois ela permite observar mais features que podem ser combinadas:
-
+Abaixo é possível observar o heatmap de correlação entre as features do data set.
 
 ```{r}
 # install.packages("corrplot")
@@ -363,11 +366,68 @@ library(corrplot)
 
 # dev.new(width = 15, height = 15, unit = "in", noRStudioGD = TRUE)
 
+# Calculando a matriz de correlação
+correlation <- cor(treino_normalizado[,c(1:6, 13:14)])
+print(correlation)
+
 corrplot(correlation, method = "color", type = "upper",
          addCoef.col = "black", tl.col = "black", tl.srt = 45, number.cex = 1)
 ```
-No plot acima é possível notar que mais fatures podem ser combinadas, pois possuem um relativa correlação. As features Duração e Temperatura.Corporal tem uma grau de correção de 0.90. O valor de correlação de 0.85 é observado entre Duração e Batimento.Cardiado, e 0.77 entre Batimento.Cardiaco e Temperatura.Corporal. Essas três são grande candidatas a serem combinadas numa só, além de ser possível combinar um par delas em somente uma.
+No plot acima, é possível notar que mais features podem ser combinadas, pois possuem uma correlação elevada. As features Duração e Temperatura.Corporal tem um grau de correlação de 0.90. O valor de correlação de 0.85 é observado entre Duração e Batimento.Cardiaco, e 0.77 entre Batimento.Cardiaco e Temperatura.Corporal. Essas três são grande candidatas a serem combinadas numa só, além de ser possível combinar um par delas em somente uma. Em especial, as features Peso e Altura também tem uma correlação muito alta (0.96).
+
+Para abordar a alta correlação entre Peso e Altura e simplificar o modelo, iremos transformar as features Peso e Altura em uma, calculando o IMC, conforme a fórmula:
+$$IMC = \frac{Peso}{Altura^2}$$
 
 
+```{r}
+treino_engineered <- treino_normalizado
+validacao_engineered <- validacao_normalizado
+
+IMC <- function(peso, altura){
+  peso/altura^2
+}
+
+treino_engineered$IMC <- IMC(dados_para_encoding_treino$Peso, dados_para_encoding_treino$Altura/100)
+min_imc <- min(treino_engineered$IMC)
+max_imc <- max(treino_engineered$IMC)
+diff_imc <- max_imc - min_imc
+treino_engineered$IMC <- (treino_engineered$IMC - min_imc)/diff_imc
+
+treino_engineered$Peso <- NULL
+treino_engineered$Altura <- NULL
+
+validacao_engineered$IMC <- IMC(dados_para_encoding_validacao$Peso, dados_para_encoding_validacao$Altura/100)
+validacao_engineered$IMC <- (validacao_engineered$IMC - min_imc)/diff_imc
+
+validacao_engineered$Peso <- NULL
+validacao_engineered$Altura <- NULL
 
 
+IMC_engineered_model <- lm(formula = Calorias ~ IMC
+               + Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                Idade20_29 +
+                Idade30_39 +
+                Idade40_49 +
+                Idade50_59 +
+                Idade60_69 +
+                Idade70_79 +
+                Generofeminino + 
+                Generomasculino
+               ,data=treino_engineered)
+
+model_metrics(treino_engineered, validacao_engineered, IMC_engineered_model)
+model_metrics(treino_normalizado, validacao_normalizado, baseline)
+
+
+```
+
+Vimos que a substituição do IMC piorou levemente o modelo.
+
+Além das análises de correlação, dado o número restrito de features, podemos também construir scatter plots de cada feature com a variável alvo, para observar relações não lineares que possamos incluir no modelo.
+```{r}
+ggplot(treino_engineered, aes(x = IMC, y = Calorias)) + geom_point() + geom_smooth()
+ggplot(treino_engineered, aes(x = Duracao, y = Calorias)) + geom_point() + geom_smooth()
+ggplot(treino_engineered, aes(x = Batimento.Cardiaco, y = Calorias)) + geom_point() + geom_smooth()
+ggplot(treino_engineered, aes(x = Temperatura.Corporal, y = Calorias)) + geom_point() + geom_smooth()
+```
+Analisando os scatter plots, podemos ver que a relação entre Temperatura.Corporal e Batimento.Cardiaco para Calorias parece ser algo que se aproxima de **quadrático**, sugerindo oportunidades de melhoria ao tentarmos fazer uma regressão polinomial. A baixa correlação do IMC (e, consequentemente, peso e altura) com as Calorias fica mais evidente, portanto, podemos remover esta feature do modelo daqui para frente, pois não tem boa explicabilidade dos dados.
