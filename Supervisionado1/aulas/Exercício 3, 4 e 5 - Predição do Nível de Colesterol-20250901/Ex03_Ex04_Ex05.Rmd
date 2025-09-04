@@ -1,0 +1,1501 @@
+---
+title: INF0615 -- Aprendizado Supervisionado I
+output: pdf_document
+subtitle: Exercício 03, 04 e 05 - Regressão Logística
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(
+  echo    = TRUE,   # Exibir código nos chunks
+  error   = FALSE,  # Ocultar mensagens de erro
+  message = FALSE,  # Ocultar mensagens informativas
+  warning = FALSE,  # Ocultar avisos
+  tidy    = FALSE   # Não reformatar automaticamente o código
+)
+
+options(digits = 4, width = 400) # Definição do número de casas decimais padrão
+```
+
+# Módulos comuns
+
+Neste exercício, exploraremos conceitos de aprendizado supervisionado aplicados à previsão de colesterol:
+
+1.  **Regressão Logística**: Usaremos para prever se o colesterol está acima de um limiar específico, baseando-se nas variáveis preditoras.
+
+2.  **Regularização**: Aplicaremos técnicas como Ridge ou Lasso para evitar o sobreajuste do modelo, adicionando penalidade aos parâmetros.
+
+3.  **Desbalanceamento de Classe**: Corrigiremos a disparidade entre classes usando técnicas como oversampling, undersampling ou SMOTE para melhorar a previsão da classe minoritária.
+
+------------------------------------------------------------------------
+
+## Módulo 0: Instalando Dependências
+
+Antes de prosseguir, verifique se as bibliotecas necessárias estão instaladas. Caso não estejam, remova o `#` das linhas abaixo para instalá-las:
+
+```{r install-packages, eval = FALSE}
+# install.packages("glmnet")
+# install.packages("caret")
+# install.packages("purrr")
+# install.packages("pROC")
+# install.packages("tinytex")
+```
+
+------------------------------------------------------------------------
+
+## Módulo 1: Configuração do Ambiente
+
+Carregue as bibliotecas necessárias e define uma semente aleatória para reprodutibilidade:
+
+```{r}
+library(ggplot2)   # Para visualização de dados
+library(reshape2)  # Para manipulação de dados
+library(glmnet)    # Para modelagem de regressão
+library(caret)     # Para treinamento de modelos
+library(pROC)      # Para avaliação de modelos
+library(corrplot)  # Para correlação
+
+set.seed(42)  # Garante reprodutibilidade dos resultados
+```
+
+------------------------------------------------------------------------
+
+## Módulo 2: Carregamento do Dataset
+
+Carregue os conjuntos de dados de **treinamento** e **validação**, que serão utilizados para treinar e avaliar os modelos:
+
+```{r}
+train_data <- read.csv("cholesterol_training_set.csv")
+valid_data <- read.csv("cholesterol_validation_set.csv")
+
+# Convertendo a variável de classe para fator
+train_data$class <- as.factor(train_data$class)
+valid_data$class <- as.factor(valid_data$class)
+```
+
+### Módulo 2.1: Explorando os Dados
+
+A seguir, analisamos algumas informações básicas sobre os conjuntos de dados.
+
+#### Módulo 2.1.1: Dados de Treinamento
+
+```{r}
+# Visualiza as primeiras linhas do dataset
+head(train_data)
+
+# Exibe as dimensões do dataset
+cat("Amostras:", nrow(train_data), "Features:", ncol(train_data) - 1, "\n")
+
+# Resumo estatístico dos dados
+summary(train_data)
+
+# Verifica a existência de valores ausentes
+if (any(is.na(train_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de treinamento.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de treinamento.\n")
+}
+```
+
+#### Módulo 2.1.2: Dados de Validação
+
+```{r}
+# Visualiza as primeiras linhas do dataset
+head(valid_data)
+
+# Exibe as dimensões do dataset
+cat("Amostras:", nrow(valid_data), "Features:", ncol(valid_data) - 1, "\n")
+
+# Resumo estatístico dos dados
+summary(valid_data)
+
+# Verifica a existência de valores ausentes
+if (any(is.na(valid_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de validação.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de validação.\n")
+}
+```
+
+### Módulo 2.1.3: Frequência das classes
+
+Para avaliar o desequilíbrio de classes, primeiro identificamos e contamos a frequência de cada classe no conjunto de dados. Isso é crucial para entender se o modelo pode ser tendencioso devido à disparidade no volume de dados por classe. Vamos verificar a distribuição das classes sem realizar tratamento imediato.
+
+```{r}
+# Exibe a frequência das classes no conjunto de treinamento
+table(train_data$class)
+```
+
+### Etapa 2.2: Normalização dos Dados
+
+Normalização é um processo que ajusta os valores das features para uma escala comum, melhorando a performance dos modelos. A formula do Z-norm é a seguinte:
+
+$$x_{Znorm} = \frac{x - mean(x)}{sd(x)}$$
+
+```{r}
+# Calculando a média e o desvio padrão para normalização
+mean_features <- apply(train_data[, 1:(ncol(train_data)-1)], 2, mean)
+sd_features   <- apply(train_data[, 1:(ncol(train_data)-1)], 2, sd)
+
+print("Médias das features")
+print(mean_features)
+print("Desvios padrão das features")
+print(sd_features)
+```
+
+```{r}
+# Aplicando a normalização Min-Max nos dados de treino e validação
+train_data[, 1:(ncol(train_data)-1)] <- sweep(train_data[, 1:(ncol(train_data)-1)], 2, mean_features, "-")
+train_data[, 1:(ncol(train_data)-1)] <- sweep(train_data[, 1:(ncol(train_data)-1)], 2, sd_features, "/")
+
+valid_data[, 1:(ncol(valid_data)-1)] <- sweep(valid_data[, 1:(ncol(valid_data)-1)], 2, mean_features, "-")
+valid_data[, 1:(ncol(valid_data)-1)] <- sweep(valid_data[, 1:(ncol(valid_data)-1)], 2, sd_features, "/")
+```
+
+```{r}
+summary(train_data)
+```
+
+------------------------------------------------------------------------
+
+# Exercício 3
+
+Aqui o foco é treinar um modelo de regressão logística em R, avaliar o desempenho do modelo de classificação e analisar a curva de viés-varância.
+
+## Módulo 3: Regressão Logística
+
+Vamos criar um modelo baseline de regressão logística para futuras comparações
+
+```{r}
+getHypothesis <- function(feature_names, degree){
+  hypothesis_string <- "hypothesis <- formula(class ~ "
+  for(d in 1:degree){
+    for(i in 1:length(feature_names)){
+      hypothesis_string <- paste(hypothesis_string, "I(", feature_names[i], "^", d, ") + ", sep = "")
+    }
+  }
+  
+  hypothesis_string <- substr(hypothesis_string, 1, nchar(hypothesis_string)-3)
+  hypothesis_string <- paste(hypothesis_string, ")")
+  hypothesis <- eval(parse(text=hypothesis_string))
+  return(hypothesis)
+}
+```
+
+```{r}
+# Define os nomes das features
+feature_names <- colnames(train_data)[1:(ncol(train_data) - 1)]
+
+hypothesis <- getHypothesis(feature_names, 1)
+hypothesis
+```
+
+### Módulo 3.1: Treinamento do Modelo
+
+```{r}
+# Obtém ajuda sobre a função glmnet
+help(glmnet)
+```
+
+```{r}
+# Prepara a matriz de features e a variável de resposta
+x_train <- model.matrix(hypothesis, data=train_data)
+y_train <- train_data$class
+
+x_valid <- model.matrix(hypothesis, data=valid_data)
+y_valid <- valid_data$class
+```
+
+```{r}
+# Treina o modelo de regressão logística
+model <- glmnet(x_train, y_train, family = "binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
+
+# Exibe os coeficientes aprendidos
+print(model$beta)
+print(model$a0)
+```
+
+### Módulo 3.2: Predição
+
+Uma vez que o modelo está treinado, podemos realizar previsões tanto para os dados de treino quanto para os dados de validação.
+
+```{r}
+train_pred <- predict(model, newx=x_train, type="response")
+valid_pred <- predict(model, newx=x_valid, type="response")
+
+# Threshold = 0.5 
+train_class_pred <- train_pred
+train_class_pred[train_pred >= 0.5] <- 1
+train_class_pred[train_pred < 0.5]  <- 0
+
+valid_class_pred <- valid_pred
+valid_class_pred[valid_pred >= 0.5] <- 1
+valid_class_pred[valid_pred < 0.5]  <- 0
+```
+
+### Módulo 3.3: Cálculo das Métricas de Desempenho
+
+A seguir, implementamos três métricas importantes para avaliar o desempenho do modelo...
+
+#### Módulo 3.4: Cross Entropy Loss
+
+A função `getLoss` abaixo calcula a Cross Entropy Loss, uma métrica crucial para modelos de classificação logística, considerando a estabilidade numérica para evitar o logaritmo de zero:
+
+Sua formula:
+
+$$
+CrossEntropyLoss(y, h_{\theta}(x))=−\frac{1}{m}\sum^m_{i=1} [y^ilog(h_{\theta}(x^i))+(1−y^i)log(1−h_{\theta}(x^i))]
+$$
+
+```{r}
+getLoss <- function(y_true, y_pred){
+  # Separar previsões por classe
+  y_pred_n <- y_pred[y_true == 0]
+  y_pred_p <- y_pred[y_true == 1]
+  
+  # Contar o número de instâncias em cada classe
+  countN <- length(y_pred_n)
+  countP <- length(y_pred_p)
+  
+  eps <- 1e-9  # Constante pequena para estabilidade numérica
+
+  # Calcular a perda para a classe 0
+  totalLossN <- sum(-log2(1 - y_pred_n + eps))
+  
+  # Calcular a perda para a classe 1
+  totalLossP <- sum(-log2(y_pred_p + eps))
+  
+  # Calcular a perda média por classe
+  avgLossN <- totalLossN / countN
+  avgLossP <- totalLossP / countP
+
+  # Calcular a perda total balanceada
+  avgLossTotal <- (avgLossN + avgLossP) / 2
+
+  
+  return(c(LossN = avgLossN, LossP = avgLossP, AverageLoss = avgLossTotal))
+}
+```
+
+```{r}
+train_losses <- getLoss(train_data$class, train_pred)
+valid_losses <- getLoss(valid_data$class, valid_pred)
+
+cat("Train\n")
+print(train_losses)
+
+cat("Valid\n")
+print(valid_losses)
+```
+
+#### Módulo 3.5: Matriz de Confusão
+
+A matriz de confusão é uma tabela utilizada para descrever o desempenho de um modelo de classificação. A partir dessa matriz, podemos calcular métricas importantes como precisão, recall e accuracy.
+
+-   **Verdadeiros Positivos (TP)**: Casos que foram corretamente identificados como positivos.
+
+-   **Falsos Positivos (FP)**: Casos negativos erroneamente classificados como positivos.
+
+-   **Verdadeiros Negativos (TN)**: Casos que foram corretamente identificados como negativos.
+
+-   **Falsos Negativos (FN)**: Casos positivos erroneamente classificados como negativos.
+
+![Fig 1. Matriz de confusão](figures/matrizConfusao.png){width="315"}
+
+```{r}
+train_cm <- confusionMatrix(data=as.factor(train_class_pred), 
+                      reference=as.factor(train_data$class), 
+                      positive='1')
+
+train_cm$table 
+```
+
+```{r}
+# Calcula a matriz de confusão relativa 
+calculaMatrizConfusaoRelativa <- function(cm){
+    
+    # Aplicamos a transposição para garantir que a referencia
+    # fique nas linhas e a predicao nas colunas
+    cm_absolute = t(cm$table)
+    
+    cm_relative = cm_absolute
+    
+    cm_relative[1,1] = round(cm_absolute[1,1]/sum(cm_absolute[1,]), digits=2)
+    cm_relative[1,2] = round(cm_absolute[1,2]/sum(cm_absolute[1,]), digits=2)
+    cm_relative[2,1] = round(cm_absolute[2,1]/sum(cm_absolute[2,]), digits=2)
+    cm_relative[2,2] = round(cm_absolute[2,2]/sum(cm_absolute[2,]), digits=2)
+    
+    return(cm_relative)  
+}
+```
+
+```{r}
+# SEMPRE construam e reportem a matriz de confusao relativa!
+cat("Train\n")
+train_cm_relative_base <- calculaMatrizConfusaoRelativa(train_cm)
+train_cm_relative_base
+```
+
+```{r}
+cat("Valid\n")
+valid_cm <- confusionMatrix(data=as.factor(valid_class_pred), 
+                      reference=as.factor(valid_data$class), 
+                      positive='1')
+
+valid_cm_relative_base <- calculaMatrizConfusaoRelativa(valid_cm)
+valid_cm_relative_base
+```
+
+### Módulo 3.4: Avaliação do Modelo
+
+A partir da matriz de confusão relativa, podemos calcular métricas de avaliação do modelo:
+
+-   **Precisão:** Mede a proporção de verdadeiros positivos entre os itens classificados como positivos.
+
+    $$ precision = \frac{TP}{TP + FP}$$
+
+-   **Recall:** Mede a proporção de verdadeiros positivos entre todos os itens verdadeiramente positivos.
+
+    $$ recall = \frac{TP}{TP + FN}$$
+
+-   **F1 Score:** É a média harmônica da precisão e do recall, útil para encontrar um equilíbrio entre os dois.
+
+    $$ F1Score = \frac{2\cdot precision\cdot recall}{precision + recall}$$
+
+-   **Acurácia Balanceada:**
+
+    $$ BalancedAccuracy = \frac{1}{2}(\frac{TP}{TP + FN} + \frac{TN}{TN+FP})$$
+
+```{r}
+calculateMetrics <- function(cm) {
+  # Extrai TN, FP, FN, TP da matriz de confusão
+  # Assumindo a estrutura:
+  #           Reference
+  # Prediction   0     1
+  #         0   TN    FP
+  #         1   FN    TP
+  
+  TN <- cm[1, 1]
+  FP <- cm[1, 2]
+  FN <- cm[2, 1]  
+  TP <- cm[2, 2]  
+  
+  precision <- if (TP + FP == 0) 0 else TP / (TP + FP)
+  recall    <- if (TP + FN == 0) 0 else TP / (TP + FN)
+  f1        <- if (precision + recall == 0) 0 else (2 * precision * recall) / (precision + recall)
+  bal_acc   <- ( (TN / (TN + FP)) + (TP / (TP + FN)) ) / 2
+  
+  return(c(Precision = precision, Recall = recall, F1 = f1, BalAcc = bal_acc))
+}
+
+# Calculando as métricas para o conjunto de treino
+train_metrics = calculateMetrics(train_cm$table)
+
+# Calculando as métricas para o conjunto de validação
+valid_metrics = calculateMetrics(valid_cm$table)
+
+# Organizando os resultados em um dataframe
+results_baseline <- data.frame(
+  Train  = train_metrics,
+  Valid  = valid_metrics
+)
+
+# Formatando os resultados para melhor leitura
+results_baseline$Train <- as.numeric(results_baseline$Train)
+results_baseline$Valid <- as.numeric(results_baseline$Valid)
+
+# Evitando notação científica na exibição dos resultados
+results_baseline$Train <- format(results_baseline$Train, scientific = FALSE)
+results_baseline$Valid <- format(results_baseline$Valid, scientific = FALSE)
+
+# Exibindo os resultados
+results_baseline
+```
+
+### Módulo 3.5: Curva ROC e AUC
+
+A **Curva ROC (Receiver Operating Characteristic)** é uma ferramenta utilizada para avaliar a performance de modelos de classificação binária. Ela mostra a relação entre:
+
+-   **Taxa de Verdadeiros Positivos (Sensibilidade)** → Quantos casos positivos foram corretamente classificados.
+
+-   **Taxa de Falsos Positivos (1 - Especificidade)** → Quantos casos negativos foram erroneamente classificados como positivos.
+
+A curva é traçada variando o limiar de decisão do modelo, gerando diferentes pontos na escala de sensibilidade e especificidade.
+
+Por sua vez o **AUC (Area Under the Curve)** representa a área sob a curva ROC e mede a capacidade do modelo de distinguir entre as classes.
+
+-   **AUC = 1.0** → Modelo perfeito
+
+-   **AUC \> 0.9** → Excelente
+
+-   **AUC entre 0.7 e 0.9** → Bom
+
+-   **AUC = 0.5** → Modelo aleatório (sem poder discriminativo)
+
+Quanto maior a AUC, melhor o modelo na classificação.
+
+```{r}
+# Calcula a curva ROC
+ROC <- roc(valid_data$class, valid_pred[,1], direction="<")
+
+# Plota a curva ROC com melhorias visuais
+plot(ROC, col="steelblue", lwd=3, main="Curva ROC - Validação", 
+     xlab="Taxa de Falsos Positivos (1 - Especificidade)", 
+     ylab="Taxa de Verdadeiros Positivos (Sensibilidade)", 
+     cex.main=1.5, cex.lab=1.2, cex.axis=1.2)
+
+# Adiciona grade discreta
+grid(col="gray90", lty="dotted")
+
+# Exibe a AUC no gráfico
+auc_value <- round(auc(ROC), 3)
+legend("bottomright", legend=paste("AUC =", auc_value), col="steelblue", lwd=3, bty="n")
+
+
+```
+
+------------------------------------------------------------------------
+
+## Módulo 4: Regressão Polinomial
+
+Outra forma para aumentar a complexidade do modelo é utilizar regressão polinomial. Isso pode melhorar o ajuste ao dado, especialmente quando as relações entre as variáveis não são lineares.
+
+### Módulo 4.1: Treinamento
+
+```{r}
+LossPerDegree <- data.frame(degree=numeric(5), TrainLoss=numeric(5), ValidLoss=numeric(5))
+F1PerDegree  <- data.frame(degree=numeric(5), TrainF1=numeric(5), ValidF1=numeric(5))
+
+for(i in 1:5){  
+  cat("Degree")
+  print(i)
+  hypothesis <- getHypothesis(feature_names, i)
+  
+  # Preparar os dados de treinamento e validação
+  x_train <- model.matrix(hypothesis, train_data)
+  y_train <- train_data$class
+  
+  x_valid <- model.matrix(hypothesis, valid_data)
+  y_valid <- valid_data$class
+  
+  # Treinamento do modelo
+  model <- glmnet(x_train, y_train, 
+                  family="binomial", 
+                  standardize=FALSE, 
+                  maxit=1e+05, 
+                  alpha=0, 
+                  lambda=1e-6)
+  
+  # Predicao do modelo
+  train_pred <- predict(model, newx=x_train, type="response")
+  valid_pred <- predict(model, newx=x_valid, type="response")
+  
+  # Transformaçao das predicoes em classes
+  train_class_pred                    <- train_pred
+  train_class_pred[train_pred >= 0.5] <- 1
+  train_class_pred[train_pred < 0.5]  <- 0
+  
+  valid_class_pred                    <- valid_pred
+  valid_class_pred[valid_pred >= 0.5] <- 1
+  valid_class_pred[valid_pred < 0.5]  <- 0
+  
+  # Calcula a loss dos dois conjuntos
+  train_losses <- getLoss(train_data$class, train_pred)
+  valid_losses <- getLoss(valid_data$class, valid_pred)
+
+  
+  # Calcula a matriz de confusão
+  train_cm <- confusionMatrix(data=as.factor(train_class_pred), 
+                        reference=as.factor(train_data$class), 
+                        positive='1')
+  
+  valid_cm <- confusionMatrix(data=as.factor(valid_class_pred), 
+                        reference=as.factor(valid_data$class), 
+                        positive='1')
+  
+  # Calcula mẽtrica de interesse
+  train_metrics = calculateMetrics(train_cm$table)
+  valid_metrics = calculateMetrics(valid_cm$table)
+
+  LossPerDegree[i,] <- c(i, train_losses["AverageLoss"], valid_losses["AverageLoss"])
+  F1PerDegree[i,]  <- c(i, train_metrics["F1"], valid_metrics["F1"]) 
+}
+```
+
+### Módulo 4.2: Curva de Viés e Variância
+
+```{r}
+# Gráfico da Loss
+LossPerDegreeMelt <- melt(LossPerDegree, id="degree")
+p <- ggplot(data=LossPerDegreeMelt, aes(x=degree, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("Loss") + scale_x_discrete(name ="Degree", limits=as.character(1:5))
+
+p + theme(legend.position = c(0.4, 0.9), legend.title = element_blank())
+
+# Gráfico da Acurácia
+F1PerDegreeMelt <- melt(F1PerDegree, id="degree")
+
+p <- ggplot(data=F1PerDegreeMelt, aes(x=degree, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("F1") + scale_x_discrete(name ="Degree",limits=as.character(1:5))
+
+p + theme(legend.position = c(0.2, 0.1), legend.title = element_blank())
+
+```
+
+------------------------------------------------------------------------
+
+## Módulo 5: Combinação de Features
+
+### Módulo 5.1: Correlação
+
+```{r}
+# Calculando a matriz de correlação
+matriz_correlacao <- cor(train_data[1:(ncol(train_data) - 1)])
+
+# Ajusta as margens do gráfico
+par(mar = c(2, 2, 2, 2))  
+
+# Ajusta o tamanho do texto para todos os elementos do gráfico
+par(cex = 0.8)            
+
+# Cria um novo dispositivo gráfico com dimensões específicas
+dev.new(width = 25, height = 25, unit = "in", noRStudioGD = TRUE)
+
+# Plota a matriz de correlação com tamanho de texto reduzido
+corrplot(matriz_correlacao, method = "color", type = "upper",
+         addCoef.col = "black", tl.col = "black", tl.srt = 25, 
+         number.cex = 0.8)  # Ajuste este valor para alterar o tamanho do texto dos coeficientes
+
+```
+
+### Módulo 5.2: Criação de hipóteses
+
+```{r}
+f01 <- formula(class ~ .)
+f02 <- formula(class ~ . + (LBXTR+LBDHDD+LBXGLT+LBXAPB)^2)
+f03 <- formula(class ~ . + (LBXTR+LBDHDD+LBXGLT+LBXAPB)^3)
+f04 <- formula(class ~ . + (LBXTR+LBDHDD+LBXGLT+LBXAPB)^4)
+```
+
+### Módulo 5.3: Treinamento
+
+```{r}
+formulas <- c(f01, f02, f03, f04)
+
+LossPerCombination <- data.frame(combination=numeric(4), TrainLoss=numeric(4), ValidLoss=numeric(4))
+F1PerCombination  <- data.frame(combination=numeric(4), TrainF1=numeric(4), ValidF1=numeric(4))
+
+i <- 1
+for(hypothesis in formulas){  
+  
+  # Preparar os dados de treinamento e validação
+  x_train <- model.matrix(hypothesis, train_data)
+  y_train <- train_data$class
+  
+  x_valid <- model.matrix(hypothesis, valid_data)
+  y_valid <- valid_data$class
+  
+  # Treinamento do modelo
+  model <- glmnet(x_train, y_train, 
+                  family="binomial", 
+                  standardize=FALSE, 
+                  maxit=1e+05, 
+                  alpha=0, 
+                  lambda=1e-6)
+  
+  # Predicao do modelo
+  train_pred <- predict(model, newx=x_train, type="response")
+  valid_pred <- predict(model, newx=x_valid, type="response")
+  
+  # Transformaçao das predicoes em classes
+  train_class_pred                    <- train_pred
+  train_class_pred[train_pred >= 0.5] <- 1
+  train_class_pred[train_pred < 0.5]  <- 0
+  
+  valid_class_pred                    <- valid_pred
+  valid_class_pred[valid_pred >= 0.5] <- 1
+  valid_class_pred[valid_pred < 0.5]  <- 0
+  
+  # Calcula a loss dos dois conjuntos
+  train_losses <- getLoss(train_data$class, train_pred)
+  valid_losses <- getLoss(valid_data$class, valid_pred)
+
+  
+  # Calcula a matriz de confusão
+  train_cm <- confusionMatrix(data=as.factor(train_class_pred), 
+                        reference=as.factor(train_data$class), 
+                        positive='1')
+  
+  valid_cm <- confusionMatrix(data=as.factor(valid_class_pred), 
+                        reference=as.factor(valid_data$class), 
+                        positive='1')
+  
+  # Calcula mẽtrica de interesse
+  train_metrics = calculateMetrics(train_cm$table)
+  valid_metrics = calculateMetrics(valid_cm$table)
+  
+  LossPerCombination[i,] <- c(i, train_losses["AverageLoss"], valid_losses["AverageLoss"])
+  F1PerCombination[i,]  <- c(i, train_metrics["F1"], valid_metrics["F1"]) 
+  
+  i <- i + 1
+}
+```
+
+### Módulo 5.4: Curva de Viés e Variância
+
+```{r}
+# Gráfico da Loss
+LossPerCombinationMelt <- melt(LossPerCombination, id="combination") 
+p <- ggplot(data=LossPerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("Loss") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico da Acurácia
+F1PerCombinationMelt <- melt(F1PerCombination, id="combination")  # convert to long format
+p <- ggplot(data=F1PerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("F1") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+```
+
+# Exercício 4
+
+Nessa seção vamos entender regularização, como aplicar e analisar.
+
+```{r}
+results_baseline
+```
+
+```{r}
+help(glmnet)
+```
+
+------------------------------------------------------------------------
+
+## Módulo 6: Regularização Lasso
+
+A regularização Lasso é um método de regressão que adiciona um termo de penalização à função de custo, incentivando a esparsidade dos coeficientes do modelo. Isso significa que algumas das variáveis podem ter coeficientes exatamente iguais a zero, tornando o modelo mais interpretável e ajudando na seleção de variáveis.
+
+A sua fórmula é : $$Lasso = \frac{1}{2m}\sum^n_{i=1}(h_{\theta}(x^i)-y^i)^2+\lambda\sum^n_{j=1}|\theta_j|$$
+
+```{r}
+feature_names
+hypothesis = getHypothesis(feature_names, 1)
+hypothesis
+```
+
+```{r}
+lambda_values <- c(0.1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6)
+
+LossPerRegularizationLasso <- data.frame(regularization=numeric(length(lambda_values)), 
+                                    TrainLoss=numeric(length(lambda_values)),
+                                    ValLoss=numeric(length(lambda_values)))
+
+F1PerRegularizationLasso <- data.frame(regularization=numeric(length(lambda_values)), 
+                                   TrainF1=numeric(length(lambda_values)),
+                                   ValF1=numeric(length(lambda_values)))
+
+i <- 1
+for(l in lambda_values){  
+  
+  # Preparar os dados de treinamento e validação
+  x_train <- model.matrix(hypothesis, train_data)
+  y_train <- train_data$class
+  
+  x_valid <- model.matrix(hypothesis, valid_data)
+  y_valid <- valid_data$class
+  
+  # Treinamento do modelo
+  model <- glmnet(x_train, y_train, 
+                  family="binomial", 
+                  standardize=FALSE, 
+                  maxit=1e+05, 
+                  alpha=1, 
+                  lambda=l)
+  
+  # Predicao do modelo
+  train_pred <- predict(model, newx=x_train, type="response")
+  valid_pred <- predict(model, newx=x_valid, type="response")
+  
+  # Transformaçao das predicoes em classes
+  train_class_pred                    <- train_pred
+  train_class_pred[train_pred >= 0.5] <- 1
+  train_class_pred[train_pred < 0.5]  <- 0
+  
+  valid_class_pred                    <- valid_pred
+  valid_class_pred[valid_pred >= 0.5] <- 1
+  valid_class_pred[valid_pred < 0.5]  <- 0
+  
+  # Calcula a loss dos dois conjuntos
+  train_losses <- getLoss(train_data$class, train_pred)
+  valid_losses <- getLoss(valid_data$class, valid_pred)
+
+  
+  # Calcula a matriz de confusão
+  train_cm <- confusionMatrix(data=as.factor(train_class_pred), 
+                        reference=as.factor(train_data$class), 
+                        positive='1')
+  
+  valid_cm <- confusionMatrix(data=as.factor(valid_class_pred), 
+                        reference=as.factor(valid_data$class), 
+                        positive='1')
+  
+  # Calcula mẽtrica de interesse
+  train_metrics = calculateMetrics(train_cm$table)
+  valid_metrics = calculateMetrics(valid_cm$table)
+  
+  LossPerRegularizationLasso[i,] <- c(i, train_losses["AverageLoss"], valid_losses["AverageLoss"])
+  F1PerRegularizationLasso[i,]  <- c(i, train_metrics["F1"], valid_metrics["F1"]) 
+  
+  i <- i + 1
+}
+```
+
+```{r}
+# Gráfico da Loss
+LossPerRegularizationMelt <- melt(LossPerRegularizationLasso, id="regularization") 
+p <- ggplot(data=LossPerRegularizationMelt, aes(x=regularization, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia - Lasso") + ylab("Loss") + scale_x_discrete(name ="Parametro de regularizacao", limits=c("0.1", "1e-2", "1e-3", "1e-4", "1e-5", "1e-6"))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico da Acurácia
+F1PerRegularizationMelt <- melt(F1PerRegularizationLasso, id="regularization")
+p <- ggplot(data=F1PerRegularizationMelt, aes(x=regularization, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia - Lasso") + ylab("F1") + scale_x_discrete(name ="Parametro de regularizacao", limits=c("0.1", "1e-2", "1e-3", "1e-4", "1e-5", "1e-6"))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+```
+
+------------------------------------------------------------------------
+
+## Módulo 7: Regularização Rigde
+
+A regularização Ridge é um método de regressão que adiciona um termo de penalização quadrática aos coeficientes do modelo, reduzindo a magnitude dos coeficientes, mas sem forçá-los a zero. Isso ajuda a lidar com multicolinearidade e melhora a generalização do modelo ao evitar overfitting.
+
+A sua fórmula é : $$Rigde = \frac{1}{2m}\sum^n_{i=1}(h_{\theta}(x^i)-y^i)^2+\lambda\sum^n_{j=1}\theta_j²$$
+
+```{r}
+lambda_values <- c(0.1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6)
+
+LossPerRegularizationRigde <- data.frame(regularization=numeric(length(lambda_values)), 
+                                    TrainLoss=numeric(length(lambda_values)),
+                                    ValLoss=numeric(length(lambda_values)))
+
+F1PerRegularizationRigde <- data.frame(regularization=numeric(length(lambda_values)), 
+                                   TrainF1=numeric(length(lambda_values)),
+                                   ValF1=numeric(length(lambda_values)))
+
+i <- 1
+for(l in lambda_values){  
+  
+  # Preparar os dados de treinamento e validação
+  x_train <- model.matrix(hypothesis, train_data)
+  y_train <- train_data$class
+  
+  x_valid <- model.matrix(hypothesis, valid_data)
+  y_valid <- valid_data$class
+  
+  # Treinamento do modelo
+  model <- glmnet(x_train, y_train, 
+                  family="binomial", 
+                  standardize=FALSE, 
+                  maxit=1e+05, 
+                  alpha=0, 
+                  lambda=l)
+  
+  # Predicao do modelo
+  train_pred <- predict(model, newx=x_train, type="response")
+  valid_pred <- predict(model, newx=x_valid, type="response")
+  
+  # Transformaçao das predicoes em classes
+  train_class_pred                    <- train_pred
+  train_class_pred[train_pred >= 0.5] <- 1
+  train_class_pred[train_pred < 0.5]  <- 0
+  
+  valid_class_pred                    <- valid_pred
+  valid_class_pred[valid_pred >= 0.5] <- 1
+  valid_class_pred[valid_pred < 0.5]  <- 0
+  
+  # Calcula a loss dos dois conjuntos
+  train_losses <- getLoss(train_data$class, train_pred)
+  valid_losses <- getLoss(valid_data$class, valid_pred)
+
+  
+  # Calcula a matriz de confusão
+  train_cm <- confusionMatrix(data=as.factor(train_class_pred), 
+                        reference=as.factor(train_data$class), 
+                        positive='1')
+  
+  valid_cm <- confusionMatrix(data=as.factor(valid_class_pred), 
+                        reference=as.factor(valid_data$class), 
+                        positive='1')
+  
+  # Calcula mẽtrica de interesse
+  train_metrics = calculateMetrics(train_cm$table)
+  valid_metrics = calculateMetrics(valid_cm$table)
+  
+  LossPerRegularizationRigde[i,] <- c(i, train_losses["AverageLoss"], valid_losses["AverageLoss"])
+  F1PerRegularizationRigde[i,]  <- c(i, train_metrics["F1"], valid_metrics["F1"]) 
+  
+  i <- i + 1
+}
+```
+
+```{r}
+# Gráfico da Loss
+LossPerRegularizationMelt <- melt(LossPerRegularizationRigde, id="regularization") 
+p <- ggplot(data=LossPerRegularizationMelt, aes(x=regularization, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia - Ridge") + ylab("Loss") + scale_x_discrete(name ="Parametro de regularizacao", limits=c("0.1", "1e-2", "1e-3", "1e-4", "1e-5", "1e-6"))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico da Acurácia
+F1PerRegularizationMelt <- melt(F1PerRegularizationRigde, id="regularization")
+p <- ggplot(data=F1PerRegularizationMelt, aes(x=regularization, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia - Ridge") + ylab("F1 Balanced") + scale_x_discrete(name ="Parametro de regularizacao", limits=c("0.1", "1e-2", "1e-3", "1e-4", "1e-5", "1e-6"))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+```
+
+------------------------------------------------------------------------
+
+# Exercício 5
+
+Aqui o foco é entender mais sobre desbalanceamento de classes do modelo de regressão logistica em R.
+
+```{r}
+table(train_data$class)
+```
+
+```{r}
+valid_cm_relative_base
+```
+
+------------------------------------------------------------------------
+
+## Módulo 8: Class Weight
+
+```{r}
+classes_frequency = table(train_data$class)
+
+relative_classes_frequency = classes_frequency/sum(classes_frequency)
+
+w_positive = 1 - relative_classes_frequency[2]
+w_negative = 1 - relative_classes_frequency[1]
+
+# Inicializando com zeros o vetor de pesos
+weights <- rep(0.0, dim(train_data)[1])
+
+# Associando o peso dos positivos (w_positive) aos respectivos exemplos
+weights[train_data$class == 1] = w_positive 
+
+# Associando o peso dos negatives (w_negative) aos respectivos exemplos
+weights[train_data$class == 0] = w_negative 
+```
+
+### Módulo 8.1: Treinamento do Modelo
+
+```{r}
+hypothesis <- getHypothesis(feature_names, 1)
+hypothesis
+```
+
+```{r}
+# Prepara a matriz de features e a variável de resposta
+x_train <- model.matrix(hypothesis, data=train_data)
+y_train <- train_data$class
+
+x_valid <- model.matrix(hypothesis, data=valid_data)
+y_valid <- valid_data$class
+```
+
+```{r}
+# Treina o modelo de regressão logística
+model_class_weigth <- glmnet(x_train, y_train, family="binomial", weights=weights, standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
+
+# Exibe os coeficientes aprendidos
+print(model_class_weigth$beta)
+print(model_class_weigth$a0)
+```
+
+```{r}
+train_pred <- predict(model_class_weigth, newx=x_train, type="response")
+valid_pred <- predict(model_class_weigth, newx=x_valid, type="response")
+
+# Threshold = 0.5 
+train_class_pred <- train_pred
+train_class_pred[train_pred >= 0.5] <- 1
+train_class_pred[train_pred < 0.5]  <- 0
+
+valid_class_pred <- valid_pred
+valid_class_pred[valid_pred >= 0.5] <- 1
+valid_class_pred[valid_pred < 0.5]  <- 0
+```
+
+### Módulo 8.2: Cálculo das Métricas de Desempenho
+
+```{r}
+train_losses <- getLoss(train_data$class, train_pred)
+valid_losses <- getLoss(valid_data$class, valid_pred)
+
+cat("Train\n")
+print(train_losses)
+
+cat("Valid\n")
+print(valid_losses)
+```
+
+```{r}
+cat("Valid\n")
+valid_cm <- confusionMatrix(data=as.factor(valid_class_pred), 
+                      reference=as.factor(valid_data$class), 
+                      positive='1')
+
+valid_cm_relative <- calculaMatrizConfusaoRelativa(valid_cm)
+valid_cm_relative
+```
+
+```{r}
+# Calculando as métricas para o conjunto de treino
+train_cm <- confusionMatrix(data=as.factor(train_class_pred), 
+                      reference=as.factor(train_data$class), 
+                      positive='1')
+
+train_metrics = calculateMetrics(train_cm$table)
+
+# Calculando as métricas para o conjunto de validação
+valid_metrics = calculateMetrics(valid_cm$table)
+
+# Organizando os resultados em um dataframe
+results_weights <- data.frame(
+  Train  = train_metrics,
+  Valid  = valid_metrics
+)
+
+# Formatando os resultados para melhor leitura
+results_weights$Train <- as.numeric(results_weights$Train)
+results_weights$Valid <- as.numeric(results_weights$Valid)
+
+# Evitando notação científica na exibição dos resultados
+results_weights$Train <- format(results_weights$Train, scientific = FALSE)
+results_weights$Valid <- format(results_weights$Valid, scientific = FALSE)
+
+# Exibindo os resultados
+results_weights
+```
+
+------------------------------------------------------------------------
+
+## Módulo 9: Oversampling
+
+```{r}
+train_data <- read.csv("cholesterol_training_set.csv", stringsAsFactors=TRUE)
+valid_data   <- read.csv("cholesterol_validation_set.csv", stringsAsFactors=TRUE)
+
+positive_data <- train_data[train_data$class == 1,]
+negative_data <- train_data[train_data$class == 0,]
+
+dim(positive_data)
+dim(negative_data)
+```
+
+```{r}
+# Aumentar amostras da classe minoritaria em 2x
+selected_idx    <- sample(1:nrow(positive_data), 2*nrow(positive_data), replace=TRUE)
+oversampled_pos <- positive_data[selected_idx,]
+
+new_train_data <- rbind(oversampled_pos, negative_data)
+table(new_train_data$class)
+```
+
+```{r}
+# Z-norm normalization
+mean_features <- apply(new_train_data[,1:(ncol(new_train_data)-1)], 2, mean)
+sd_features   <- apply(new_train_data[,1:(ncol(new_train_data)-1)], 2, sd)
+
+new_train_data[,1:(ncol(new_train_data)-1)] <- sweep(new_train_data[,1:(ncol(new_train_data)-1)], 2, mean_features, "-")
+new_train_data[,1:(ncol(new_train_data)-1)] <- sweep(new_train_data[,1:(ncol(new_train_data)-1)], 2, sd_features, "/")
+
+valid_data[,1:(ncol(valid_data)-1)] <- sweep(valid_data[,1:(ncol(valid_data)-1)], 2, mean_features, "-")
+valid_data[,1:(ncol(valid_data)-1)] <- sweep(valid_data[,1:(ncol(valid_data)-1)], 2, sd_features, "/")
+```
+
+### Módulo 9.1: Treinamento do Modelo
+
+```{r}
+hypothesis <- getHypothesis(feature_names, 1)
+hypothesis
+```
+
+```{r}
+# Prepara a matriz de features e a variável de resposta
+x_train <- model.matrix(hypothesis, data=new_train_data)
+y_train <- new_train_data$class
+
+x_valid <- model.matrix(hypothesis, data=valid_data)
+y_valid <- valid_data$class
+```
+
+```{r}
+# Treina o modelo de regressão logística
+model_over <- glmnet(x_train, y_train, family="binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
+
+# Exibe os coeficientes aprendidos
+print(model_over$beta)
+print(model_over$a0)
+```
+
+```{r}
+train_pred <- predict(model_over, newx=x_train, type="response")
+valid_pred <- predict(model_over, newx=x_valid, type="response")
+
+# Threshold = 0.5 
+train_class_pred <- train_pred
+train_class_pred[train_pred >= 0.5] <- 1
+train_class_pred[train_pred < 0.5]  <- 0
+
+valid_class_pred <- valid_pred
+valid_class_pred[valid_pred >= 0.5] <- 1
+valid_class_pred[valid_pred < 0.5]  <- 0
+```
+
+### Módulo 9.2: Cálculo das Métricas de Desempenho
+
+```{r}
+train_losses <- getLoss(new_train_data$class, train_pred)
+valid_losses <- getLoss(valid_data$class, valid_pred)
+
+cat("Train\n")
+print(train_losses)
+
+cat("Valid\n")
+print(valid_losses)
+```
+
+```{r}
+cat("Valid\n")
+valid_cm <- confusionMatrix(data=as.factor(valid_class_pred), 
+                      reference=as.factor(valid_data$class), 
+                      positive='1')
+
+valid_cm_relative <- calculaMatrizConfusaoRelativa(valid_cm)
+valid_cm_relative
+```
+
+```{r}
+# Calculando as métricas para o conjunto de treino
+train_cm <- confusionMatrix(data=as.factor(train_class_pred), 
+                      reference=as.factor(new_train_data$class), 
+                      positive='1')
+
+train_metrics = calculateMetrics(train_cm$table)
+
+# Calculando as métricas para o conjunto de validação
+valid_metrics = calculateMetrics(valid_cm$table)
+
+# Organizando os resultados em um dataframe
+results_over <- data.frame(
+  Train  = train_metrics,
+  Valid  = valid_metrics
+)
+
+# Formatando os resultados para melhor leitura
+results_over$Train <- as.numeric(results_over$Train)
+results_over$Valid <- as.numeric(results_over$Valid)
+
+# Evitando notação científica na exibição dos resultados
+results_over$Train <- format(results_over$Train, scientific = FALSE)
+results_over$Valid <- format(results_over$Valid, scientific = FALSE)
+
+# Exibindo os resultados
+results_over
+```
+
+------------------------------------------------------------------------
+
+## Módulo 10: Undersampling
+
+```{r}
+train_data <- read.csv("cholesterol_training_set.csv", stringsAsFactors=TRUE)
+valid_data <- read.csv("cholesterol_validation_set.csv", stringsAsFactors=TRUE)
+
+positive_data <- train_data[train_data$class == 1,]
+negative_data <- train_data[train_data$class == 0,]
+
+dim(positive_data)
+dim(negative_data)
+```
+
+```{r}
+selected_idx    <- sample(1:nrow(negative_data), size=1.2*nrow(positive_data), replace=TRUE)
+undersample_neg <- negative_data[selected_idx,]
+
+new_train_data <- rbind(undersample_neg, positive_data)
+table(new_train_data$class)
+```
+
+```{r}
+# Z-norm normalization
+mean_features <- apply(new_train_data[,1:(ncol(new_train_data)-1)], 2, mean)
+sd_features   <- apply(new_train_data[,1:(ncol(new_train_data)-1)], 2, sd)
+
+new_train_data[,1:(ncol(new_train_data)-1)] <- sweep(new_train_data[,1:(ncol(new_train_data)-1)], 2, mean_features, "-")
+new_train_data[,1:(ncol(new_train_data)-1)] <- sweep(new_train_data[,1:(ncol(new_train_data)-1)], 2, sd_features, "/")
+
+valid_data[,1:(ncol(valid_data)-1)] <- sweep(valid_data[,1:(ncol(valid_data)-1)], 2, mean_features, "-")
+valid_data[,1:(ncol(valid_data)-1)] <- sweep(valid_data[,1:(ncol(valid_data)-1)], 2, sd_features, "/")
+```
+
+### Módulo 10.1: Treinamento do Modelo
+
+```{r}
+hypothesis <- getHypothesis(feature_names, 1)
+hypothesis
+```
+
+```{r}
+# Prepara a matriz de features e a variável de resposta
+x_train <- model.matrix(hypothesis, data=new_train_data)
+y_train <- new_train_data$class
+
+x_valid <- model.matrix(hypothesis, data=valid_data)
+y_valid <- valid_data$class
+```
+
+```{r}
+# Treina o modelo de regressão logística
+model_under <- glmnet(x_train, y_train, family="binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
+
+# Exibe os coeficientes aprendidos
+print(model_under$beta)
+print(model_under$a0)
+```
+
+```{r}
+train_pred <- predict(model_under, newx=x_train, type="response")
+valid_pred <- predict(model_under, newx=x_valid, type="response")
+
+# Threshold = 0.5 
+train_class_pred <- train_pred
+train_class_pred[train_pred >= 0.5] <- 1
+train_class_pred[train_pred < 0.5]  <- 0
+
+valid_class_pred <- valid_pred
+valid_class_pred[valid_pred >= 0.5] <- 1
+valid_class_pred[valid_pred < 0.5]  <- 0
+```
+
+### Módulo 10.2: Cálculo das Métricas de Desempenho
+
+```{r}
+train_losses <- getLoss(new_train_data$class, train_pred)
+valid_losses <- getLoss(valid_data$class, valid_pred)
+
+cat("Train\n")
+print(train_losses)
+
+cat("Valid\n")
+print(valid_losses)
+```
+
+```{r}
+cat("Valid\n")
+valid_cm <- confusionMatrix(data=as.factor(valid_class_pred), 
+                      reference=as.factor(valid_data$class), 
+                      positive='1')
+
+valid_cm_relative <- calculaMatrizConfusaoRelativa(valid_cm)
+valid_cm_relative
+```
+
+```{r}
+# Calculando as métricas para o conjunto de treino
+train_cm <- confusionMatrix(data=as.factor(train_class_pred), 
+                      reference=as.factor(new_train_data$class), 
+                      positive='1')
+
+train_metrics = calculateMetrics(train_cm$table)
+
+# Calculando as métricas para o conjunto de validação
+valid_metrics = calculateMetrics(valid_cm$table)
+
+# Organizando os resultados em um dataframe
+results_under <- data.frame(
+  Train  = train_metrics,
+  Valid  = valid_metrics
+)
+
+# Formatando os resultados para melhor leitura
+results_under$Train <- as.numeric(results_under$Train)
+results_under$Valid <- as.numeric(results_under$Valid)
+
+# Evitando notação científica na exibição dos resultados
+results_under$Train <- format(results_under$Train, scientific = FALSE)
+results_under$Valid <- format(results_under$Valid, scientific = FALSE)
+
+# Exibindo os resultados
+results_under
+```
+
+------------------------------------------------------------------------
+
+## Módulo 11: SMOTE
+
+### O que é o SMOTE?
+
+SMOTE (*Synthetic Minority Over-sampling Technique*) é um método de sobremuestreamento usado para lidar com desbalanceamento de classes em problemas de aprendizado de máquina. Ele gera novos exemplos sintéticos da classe minoritária em vez de apenas duplicar exemplos existentes. O algoritmo funciona da seguinte forma:
+
+1.  Para cada exemplo da classe minoritária, encontram-se seus **k vizinhos mais próximos**.
+2.  Escolhe-se aleatoriamente um desses vizinhos e calcula-se um novo ponto **ao longo do segmento** entre o exemplo original e o vizinho escolhido.
+3.  Esse processo se repete até atingir o número desejado de exemplos sintéticos.
+
+Dessa forma, o SMOTE ajuda a reduzir o risco de *overfitting* e melhora a capacidade do modelo de generalizar.
+
+### Parâmetros do SMOTE
+
+#### `perc.over`
+
+`perc.over / 100` é o número de novos exemplos sintéticos gerados para cada exemplo da classe minoritária.
+
+-   Se `perc.over = 100`, então gera-se `100/100 = 1` exemplo sintético para cada exemplo da classe minoritária.\
+-   Se há **465 exemplos** na classe minoritária, e para cada um deles um novo exemplo sintético é gerado, a classe minoritária passa a ter: $$465\space(exemplos_{originais}) + 465\space(exemplos_{sintéticos}) = 930\space exemplos$$
+
+#### `perc.under`
+
+`perc.under / 100` é o número de elementos amostrados da classe majoritária para cada exemplo sintético gerado.
+
+-   Como foram gerados **465 exemplos sintéticos**, são amostrados `200/100 = 2` exemplos da classe majoritária para cada um deles. Assim, a classe majoritária passa a ter:
+
+$$465\space(exemplos_{sintéticos})\cdot2 = 930\space exemplos$$
+
+#### `k`
+
+`k = 3` representa o número de vizinhos utilizados para cada exemplo da classe minoritária na geração de novos exemplos.
+
+## Considerações
+
+Após esse processo, ambas as classes ficam com a mesma quantidade de exemplos. No entanto, um bom balanceamento **não significa necessariamente** que todas as classes devem ter exatamente o mesmo número de exemplos. A proporção ideal depende do problema e pode exigir testes para encontrar o melhor ajuste.
+
+```{r}
+source("support_functions.R")
+
+train_data <- read.csv("cholesterol_training_set.csv", stringsAsFactors = TRUE)
+valid_data <- read.csv("cholesterol_validation_set.csv", stringsAsFactors = TRUE)
+
+#help(SMOTE)
+# Cuidade!!!! SMOTE funciona apenas se as labels são do tipo Factor
+train_data$class <- as.factor(train_data$class)
+
+new_train_data <- SMOTE(hypothesis, train_data, 
+                     perc.over = 100,  
+                     perc.under = 200, 
+                     k=3)
+
+dim(new_train_data)
+table(new_train_data$class)
+```
+
+```{r}
+# Z-norm normalization
+mean_features <- apply(new_train_data[,1:(ncol(new_train_data)-1)], 2, mean)
+sd_features   <- apply(new_train_data[,1:(ncol(new_train_data)-1)], 2, sd)
+
+new_train_data[,1:(ncol(new_train_data)-1)] <- sweep(new_train_data[,1:(ncol(new_train_data)-1)], 2, mean_features, "-")
+new_train_data[,1:(ncol(new_train_data)-1)] <- sweep(new_train_data[,1:(ncol(new_train_data)-1)], 2, sd_features, "/")
+
+valid_data[,1:(ncol(valid_data)-1)] <- sweep(valid_data[,1:(ncol(valid_data)-1)], 2, mean_features, "-")
+valid_data[,1:(ncol(valid_data)-1)] <- sweep(valid_data[,1:(ncol(valid_data)-1)], 2, sd_features, "/")
+```
+
+### Módulo 11.1: Treinamento do Modelo
+
+```{r}
+hypothesis <- getHypothesis(feature_names, 1)
+hypothesis
+```
+
+```{r}
+# Prepara a matriz de features e a variável de resposta
+x_train <- model.matrix(hypothesis, data=new_train_data)
+y_train <- new_train_data$class
+
+x_valid <- model.matrix(hypothesis, data=valid_data)
+y_valid <- valid_data$class
+```
+
+```{r}
+# Treina o modelo de regressão logística
+model_smote <- glmnet(x_train, y_train, family="binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
+
+# Exibe os coeficientes aprendidos
+print(model_smote$beta)
+print(model_smote$a0)
+```
+
+```{r}
+train_pred <- predict(model_smote, newx=x_train, type="response")
+valid_pred <- predict(model_smote, newx=x_valid, type="response")
+
+# Threshold = 0.5 
+train_class_pred <- train_pred
+train_class_pred[train_pred >= 0.5] <- 1
+train_class_pred[train_pred < 0.5]  <- 0
+
+valid_class_pred <- valid_pred
+valid_class_pred[valid_pred >= 0.5] <- 1
+valid_class_pred[valid_pred < 0.5]  <- 0
+```
+
+### Módulo 11.2: Cálculo das Métricas de Desempenho
+
+```{r}
+train_losses <- getLoss(new_train_data$class, train_pred)
+valid_losses <- getLoss(valid_data$class, valid_pred)
+
+cat("Train\n")
+print(train_losses)
+
+cat("Valid\n")
+print(valid_losses)
+```
+
+```{r}
+cat("Valid\n")
+valid_cm <- confusionMatrix(data=as.factor(valid_class_pred), 
+                      reference=as.factor(valid_data$class), 
+                      positive='1')
+
+valid_cm_relative <- calculaMatrizConfusaoRelativa(valid_cm)
+valid_cm_relative
+```
+
+```{r}
+# Calculando as métricas para o conjunto de treino
+train_cm <- confusionMatrix(data=as.factor(train_class_pred), 
+                      reference=as.factor(new_train_data$class), 
+                      positive='1')
+
+train_metrics = calculateMetrics(train_cm$table)
+
+# Calculando as métricas para o conjunto de validação
+valid_metrics = calculateMetrics(valid_cm$table)
+
+# Organizando os resultados em um dataframe
+results_smote <- data.frame(
+  Train  = train_metrics,
+  Valid  = valid_metrics
+)
+
+# Formatando os resultados para melhor leitura
+results_smote$Train <- as.numeric(results_smote$Train)
+results_smote$Valid <- as.numeric(results_smote$Valid)
+
+# Evitando notação científica na exibição dos resultados
+results_smote$Train <- format(results_smote$Train, scientific = FALSE)
+results_smote$Valid <- format(results_smote$Valid, scientific = FALSE)
+
+# Exibindo os resultados
+results_smote
+```
+
+------------------------------------------------------------------------
+
+## Módulo 12: Conjunto de Teste
+
+Após o treinamento e a validação de diferentes modelos, é necessário selecionar o melhor modelo com base no conjunto de validação para avaliá-lo no conjunto de teste.
+
+**Importante:** O conjunto de teste deve ser utilizado **apenas uma vez**. O desempenho do modelo no conjunto de teste reflete sua capacidade de generalização para o mundo real.
+
+### Módulo 12.1: Avaliando o Desempenho dos Modelos
+
+```{r}
+cat("Modelo Baseline\n\tF1 Score:", results_baseline["F1", "Valid"], "\n")
+```
+
+```{r}
+cat("Modelo Polinomial\n\tF1 Score:", max(F1PerDegree$ValidF1), "\n")
+cat("Modelo Combinatório\n\tF1 Score:", max(F1PerCombination$ValidF1), "\n")
+
+```
+
+```{r}
+cat("Modelo Lasso\n\tF1 Score:", max(F1PerRegularizationLasso$ValF1), "\n")
+cat("Modelo Ridge\n\tF1 Score:", max(F1PerRegularizationRigde$ValF1), "\n")
+```
+
+```{r}
+cat("Modelo Weights\n\tF1 Score:", results_weights['F1', 'Valid'], "\n")
+cat("Modelo Oversampling\n\tF1 Score:", results_over['F1', 'Valid'], "\n")
+cat("Modelo Undersampling\n\tF1 Score:", results_under['F1', 'Valid'], "\n")
+cat("Modelo SMOTE\n\tF1 Score:", results_smote['F1', 'Valid'], "\n")
+```
+
+```{r}
+train_data <- read.csv("cholesterol_training_set.csv")
+test_data  <- read.csv("cholesterol_test_set.csv")
+
+train_data$class <- as.factor(train_data$class)
+test_data$class  <- as.factor(test_data$class)
+```
+
+```{r}
+# Verifica a existência de valores ausentes
+if (any(is.na(test_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de teste\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de teste\n")
+}
+```
+
+```{r}
+# Aplicando a normalização Min-Max nos dados de treino e validação
+mean_features <- apply(train_data[, 1:(ncol(train_data)-1)], 2, mean)
+sd_features   <- apply(train_data[, 1:(ncol(train_data)-1)], 2, sd)
+
+test_data[, 1:(ncol(test_data)-1)] <- sweep(test_data[, 1:(ncol(test_data)-1)], 2, mean_features, "-")
+test_data[, 1:(ncol(test_data)-1)] <- sweep(test_data[, 1:(ncol(test_data)-1)], 2, sd_features, "/")
+```
+
+```{r}
+# Prepara a matriz de features e a variável de resposta
+x_test <- model.matrix(hypothesis, data=test_data)
+y_test <- test_data$class
+```
+
+```{r}
+test_pred <- predict(model_class_weigth, newx=x_test, type="response")
+
+# Threshold = 0.5 
+test_class_pred <- test_pred
+test_class_pred[test_pred >= 0.5] <- 1
+test_class_pred[test_pred < 0.5]  <- 0
+```
+
+```{r}
+test_losses <- getLoss(test_data$class, test_pred)
+print(test_losses)
+```
+
+```{r}
+cm <- confusionMatrix(data=as.factor(test_class_pred), 
+                      reference=as.factor(test_data$class), 
+                      positive='1')
+
+test_cm_relative <- calculaMatrizConfusaoRelativa(cm)
+test_cm_relative
+```
+
+```{r}
+test_metrics = calculateMetrics(cm$table)
+test_metrics
+```

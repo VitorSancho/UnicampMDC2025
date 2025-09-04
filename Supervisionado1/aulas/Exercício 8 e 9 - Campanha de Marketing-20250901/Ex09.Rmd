@@ -1,0 +1,730 @@
+---
+title: INF0615 -- Aprendizado Supervisionado I
+output: pdf_document
+subtitle: Exercício 09 - Ensembles
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(
+  echo    = TRUE,   # Exibir código nos chunks
+  error   = FALSE,  # Ocultar mensagens de erro
+  message = FALSE,  # Ocultar mensagens informativas
+  warning = FALSE,  # Ocultar avisos
+  tidy    = FALSE   # Não reformatar automaticamente o código
+)
+
+options(digits = 4) # Definição do número de casas decimais padrão
+```
+
+Neste exercício, exploraremos conceitos de emsembles. Vamos utilizar
+três métodos principais:
+
+1.  **Bagging:** Cria subconjuntos com reposição, treina modelos
+    independentes e faz previsões por média ou votação.
+
+2.  **Pasting:** Semelhante ao Bagging, mas amostrando sem reposição,
+    reduzindo a variância.
+
+3.  **Boosting:** Treina modelos sequenciais, corrigindo erros dos
+    anteriores, para reduzir o viés e melhorar a precisão.
+
+## Módulo 0: Instalando Dependências
+
+Antes de prosseguir, verifique se as bibliotecas necessárias estão
+instaladas. Caso não estejam, remova o `#` das linhas abaixo para
+instalá-las:
+
+```{r install-packages, eval = FALSE}
+# install.packages("rpart")
+# install.packages("rpart.plot")
+# install.packages("randomForest")
+# install.packages("ramify")
+```
+
+------------------------------------------------------------------------
+
+## Módulo 1: Configuração do Ambiente
+
+Carregue as bibliotecas necessárias e define uma semente aleatória para
+reprodutibilidade:
+
+```{r}
+library(ggplot2)      # Para visualização de dados
+library(reshape2)     # Para manipulação de dados
+library(caret)        # Para treinamento de modelos
+library(rpart)        # Árvore de decisão
+library(rpart.plot)   # Visualização de árvores de decisão
+library(randomForest) # Random Forest
+
+set.seed(40)  # Garante reprodutibilidade dos resultados
+```
+
+------------------------------------------------------------------------
+
+## Módulo 2: Carregamento do Dataset
+
+Carregue o conjunto de dados, no quals será utilizado para treinar e
+avaliar os modelos:
+
+```{r}
+data <- read.csv("bank-full.csv", header=TRUE, sep=";", stringsAsFactors=TRUE)
+
+# Este atributo deve obrigatoriamente ser retirado segundo
+# os autores da base para que haja um treinamento e validacao justos.
+data[,"duration"] <- NULL
+
+# Remove os elementos repetidos antes da divisao Treino/Validacao/Test
+data <- unique(data)
+```
+
+### Módulo 2.1: Divisão do conjunto de dados
+
+```{r}
+# Treino-Validacao 80% / Teste 20%
+randomTrainValIndexes <- sample(1:nrow(data), size=0.8*nrow(data))
+train_valid_data      <- data[randomTrainValIndexes, ]
+test_data             <- data[-randomTrainValIndexes, ] 
+
+randomTrainIndexes <- sample(1:nrow(train_valid_data), size=0.8*nrow(train_valid_data))
+train_data         <- train_valid_data[randomTrainIndexes, ]
+valid_data         <- train_valid_data[-randomTrainIndexes, ] 
+```
+
+### Módulo 2.2: Explorando os Dados
+
+A seguir, analisamos algumas informações básicas sobre os conjuntos de
+dados.
+
+#### Módulo 2.2.1: Dados de Treinamento
+
+```{r}
+# Visualiza as primeiras linhas do dataset
+head(train_data)
+
+# Exibe as dimensões do dataset
+cat("Amostras:", nrow(train_data), "Features:", ncol(train_data) - 1, "\n")
+
+# Resumo estatístico dos dados
+summary(train_data)
+
+# Verifica a existência de valores ausentes
+if (any(is.na(train_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de treinamento.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de treinamento.\n")
+}
+```
+
+#### Módulo 2.2.2: Dados de Validação
+
+```{r}
+# Visualiza as primeiras linhas do dataset
+head(valid_data)
+
+# Exibe as dimensões do dataset
+cat("Amostras:", nrow(valid_data), "Features:", ncol(valid_data) - 1, "\n")
+
+# Resumo estatístico dos dados
+summary(valid_data)
+
+# Verifica a existência de valores ausentes
+if (any(is.na(valid_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de validação.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de validação.\n")
+}
+```
+
+### Módulo 2.2.3: Frequência das classes
+
+Para avaliar o desequilíbrio de classes, primeiro identificamos e
+contamos a frequência de cada classe no conjunto de dados. Isso é
+crucial para entender se o modelo pode ser tendencioso devido à
+disparidade no volume de dados por classe. Vamos verificar a
+distribuição das classes sem realizar tratamento imediato.
+
+```{r}
+# Exibe a frequência das classes no conjunto de treinamento
+table(train_data$y)
+```
+
+```{r}
+train_data_no  <- train_data[train_data$y == "no",]
+train_data_yes <- train_data[train_data$y == "yes",] 
+
+lowest_samples <- min(nrow(train_data_no), nrow(train_data_yes))
+lowest_samples
+```
+
+## Módulo 3: Bagging
+
+Bagging consiste em criar múltiplos subconjuntos de dados a partir do
+conjunto original por meio de amostragem **COM** reposição. Cada
+subconjunto treina um modelo independente, e as previsões finais são
+feitas por média (para regressão) ou votação majoritária (para
+classificação).
+
+```{r}
+ntrees <- 50
+
+# Matriz de tamanho N x M inicializada com zeros.
+# N é o número de exemplos no conjunto de validação.
+# M é o número de árvores no Ensemble.
+valid_pred <- matrix(0, nrow = nrow(valid_data), ncol = ntrees)
+```
+
+### Módulo 3.1: Treinamento
+
+```{r}
+for(i in 1:ntrees){
+  
+  # Seleciona uma quantidade aleatória entre 85% e 100% 
+  # do número de exemplos da classe menos frequente.
+  nsamples <- round(runif(1, min = 0.85, max = 1.0) * lowest_samples)
+  
+  # Seleciona, COM reposição, os índices das classes negativa e positiva.
+  NoIdx  <- sample(1:nrow(train_data_no), nsamples, replace = TRUE)
+  YesIdx <- sample(1:nrow(train_data_yes), nsamples, replace = TRUE)
+  
+  # Monta o conjunto de treinamento.
+  subsettrain_data <- rbind(train_data_no[NoIdx, ], train_data_yes[YesIdx, ])
+  
+  # Treina o modelo de árvore de decisão.
+  tree_model <- rpart(
+    formula = y ~ ., 
+    data = subsettrain_data, 
+    method = "class",
+    control = rpart.control(minsplit = 2, cp = 0.0, xval = 0),
+    parms = list(split = "information")
+  )
+  
+  # Obtém as previsões do modelo.
+  pred_one_tree <- predict(tree_model, valid_data)
+  
+  # Converte as previsões em classes numéricas.
+  classes         <- apply(pred_one_tree, 1, which.max) - 1
+  valid_pred[, i] <- classes 
+}
+```
+
+### Módulo 3.2: Predição
+
+```{r}
+# Contagem de votos do Ensemble.
+votes <- rowSums(valid_pred) / ntrees
+
+# Converte para classes finais com threshold de 0.5.
+votes[votes >= 0.5] <- 'yes'
+votes[votes < 0.5]  <- 'no'
+```
+
+### Módulo 3.3: Cálculo das Métricas de Desempenho
+
+```{r}
+# Calcula a matriz de confusão relativa.
+calculaMatrizConfusaoRelativa <- function(cm) {
+  cm_absolute <- t(cm$table)
+  cm_relative <- cm_absolute
+  
+  cm_relative[1, 1] <- round(cm_absolute[1, 1] / sum(cm_absolute[1, ]), digits = 2)
+  cm_relative[1, 2] <- round(cm_absolute[1, 2] / sum(cm_absolute[1, ]), digits = 2)
+  cm_relative[2, 1] <- round(cm_absolute[2, 1] / sum(cm_absolute[2, ]), digits = 2)
+  cm_relative[2, 2] <- round(cm_absolute[2, 2] / sum(cm_absolute[2, ]), digits = 2)
+  
+  return(cm_relative)  
+}
+
+calculateMetrics <- function(cm) {
+  # Extrai TN, FP, FN, TP da matriz de confusão
+  # Assumindo a estrutura:
+  #           Reference
+  # Prediction   0     1
+  #         0   TN    FP
+  #         1   FN    TP
+  
+  TN <- cm[1, 1]
+  FP <- cm[1, 2]
+  FN <- cm[2, 1]  
+  TP <- cm[2, 2]  
+  
+  precision <- if (TP + FP == 0) 0 else TP / (TP + FP)
+  recall    <- if (TP + FN == 0) 0 else TP / (TP + FN)
+  f1        <- if (precision + recall == 0) 0 else (2 * precision * recall) / (precision + recall)
+  bal_acc   <- ( (TN / (TN + FP)) + (TP / (TP + FN)) ) / 2
+  
+  return(c(Precision = precision, Recall = recall, F1 = f1, BalAcc = bal_acc))
+}
+```
+
+```{r}
+cat("Validação\n")
+cm <- confusionMatrix(
+  data = as.factor(votes), 
+  reference = as.factor(valid_data$y), 
+  positive = 'yes'
+)
+
+valid_cm_relative <- calculaMatrizConfusaoRelativa(cm)
+valid_cm_relative
+```
+
+```{r}
+# Calculando as métricas para o conjunto de validação
+valid_metrics_baggings = calculateMetrics(cm$table)
+valid_metrics_baggings
+```
+
+### Módulo 3.4: Variando Classificadores
+
+```{r}
+accValBagging <- numeric(ntrees - 1)
+
+for(i in 2:ntrees) {
+  votes <- rowSums(valid_pred[, 1:i]) / i
+  
+  votes[votes >= 0.5] <- 'yes'
+  votes[votes < 0.5]  <- 'no'
+  
+  cm <- confusionMatrix(
+    data = as.factor(votes), 
+    reference = as.factor(valid_data$y), 
+    positive = 'yes'
+  )
+  
+  valid_cm_relative <- calculaMatrizConfusaoRelativa(cm)
+  valid_metrics     <- calculateMetrics(cm$table)
+  
+  accValBagging[i - 1] <- valid_metrics["BalAcc"]
+}
+```
+
+```{r}
+# Plot da acurácia balanceada em função do número de classificadores.
+plot(2:ntrees, accValBagging,
+     main = "Variação de Classificadores (Bagging)",
+     xlab = "Número de Classificadores", 
+     ylab = "Acurácia Balanceada", 
+     col = "blue", type = "o")
+```
+
+------------------------------------------------------------------------
+
+## Módulo 4: Pasting
+
+Pasting consiste em criar múltiplos subconjuntos de dados a partir do
+conjunto original por meio de amostragem **SEM** reposição. Cada
+subconjunto treina um modelo independente, e as previsões finais são
+feitas por média (para regressão) ou votação majoritária (para
+classificação).
+
+```{r}
+ntrees <- 50
+
+# Matriz de tamanho N x M inicializada com zeros.
+# N é o número de exemplos no conjunto de validação.
+# M é o número de árvores no Ensemble.
+valid_pred <- matrix(0, nrow = nrow(valid_data), ncol = ntrees)
+```
+
+### Módulo 4.1: Treinamento
+
+```{r}
+for(i in 1:ntrees){
+  
+  # Seleciona uma quantidade aleatória entre 85% e 100% 
+  # do número de exemplos da classe menos frequente.
+  nsamples <- round(runif(1, min = 0.85, max = 1.0) * lowest_samples)
+  
+  # Seleciona, SEM reposição, os índices das classes negativa e positiva.
+  NoIdx  <- sample(1:nrow(train_data_no), nsamples, replace = FALSE)
+  YesIdx <- sample(1:nrow(train_data_yes), nsamples, replace = FALSE)
+  
+  # Monta o conjunto de treinamento.
+  subsettrain_data <- rbind(train_data_no[NoIdx, ], train_data_yes[YesIdx, ])
+  
+  # Treina o modelo de árvore de decisão.
+  tree_model <- rpart(
+    formula = y ~ ., 
+    data = subsettrain_data, 
+    method = "class",
+    control = rpart.control(minsplit = 2, cp = 0.0, xval = 0),
+    parms = list(split = "information")
+  )
+  
+  # Obtém as previsões do modelo.
+  pred_one_tree <- predict(tree_model, valid_data)
+  
+  # Converte as previsões em classes numéricas.
+  classes         <- apply(pred_one_tree, 1, which.max) - 1
+  valid_pred[, i] <- classes 
+}
+```
+
+### Módulo 4.2: Predição
+
+```{r}
+# Contagem de votos do Ensemble.
+votes <- rowSums(valid_pred) / ntrees
+
+# Converte para classes finais com threshold de 0.5.
+votes[votes >= 0.5] <- 'yes'
+votes[votes < 0.5]  <- 'no'
+```
+
+### Módulo 4.3: Cálculo das Métricas de Desempenho
+
+```{r}
+cat("Validação\n")
+cm <- confusionMatrix(
+  data = as.factor(votes), 
+  reference = as.factor(valid_data$y), 
+  positive = 'yes'
+)
+
+valid_cm_relative <- calculaMatrizConfusaoRelativa(cm)
+valid_cm_relative
+```
+
+```{r}
+# Calculando as métricas para o conjunto de validação
+valid_metrics_pasting = calculateMetrics(cm$table)
+valid_metrics_pasting
+```
+
+### Módulo 4.4: Variando Classificadores
+
+```{r}
+accValPasting <- numeric(ntrees - 1)
+
+for(i in 2:ntrees) {
+  votes <- rowSums(valid_pred[, 1:i]) / i
+  
+  votes[votes >= 0.5] <- 'yes'
+  votes[votes < 0.5]  <- 'no'
+  
+  cm <- confusionMatrix(
+    data = as.factor(votes), 
+    reference = as.factor(valid_data$y), 
+    positive = 'yes'
+  )
+  
+  valid_cm_relative <- calculaMatrizConfusaoRelativa(cm)
+  valid_metrics     <- calculateMetrics(cm$table)
+  
+  accValPasting[i - 1] <- valid_metrics["BalAcc"]
+}
+```
+
+```{r}
+# Plot da acurácia balanceada em função do número de classificadores.
+plot(2:ntrees, accValPasting,
+     main = "Variação de Classificadores (Pasting)",
+     xlab = "Número de Classificadores", 
+     ylab = "Acurácia Balanceada", 
+     col = "blue", type = "o")
+```
+
+------------------------------------------------------------------------
+
+## Módulo 5: Bosting
+
+Boosting consiste em treinar modelos sequenciais, onde cada modelo é
+ajustado para corrigir os erros dos modelos anteriores. As previsões
+finais são feitas combinando os modelos com pesos, onde modelos mais
+fortes recebem maior peso.
+
+```{r}
+ntrees <- 50
+
+# O algoritmo Boosting necessita que os dados sejam balanceados!
+NoIdx  <- sample(1:nrow(train_data_no), 2*lowest_samples, replace = FALSE)
+YesIdx <- sample(1:nrow(train_data_yes), lowest_samples, replace = FALSE)
+
+balanced_train_data <- rbind(train_data_no[NoIdx,], train_data_yes[YesIdx,])
+
+table(balanced_train_data$y)
+```
+
+```{r}
+valPredictedClasses <- matrix(0, nrow = nrow(valid_data), ncol = ntrees)
+
+# Replica o peso 1 igualmente para todos os exemplos de treinamento.
+# Em cada iteracao do Boosting, esse valores serao atualizados de acordo
+# com o acerto ou com o erro. 
+weights <- rep(1/nrow(balanced_train_data), nrow(balanced_train_data))
+```
+
+```{r}
+for(i in 1:ntrees){
+  # Treina o i-th modelo do ensemble
+  tree_model <- rpart(formula = y ~ ., 
+                     weights = weights, 
+                     data = balanced_train_data, 
+                     method = "class",
+                     control = rpart.control(minsplit=2, cp=0.0, xval = 0),
+                     parms = list(split="information"))
+  
+  # Obtém as previsões do modelo.
+  pred_one_tree <- predict(tree_model, valid_data)
+  
+  # Converte as previsões em classes numéricas.
+  classes         <- apply(pred_one_tree, 1, which.max) - 1
+  valid_pred[, i] <- classes 
+  
+  trainPreds   <- predict(tree_model, )
+  trainClasses <- apply(trainPreds, 1, which.max) - 1
+
+  # Toma-se os indices dos casos de acerto e de erro no conjunto
+  # de treinamento. 
+  missedCases  <- (trainClasses != balanced_train_data$y)
+  correctCases <- (trainClasses == balanced_train_data$y)
+  
+  # Atualiza-se os pesos dos exemplos. Casos corretos tem seus pesos
+  # decrementados em 10%, casos de erro tem seus pesos aumentados em
+  # 5%. 
+  weights[correctCases] <- 0.9*weights[correctCases]
+  weights[missedCases]  <- 1.1*weights[missedCases]
+}
+```
+
+### Módulo 5.1: Predição
+
+```{r}
+# Contagem de votos do Ensemble.
+votes <- rowSums(valid_pred) / ntrees
+
+# Converte para classes finais com threshold de 0.5.
+votes[votes >= 0.5] <- 'yes'
+votes[votes < 0.5]  <- 'no'
+```
+
+### Módulo 5.2: Cálculo das Métricas de Desempenho
+
+```{r}
+cat("Validação\n")
+cm <- confusionMatrix(
+  data = as.factor(votes), 
+  reference = as.factor(valid_data$y), 
+  positive = 'yes'
+)
+
+valid_cm_relative <- calculaMatrizConfusaoRelativa(cm)
+valid_cm_relative
+```
+
+```{r}
+# Calculando as métricas para o conjunto de validação
+valid_metrics_boosting = calculateMetrics(cm$table)
+valid_metrics_boosting
+```
+
+### Módulo 5.3: Variando Classificadores
+
+```{r}
+accValBoosting <- numeric(ntrees - 1)
+
+for(i in 2:ntrees) {
+  votes <- rowSums(valid_pred[, 1:i]) / i
+  
+  votes[votes >= 0.5] <- 'yes'
+  votes[votes < 0.5]  <- 'no'
+  
+  cm <- confusionMatrix(
+    data = as.factor(votes), 
+    reference = as.factor(valid_data$y), 
+    positive = 'yes'
+  )
+  
+  valid_cm_relative <- calculaMatrizConfusaoRelativa(cm)
+  valid_metrics     <- calculateMetrics(cm$table)
+  
+  accValBoosting[i - 1] <- valid_metrics["BalAcc"]
+}
+```
+
+```{r}
+# Plot da acurácia balanceada em função do número de classificadores.
+plot(2:ntrees, accValBoosting,
+     main = "Variação de Classificadores (Boosting)",
+     xlab = "Número de Classificadores", 
+     ylab = "Acurácia Balanceada", 
+     col = "blue", type = "o")
+```
+
+### Módulo 5.4: Comparação
+
+```{r}
+plot(2:ntrees, accValBagging, 
+     xlab = "Número de classificadores", 
+     ylab = "Acurácia Balanceada (Validação)",
+     col="blue", 
+     type="o", 
+     ylim=c(0.61, 0.75),
+     main="Desempenho dos Classificadores")
+
+points(accValPasting, col="red", pch="+")
+lines(accValPasting, col="red", lty=2)
+
+points(accValBoosting, col="green", pch="*")
+lines(accValBoosting, col="green", lty=2)
+
+legend("bottomright", legend=c("Bagging", "Pasting", "Boosting"), 
+       col=c("blue","red", "green"), pch=c("o", "+", "*"), 
+       cex=0.8, pt.cex = 1.5)
+
+```
+
+## Módulo 6: Random Forest com Balanceamento por árvore
+
+```{r}
+getRandomForestResults <- function(ntree, m, trainSet, valSet){
+  
+  # Separa os exemplos das classes positivas e negativas
+  dataNeg <- trainSet[trainSet$y == "no",]  # Classe negativa
+  dataPos <- trainSet[trainSet$y == "yes",] # Classe positiva
+  
+  # Obtém o menor número de exemplos entre as classes positiva e negativa
+  lowest_samples <- min(dim(dataNeg)[1], dim(dataPos)[1])
+  
+  # Inicializa uma matriz para armazenar as predições de cada árvore (colunas) 
+  # no conjunto de validação (linhas)
+  valPredictedClasses <- matrix(0, nrow = nrow(valSet), ncol = ntree)
+  
+  # Loop para treinar as árvores da Random Forest
+  for(i in 1:ntree){
+    
+    # Determina o número de amostras aleatórias para as classes (entre 85% e 100% do tamanho da classe)
+    nsamples <- round(runif(1, min=0.85, max=1.0) * lowest_samples)
+    
+    # Seleção com reposição dos índices para a classe negativa
+    NoIdx <- sample(1:nrow(dataNeg), nsamples, replace = TRUE)
+    
+    # Seleção com reposição dos índices para a classe positiva
+    YesIdx <- sample(1:nrow(dataPos), nsamples, replace = TRUE)
+    
+    # Seleção aleatória de um subconjunto das features (desconsiderando o target)
+    featuresIdx <- sample(1:(ncol(trainSet)-1), m, replace = FALSE)
+    
+    # Adiciona o índice do target de volta ao conjunto de features
+    featuresIdx <- c(featuresIdx, ncol(trainSet)) 
+    
+    # Cria o conjunto de treino com base nas amostras e features selecionadas
+    subsettrain_data <- rbind(dataNeg[NoIdx, featuresIdx], dataPos[YesIdx, featuresIdx])
+    
+    # Treina uma árvore de decisão (usando rpart)
+    treeModel <- rpart(formula = y ~ ., 
+                       data = subsettrain_data, 
+                       method = "class",
+                       control = rpart.control(minsplit = 2, cp = 0.0, xval = 0),
+                       parms = list(split = "information"))
+    
+    # Faz as predições para o conjunto de validação
+    valPreds <- predict(treeModel, valSet)
+    
+    # Converte as predições para valores binários (0 para "no" e 1 para "yes")
+    valClasses <- apply(valPreds, 1, which.max) - 1
+    valPredictedClasses[, i] <- valClasses
+  }
+  
+  # Calcula os votos para cada exemplo de validação
+  votes <- rowSums(valPredictedClasses) / ntree
+  
+  # Define a classe final baseada no número de votos (se a proporção for >= 0.5, escolhe "yes")
+  votes[votes >= 0.5] <- 'yes'
+  votes[votes < 0.5] <- 'no'
+  
+  # Calcula a matriz de confusão para verificar a precisão das predições
+  cm <- confusionMatrix(data = as.factor(votes), 
+                        reference = as.factor(valSet$y), 
+                        positive = 'yes')
+  
+  # Inicia um vetor para armazenar as acurácias de validação com diferentes números de classificadores
+  accValRandomForest <- c(ntree - 1)
+  
+  # Loop para calcular a acurácia de validação à medida que variamos o número de classificadores
+  for(i in 2:ntree){
+    # Calcula os votos para as predições das primeiras i árvores
+    votes <- rowSums(valPredictedClasses[, 1:i]) / i
+    
+    # Define a classe final baseada nos votos das i árvores
+    votes[votes >= 0.5] <- 'yes'
+    votes[votes < 0.5] <- 'no'
+    
+    # Calcula a matriz de confusão e a acurácia balanceada
+    cm <- confusionMatrix(data = as.factor(votes), 
+                          reference = as.factor(valSet$y), 
+                          positive = 'yes')
+    
+    # Armazena a acurácia balanceada para o número de árvores i
+    accValRandomForest[i - 1] <- cm$byClass["Balanced Accuracy"]
+  }
+  
+  # Plota a acurácia de validação conforme o número de classificadores
+  plot(2:ntree, accValRandomForest, 
+       xlab = "Número de classificadores", 
+       ylab = "Acurácia Balanceada (Validação)", 
+       col = "blue", type = "o", 
+       main = paste("Variação de Classificadores (Random Forest com", length(featuresIdx), "Features)"))
+  
+  # Retorna o vetor de acurácias de validação
+  return(accValRandomForest)
+}
+```
+
+```{r}
+number_of_trees <- 50
+
+# Raiz quadrada do numero de features
+m <- sqrt((ncol(train_data) - 1))
+accValRandomForest01 <- getRandomForestResults(number_of_trees, m, train_data, valid_data)
+
+# 50% do numero de features
+m <- (ncol(train_data) - 1)*0.5
+accValRandomForest02 <- getRandomForestResults(number_of_trees, m, train_data, valid_data)
+
+# 75% do numero de features
+m <- (ncol(train_data) - 1)*0.75
+accValRandomForest03 <- getRandomForestResults(number_of_trees, m, train_data, valid_data)
+```
+
+```{r}
+# Ajuste das dimensões do gráfico
+par(mar = c(2, 6, 4, 2))
+
+# Plota as acurácias de validação de todas as técnicas com o gráfico maior
+plot(2:ntrees, accValBagging, 
+     xlab = "Número de Classificadores", 
+     ylab = "Acurácia Balanceada (Validação)", 
+     col = "blue", type = "l", lty = 1, 
+     lwd = 2, # Aumenta a espessura da linha
+     ylim = c(min(accValBagging, accValPasting, accValBoosting, 
+                  accValRandomForest01, accValRandomForest02, accValRandomForest03), 
+              max(accValBagging, accValPasting, accValBoosting, 
+                  accValRandomForest01, accValRandomForest02, accValRandomForest03)),
+     main = "Variação da Acurácia Balanceada com o Número de Classificadores", 
+     cex.main = 1, # Tamanho do título
+     cex.lab = 1, # Tamanho dos rótulos dos eixos
+     cex.axis = 1) # Tamanho dos números dos eixos
+
+# Adiciona as linhas de outras técnicas
+lines(2:ntrees, accValPasting, col = "red", lty = 1, lwd = 2)
+lines(2:ntrees, accValBoosting, col = "green", lty = 1, lwd = 2)
+lines(2:ntrees, accValRandomForest01, col = "magenta", lty = 1, lwd = 2)
+lines(2:ntrees, accValRandomForest02, col = "yellow2", lty = 1, lwd = 2)
+lines(2:ntrees, accValRandomForest03, col = "aquamarine4", lty = 1, lwd = 2)
+
+# Melhora a legenda e coloca na parte inferior direita
+legend("bottomright", legend = c("Bagging", "Pasting", "Boosting", 
+                                 "Random Forest sqrt(features)", 
+                                 "Random Forest 50%", 
+                                 "Random Forest 75%"), 
+       col = c("blue", "red", "green", "magenta", "yellow2", "aquamarine4"), 
+       lty = 1, 
+       lwd = 1, # Espessura das linhas na legenda
+       cex = 1) # Tamanho dos pontos na legenda
+
+```

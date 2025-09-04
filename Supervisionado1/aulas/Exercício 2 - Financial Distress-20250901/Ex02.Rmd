@@ -1,0 +1,609 @@
+---
+title: INF0615 -- Aprendizado Supervisionado I
+output: pdf_document
+subtitle: Exercício 02 - Financial Distress
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(
+  echo = TRUE,      # Exibir código nos chunks
+  error = FALSE,    # Ocultar mensagens de erro
+  message = FALSE,  # Ocultar mensagens informativas
+  warning = FALSE,  # Ocultar avisos
+  tidy = FALSE      # Não reformatar automaticamente o código
+)
+
+options(digits = 3) # Definição do número de casas decimais padrão
+```
+
+Neste exercício, iremos explorar conceitos fundamentais de aprendizado supervisionado, aplicando-os a um problema de **estabilidade financeira da empresa**. Trabalharemos com as seguintes técnicas:
+
+-   **Regressão Linear**: Modelagem da relação entre variáveis preditoras e o preço do imóvel.
+-   **Combinação de Features**: Uso de transformações e combinações de atributos para melhorar a performance do modelo.
+-   **Regressão Polinomial**: Introdução de termos não lineares para capturar padrões mais complexos nos dados.
+
+------------------------------------------------------------------------
+
+## Módulo 0: Instalando Dependências
+
+Antes de prosseguir, verifique se as bibliotecas necessárias estão instaladas. Caso não estejam, remova o `#` das linhas abaixo para instalá-las:
+
+```{r install-packages, eval = FALSE}
+# install.packages("ggplot2")  # Para visualização de dados
+# install.packages("reshape2") # Para manipulação de dados
+```
+
+------------------------------------------------------------------------
+
+## Módulo 1: Configuração do Ambiente
+
+Carregue as bibliotecas necessárias e define uma semente aleatória para reprodutibilidade:
+
+```{r}
+library(ggplot2)  # Visualização de dados
+library(reshape2) # Manipulação de dados
+
+set.seed(42)      # Garantir reprodutibilidade dos experimentos
+```
+
+------------------------------------------------------------------------
+
+## Módulo 2: Carregamento do Dataset
+
+Carregue o conjunto de dados:
+
+```{r}
+data <- read.csv("Financial Distress.csv")
+
+data$x80     <- NULL
+data$Company <- NULL
+data$Time    <- NULL
+
+colnames(data)
+```
+
+### Módulo 2.1: Explorando os Dados
+
+Antes de analisar os dados, é necessário dividir os dados em treinamento, validação e teste.
+
+#### Módulo 2.1.1: Divisão dos dados
+
+Uma forma é analisar a distribuição da variável *target* e dividir com base nesse conhecimento. A variável `Financial.Distress` é nosso alvo de estudo.
+
+```{r}
+# Histograma da variável target
+ggplot(data, aes(x = Financial.Distress)) + 
+  geom_histogram(bins = 30, fill = "gray", alpha = 0.7) + 
+  ggtitle("Distribuição da Financial Distress") +
+  theme_minimal()
+```
+
+```{r}
+# Com base no conhecimento prévio, removemos valores extremos para melhorar a estabilidade do modelo.
+data <- data[(data$Financial.Distress >= 0.01 & data$Financial.Distress <= 3.0),]
+```
+
+```{r}
+#Para garantir uma melhor generalização do modelo, dividimos os dados em treinamento, validação e teste. Utilizamos uma estratégia que preserva a distribuição da variável `Financial.Distress` entre os conjuntos.
+
+train_data <- data.frame()
+valid_data <- data.frame()
+test_data  <- data.frame()
+
+breaks <- seq(from=floor(min(data$Financial.Distress)),
+              to=ceiling(max(data$Financial.Distress)), length.out=30)
+
+for(i in 1:(length(breaks)-1)){
+    sp <- breaks[i]
+    ep <- breaks[i+1]
+    
+    selected_portion <- data[(sp <= data$Financial.Distress & data$Financial.Distress < ep),]
+ 
+    randomTrainValIndexes <- sample(1:nrow(selected_portion),
+                                    size=round(0.8*nrow(selected_portion)))
+    
+    selectedTrainValSet <- selected_portion[randomTrainValIndexes,]
+    selectedTestSet     <- selected_portion[-randomTrainValIndexes,]
+    
+    randomTrainIndexes <- sample(1:nrow(selectedTrainValSet),
+                                 size=round(0.8*nrow(selectedTrainValSet)))
+    
+    selectedTrainSet <- selectedTrainValSet[randomTrainIndexes,]
+    selectedValSet   <- selectedTrainValSet[-randomTrainIndexes,]
+    
+    train_data <- rbind(train_data, selectedTrainSet)
+    valid_data <- rbind(valid_data, selectedValSet)
+    test_data  <- rbind(test_data, selectedTestSet)
+}
+```
+
+```{r}
+# Distribuição do conjunto de treinamento e validação
+ggplot() + 
+  geom_histogram(data = train_data, aes(x = Financial.Distress, fill = "Treino"), bins = 30, alpha = 0.5) +
+  geom_histogram(data = valid_data, aes(x = Financial.Distress, fill = "Validação"), bins = 30, alpha = 0.5) +
+  scale_fill_manual(values = c("Treino" = "green", "Validação" = "blue")) +
+  ggtitle("Distribuição dos Conjuntos de Treinamento e Validação") +
+  theme_minimal()
+```
+
+#### Módulo 2.1.2: Dados de Treinamento
+
+A seguir, analisamos algumas informações básicas sobre os conjuntos de dados.
+
+##### Módulo 2.1.2.1: Tranformação de Variavéis
+
+Podemos avaliar a distribuição de algumas *features* a fim de transformá-las para que fiquem mais próximas de uma distribuição **gaussiana**, tornando-as mais adequadas para o treinamento do modelo.
+
+```{r}
+# Feature `x1` - Transformação Logarítmica
+ggplot(train_data, aes(x = x1)) + geom_histogram(bins = 30, fill = "blue", alpha = 0.5) + ggtitle("Distribuição Original de x1")
+
+train_data$x1_log <- log(train_data$x1)
+
+ggplot(train_data, aes(x = x1_log)) + geom_histogram(bins = 30, fill = "red", alpha = 0.5) + ggtitle("Distribuição Transformada de log_x1")
+
+train_data$x1_log <- NULL
+```
+
+```{r}
+# Feature `x4` - Transformação de Potência (0.3)
+ggplot(train_data, aes(x = x4)) + geom_histogram(bins = 30, fill = "blue", alpha = 0.5) + ggtitle("Distribuição Original de x4")
+
+train_data$x4_pow <- train_data$x4^0.3
+
+ggplot(train_data, aes(x = x4_pow)) + geom_histogram(bins = 30, fill = "red", alpha = 0.5) + ggtitle("Distribuição Transformada de x4 (Potência 0.3)")
+
+train_data$x4_pow <- NULL
+```
+
+```{r}
+# Feature `x25` - Transformação de Potência
+ggplot(train_data, aes(x = x25)) + geom_histogram(bins = 30, fill = "blue", alpha = 0.5) + ggtitle("Distribuição Original de x25")
+
+train_data$x25_pow <- train_data$x25^(2 * 0.07)
+
+ggplot(train_data, aes(x = x25_pow)) + geom_histogram(bins = 30, fill = "red", alpha = 0.5) + ggtitle("Distribuição Transformada de x25")
+
+train_data$x25_pow <- NULL
+```
+
+```{r}
+# Feature `x29` - Remoção de Outliers e Transformação Logarítmica
+ggplot(train_data, aes(x = x29)) + geom_histogram(bins = 30, fill = "blue", alpha = 0.5) + ggtitle("Distribuição Original de x29")
+
+train_data$pow_x29 <- log(train_data$x29)
+train_data_pow     <- train_data[train_data$pow_x29 > -Inf,]
+
+ggplot(train_data_pow, aes(x = pow_x29)) + geom_histogram(bins = 30, fill = "red", alpha = 0.5) + ggtitle("Distribuição Transformada de x29")
+
+train_data$pow_x29 <- NULL
+```
+
+```{r}
+# Função para aplicar transformações a um conjunto de dados
+data_transform <- function(data) {
+  # Transformação Logarítmica
+  data$x1  <- log(data$x1)
+  data$x7  <- log(data$x7)
+  data$x14 <- log(data$x14)
+  data$x18 <- log(data$x18)
+  data$x20 <- log(data$x20)
+  data$x29 <- log(data$x29)
+  data$x33 <- log2(-log2(data$x33))
+  data$x37 <- log(data$x37)
+  data$x49 <- log(data$x49)
+  
+  # Transformação de Potência
+  data$x4  <- data$x4**0.3
+  data$x21 <- data$x21**0.3
+  data$x25 <- (data$x25**2)**0.07
+  data$x28 <- (data$x28**2)**0.1
+  data$x36 <- (data$x36**2)**0.1
+  data$x41 <- data$x41**0.25
+  data$x45 <- (data$x45**2)**0.1
+  data$x48 <- data$x48**0.01
+  data$x56 <- data$x56**0.5
+  
+  # Remoção de Outliers
+  data     <- data[data$x29 > -Inf,]
+  data     <- data[data$x33 > -Inf,]
+  data     <- data[data$x37 > -Inf,]
+  data     <- data[(data$x55 >= -0.9 & data$x55 <= 0.9),]
+  
+  # Criando variáveis categóricas para `x72`
+  data$x72_c1 <- as.numeric(data$x72 <= 1)
+  data$x72_c2 <- as.numeric(data$x72 > 1 & data$x72 < 3)
+  data$x72_c3 <- as.numeric(data$x72 >= 3)
+  
+  # Removendo colunas desnecessárias
+  data <- subset(data, select = -c(
+    x8, x12, x15, x16, x17, x19, x22, x27, x31, x32, x34, x35, x38, x39, 
+    x42, x43, x44, x46, x47, x52, x54, x57, x58, x59, x60, x61, x62, x63, 
+    x64, x65, x66, x67, x68, x69, x70, x71, x72, x73, x74, x75, x79, x81
+  ))
+  return(data)
+}
+
+train_data <- data_transform(train_data)
+```
+
+```{r}
+# Exibir as primeiras linhas do dataset
+display_head <- head(train_data)
+print(display_head)
+
+# Dimensões do dataset
+cat("Amostras:", nrow(train_data), "\nFeatures:", ncol(train_data), "\n")
+
+# Resumo estatístico dos dados
+summary(train_data)
+
+# Verificar se há valores ausentes
+if (any(is.na(train_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de treinamento.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de treinamento.\n")
+}
+```
+
+#### Módulo 2.1.3: Dados de Validação
+
+```{r}
+valid_data <- data_transform(valid_data)
+
+# Exibir as primeiras linhas do dataset
+display_head <- head(valid_data)
+print(display_head)
+
+# Dimensões do dataset
+cat("Amostras:", nrow(valid_data), "\nFeatures:", ncol(valid_data), "\n")
+
+# Resumo estatístico dos dados
+summary(valid_data)
+
+# Verificar se há valores ausentes
+if (any(is.na(valid_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de validação.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de validação.\n")
+}
+```
+
+#### Módulo 2.1.4: Dados de Teste
+
+```{r}
+test_data  <- data_transform(test_data)
+
+# Verificar se há valores ausentes
+if (any(is.na(test_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de teste\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de teste\n")
+}
+```
+
+### Módulo 2.2: Normalização dos Dados
+
+Normalização é um processo que ajusta os valores das features para uma escala comum, melhorando a performance dos modelos. A formula do Z-norm é a seguinte:
+
+$$x_{Znorm} = \frac{x - mean(x)}{sd(x)}$$
+
+```{r}
+# Calculando a média e o desvio padrão para normalização
+mean_features <- apply(train_data[,2:(ncol(train_data)-3)], 2, mean)
+sd_features   <- apply(train_data[,2:(ncol(train_data)-3)], 2, sd)
+
+print("Médias das features")
+print(mean_features)
+print("Desvios padrão das features")
+print(sd_features)
+```
+
+```{r}
+# Aplicando a normalização Min-Max nos dados de treino e validação
+train_data[,2:(ncol(train_data)-3)] <- sweep(train_data[,2:(ncol(train_data)-3)], 2, mean_features, "-")
+train_data[,2:(ncol(train_data)-3)] <- sweep(train_data[,2:(ncol(train_data)-3)], 2, sd_features, "/")
+
+valid_data[,2:(ncol(valid_data)-3)] <- sweep(valid_data[,2:(ncol(valid_data)-3)], 2, mean_features, "-")
+valid_data[,2:(ncol(valid_data)-3)] <- sweep(valid_data[,2:(ncol(valid_data)-3)], 2, sd_features, "/")
+```
+
+```{r}
+summary(train_data)
+```
+
+```{r}
+summary(valid_data)
+```
+
+------------------------------------------------------------------------
+
+## Módulo 3: Regressão Linear
+
+Para avaliar o desempenho de novas técnicas de modelagem, é importante ter um modelo baseline (de referência) para comparar se as novas abordagens realmente melhoram os resultados. Neste Módulo, treinaremos uma regressão linear simples, utilizando apenas as variáveis contínuas presentes nos dados.
+
+### Módulo 3.1: Função para criar fórmulas automaticamente
+
+```{r}
+getHypothesis <- function(real_feature_names, categorical_feature_names=F, degree=3){
+  hypothesis_string <- "hypothesis <- formula(Financial.Distress ~ "
+  for(d in 1:degree){
+    for(i in 1:length(real_feature_names)){
+      hypothesis_string <- paste(hypothesis_string, "I(", real_feature_names[i], "^", d, ") + ", sep = "")
+    }
+  }
+  
+  if(typeof(categorical_feature_names) != "logical"){
+    for(i in 1:length(categorical_feature_names)){
+      hypothesis_string <- paste(hypothesis_string, categorical_feature_names[i], " + ", sep = "")
+    } 
+  }
+  
+  hypothesis_string <- substr(hypothesis_string, 1, nchar(hypothesis_string)-3)
+  hypothesis_string <- paste(hypothesis_string, ")")
+  hypothesis        <- eval(parse(text=hypothesis_string))
+  
+  return(hypothesis)
+}
+```
+
+```{r}
+real_columns        <- colnames(train_data)[2:(ncol(train_data)-3)] 
+categorical_columns <- colnames(train_data)[(ncol(train_data)-2):ncol(train_data)]
+```
+
+### Módulo 3.2: Treinamento do Modelo
+
+```{r}
+hypothesis <- getHypothesis(real_columns, categorical_columns, 1)
+baseline   <- lm(formula=hypothesis, data=train_data)
+
+# Exibindo o resumo do modelo ajustado
+summary(baseline)
+```
+
+### Módulo 3.3: Predição
+
+Uma vez que o modelo está treinado, podemos realizar previsões tanto para os dados de treino quanto para os dados de validação.
+
+```{r}
+# Realizando previsões nos dados de treino e validação
+train_pred <- predict(baseline, train_data)
+valid_pred <- predict(baseline, valid_data)
+```
+
+### Módulo 3.4: Cálculo das Métricas de Desempenho
+
+A seguir, implementamos três métricas importantes para avaliar o desempenho do modelo:
+
+1.  Erro Absoluto Médio (MAE): $$MAE = \frac{1}{m}\sum^m_{i=1}|h_{\theta}(x^i)-y^i|$$
+
+2.  Erro Quadrático Médio (MSE): $$MSE = \frac{1}{m}\sum^m_{i=1}(h_{\theta}(x^i)-y^i)^2$$
+
+3.  Coeficiente de Determinação (R²): $$R^2 = 1 - \frac{RSS}{TSS} = 1 - \frac{\sum^m_{i=1}(h_{\theta}(x^i)-y^i)^2}{\sum^m_{i=1}(y^i - \bar{y})^2}$$
+
+```{r}
+# Função para calcular o MAE
+MAE <- function(preds, labels) {
+  mae_values <- sum(abs(preds - labels)) / length(preds)
+  return(mae_values)
+}
+
+# Função para calcular o MSE
+MSE <- function(preds, labels) {
+  mse_values <- sum((preds - labels)^2) / length(preds)
+  return(mse_values)
+}
+
+# Função para calcular o R²
+R2 <- function(pred, true) {
+  rss <- sum((pred - true)^2)
+  tss <- sum((true - mean(true))^2)
+  r2 <- 1 - rss / tss
+  return(r2)
+}
+```
+
+### Módulo 3.5: Avaliação do Modelo
+
+```{r}
+# Calculando as métricas para o conjunto de treino
+mae_train <- MAE(train_pred, train_data$Financial.Distress)
+mse_train <- MSE(train_pred, train_data$Financial.Distress)
+r2_train  <- R2(train_pred, train_data$Financial.Distress)
+
+# Calculando as métricas para o conjunto de validação
+mae_valid <- MAE(valid_pred, valid_data$Financial.Distress)
+mse_valid <- MSE(valid_pred, valid_data$Financial.Distress)
+r2_valid  <- R2(valid_pred, valid_data$Financial.Distress)
+
+
+# Organizando os resultados em um dataframe
+results_baseline <- data.frame(
+  Metric = c("MAE", "MSE", "R2"),
+  Train = c(mae_train, mse_train, r2_train),
+  Valid = c(mae_valid, mse_valid, r2_valid)
+)
+
+# Formatando os resultados para melhor leitura
+results_baseline$Train <- as.numeric(results_baseline$Train)
+results_baseline$Valid <- as.numeric(results_baseline$Valid)
+
+# Evitando notação científica na exibição dos resultados
+results_baseline$Train <- format(results_baseline$Train, scientific = FALSE)
+results_baseline$Valid <- format(results_baseline$Valid, scientific = FALSE)
+
+# Exibindo os resultados
+results_baseline
+```
+
+------------------------------------------------------------------------
+
+## Módulo 4: Combinação de Features
+
+Uma estratégia para melhorar o desempenho do modelo de regressão linear é criar combinações de features. Isso pode ajudar a fornecer informações mais explícitas ao modelo. Uma maneira eficaz de realizar essa combinação é verificar as correlações entre as variáveis, combinando aquelas com baixa correlação entre si e descartando as que têm alta correlação, pois elas podem fornecer informações redundantes.
+
+A seguir, apresentamos exemplos de como criar combinações de features no modelo:
+
+### Módulo 4.1: Definição das Fórmulas
+
+```{r}
+# Fórmula com interações de ordem 2 entre as variáveis
+f01 <- formula(Financial.Distress ~ .)
+
+f02 <- formula(Financial.Distress ~ . + (x2+x5+x9+x10+x23)^2 
+                                      + (x11+x53+x50+x83+x30)^2 
+                                      + (x10+x40+x50+x82+x24)^2)
+
+f03 <- formula(Financial.Distress ~ . + (x2+x5+x9+x10+x23)^3 
+                                      + (x11+x53+x50+x83+x30)^3 
+                                      + (x10+x40+x50+x82+x24)^3)
+
+f04 <- formula(Financial.Distress ~ . + (x2+x5+x9+x10+x23)^4 
+                                      + (x11+x53+x50+x83+x30)^4 
+                                      + (x10+x40+x50+x82+x24)^4)
+```
+
+### Módulo 4.2: Treinamento do Modelo
+
+```{r}
+formulas <- c(f01, f02, f03, f04)
+MaePerCombination <- data.frame(Formula = numeric(length(formulas)), 
+                                TrainMAE = numeric(length(formulas)),
+                                ValMAE = numeric(length(formulas)))
+
+i <- 1
+for(f in formulas){
+  
+  # Treinando o modelo com a fórmula atual
+  model <- lm(formula=f, data=train_data)
+  
+  # Realizando previsões para os dados de treino e validação
+  train_pred <- predict(model, train_data)
+  valid_pred <- predict(model, valid_data)
+  
+  # Calculando o MAE para o conjunto de treino e validação
+  mae_train <- MAE(train_pred, train_data$Financial.Distress)
+  mae_val   <- MAE(valid_pred, valid_data$Financial.Distress)
+ 
+  # Armazenando os resultados
+  MaePerCombination[i, ] <- c(i, mae_train, mae_val)
+  i <- i + 1
+}
+```
+
+### Módulo 4.3: Curva de Viés e Variância
+
+Uma maneira de avaliar a complexidade do modelo é por meio da curva de viés e variância. Essa curva ajuda a entender se a complexidade do modelo está sendo um fator positivo ou negativo para o desempenho, fornecendo insights sobre o risco de underfitting ou overfitting.
+
+```{r}
+MaePerCombinationMelt <- melt(MaePerCombination, id = "Formula")
+
+# Criando o gráfico da curva de viés/variância
+p <- ggplot(data = MaePerCombinationMelt, aes(x=Formula, y=value, colour=variable)) + 
+  geom_line() + 
+  geom_point() + 
+  ggtitle("Curva Viés/Variância") + 
+  ylab("MAE") + 
+  scale_x_discrete(name="Fórmula", 
+                   limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.9, 0.9), legend.title = element_blank())
+```
+
+------------------------------------------------------------------------
+
+## Módulo 5: Regressão Polinomial
+
+Outra forma para aumentar a complexidade do modelo é utilizar regressão polinomial. Isso pode melhorar o ajuste ao dado, especialmente quando as relações entre as variáveis não são lineares.
+
+## Módulo 5.1: Treinamento
+
+```{r}
+MaePerDegree <- data.frame(Degree=numeric(length(formulas)), 
+                           TrainMAE=numeric(length(formulas)),
+                           ValMAE=numeric(length(formulas)))
+
+for(i in 1:6){
+  hypothesis <- getHypothesis(real_columns, categorical_columns, i)
+  
+  model <- lm(formula=hypothesis, data=train_data)
+  
+  train_pred <- predict(model, train_data)
+  valid_pred <- predict(model, valid_data)
+  
+  mae_train <- MAE(train_pred, train_data$Financial.Distress)
+  mae_val   <- MAE(valid_pred, valid_data$Financial.Distress)
+ 
+  MaePerDegree[i,] = c(i, mae_train, mae_val)
+}
+```
+
+```{r}
+mae_train
+```
+
+## Curva de Viés e Variância
+
+```{r}
+MaePerDegreeMelt <- melt(MaePerDegree, id="Degree")  # convert to long format
+p <- ggplot(data=MaePerDegreeMelt, aes(x=Degree, y=value, colour=variable)) + geom_line() + geom_point()
+p <- p + ggtitle("Curva vies/variancia") + ylab("MAE") + scale_x_discrete(name ="Degree", 
+                                                                          limits=as.character(1:6))
+p + theme(legend.position = c(0.9, 0.7), legend.title = element_blank())
+```
+
+------------------------------------------------------------------------
+
+## Módulo 7: Conjunto de Teste
+
+Após o treinamento e a validação de diferentes modelos, é necessário selecionar o melhor modelo com base no conjunto de validação para avaliá-lo no conjunto de teste.
+
+**Importante:** O conjunto de teste deve ser utilizado **apenas uma vez**. O desempenho do modelo no conjunto de teste reflete sua capacidade de generalização para o mundo real.
+
+### Avaliando o Desempenho dos Modelos
+
+```{r}
+min(MaePerCombination$ValMAE)        # Modelo baseado em combinações
+min(MaePerDegree$ValMAE)             # Modelo baseado em graus
+```
+
+```{r}
+# Exibindo o MAE do modelo
+i<- which.min(MaePerCombination$ValMAE)
+i
+```
+
+### Preparando o Conjunto de Teste
+
+```{r}
+test_data[,2:(ncol(test_data)-3)] <- sweep(test_data[,2:(ncol(test_data)-3)], 2, mean_features, "-")
+test_data[,2:(ncol(test_data)-3)] <- sweep(test_data[,2:(ncol(test_data)-3)], 2, sd_features, "/")
+```
+
+### Avaliando o modelo
+
+```{r}
+f03 <- formula(Financial.Distress ~ . + (x2+x5+x9+x10+x23)^3 
+                                      + (x11+x53+x50+x83+x30)^3 
+                                      + (x10+x40+x50+x82+x24)^3)
+
+best_model <- lm(formula=f03, data=train_data)
+test_pred  <- predict(best_model, test_data)
+
+mae_test <- MAE(test_pred, test_data$Financial.Distress)
+mse_test <- MSE(test_pred, test_data$Financial.Distress)
+r2_test  <- R2(test_pred,  test_data$Financial.Distress)
+
+results_cat <- data.frame(
+  Metric = c("MAE", "MSE", "R2"),
+  Test = c(mae_test, mse_test, r2_test)
+)
+
+results_cat$Test <- as.numeric(results_cat$Test)
+results_cat$Test <- format(results_cat$Test, scientific = FALSE)
+
+results_cat
+```

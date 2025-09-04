@@ -1,0 +1,563 @@
+---
+title: INF0615 -- Aprendizado Supervisionado I
+output: pdf_document
+subtitle: Exercício 08 - Telemarketing
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(
+  echo    = TRUE,   # Exibir código nos chunks
+  error   = FALSE,  # Ocultar mensagens de erro
+  message = FALSE,  # Ocultar mensagens informativas
+  warning = FALSE,  # Ocultar avisos
+  tidy    = FALSE   # Não reformatar automaticamente o código
+)
+
+options(digits = 4) # Definição do número de casas decimais padrão
+```
+
+Neste exercício, exploraremos conceitos de aprendizado supervisionado
+aplicados telemarking. Vamos utilizar dois métodos principais:
+
+1.  **Árvore de Decisão**: Para classificação e visualização da árvore
+    gerada.
+2.  **Random Forest**: Para melhorar a robustez da classificação
+    combinando várias árvores de decisão (*ensemble learning*).
+
+------------------------------------------------------------------------
+
+## Módulo 0: Instalando Dependências
+
+Antes de prosseguir, verifique se as bibliotecas necessárias estão
+instaladas. Caso não estejam, remova o `#` das linhas abaixo para
+instalá-las:
+
+```{r install-packages, eval = FALSE}
+# install.packages("rpart")
+# install.packages("rpart.plot")
+# install.packages("randomForest")
+# install.packages("ramify")
+```
+
+------------------------------------------------------------------------
+
+## Módulo 1: Configuração do Ambiente
+
+Carregue as bibliotecas necessárias e define uma semente aleatória para
+reprodutibilidade:
+
+```{r}
+library(ggplot2)      # Para visualização de dados
+library(reshape2)     # Para manipulação de dados
+library(caret)        # Para treinamento de modelos
+library(rpart)        # Árvore de decisão
+library(rpart.plot)   # Visualização de árvores de decisão
+library(randomForest) # Random Forest
+
+set.seed(40)  # Garante reprodutibilidade dos resultados
+```
+
+------------------------------------------------------------------------
+
+## Módulo 2: Carregamento do Dataset
+
+Carregue o conjunto de dados, no quals será utilizado para treinar e
+avaliar os modelos:
+
+```{r}
+data <- read.csv("bank-full.csv", header=TRUE, sep=";", stringsAsFactors=TRUE)
+
+# Este atributo deve obrigatoriamente ser retirado segundo
+# os autores da base para que haja um treinamento e validacao justos.
+data[,"duration"] <- NULL
+
+# Remove os elementos repetidos antes da divisao Treino/Validacao/Test
+data <- unique(data)
+```
+
+### Módulo 2.1: Divisão do conjunto de dados
+
+```{r}
+# Treino-Validacao 80% / Teste 20%
+randomTrainValIndexes <- sample(1:nrow(data), size=0.8*nrow(data))
+train_valid_data      <- data[randomTrainValIndexes, ]
+test_data             <- data[-randomTrainValIndexes, ] 
+
+randomTrainIndexes <- sample(1:nrow(train_valid_data), size=0.8*nrow(train_valid_data))
+train_data         <- train_valid_data[randomTrainIndexes, ]
+valid_data         <- train_valid_data[-randomTrainIndexes, ] 
+```
+
+### Módulo 2.2: Explorando os Dados
+
+A seguir, analisamos algumas informações básicas sobre os conjuntos de
+dados.
+
+#### Módulo 2.2.1: Dados de Treinamento
+
+```{r}
+# Visualiza as primeiras linhas do dataset
+head(train_data)
+
+# Exibe as dimensões do dataset
+cat("Amostras:", nrow(train_data), "Features:", ncol(train_data) - 1, "\n")
+
+# Resumo estatístico dos dados
+summary(train_data)
+
+# Verifica a existência de valores ausentes
+if (any(is.na(train_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de treinamento.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de treinamento.\n")
+}
+```
+
+#### Módulo 2.2.2: Dados de Validação
+
+```{r}
+# Visualiza as primeiras linhas do dataset
+head(valid_data)
+
+# Exibe as dimensões do dataset
+cat("Amostras:", nrow(valid_data), "Features:", ncol(valid_data) - 1, "\n")
+
+# Resumo estatístico dos dados
+summary(valid_data)
+
+# Verifica a existência de valores ausentes
+if (any(is.na(valid_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de validação.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de validação.\n")
+}
+```
+
+### Módulo 2.2.3: Frequência das classes
+
+Para avaliar o desequilíbrio de classes, primeiro identificamos e
+contamos a frequência de cada classe no conjunto de dados. Isso é
+crucial para entender se o modelo pode ser tendencioso devido à
+disparidade no volume de dados por classe. Vamos verificar a
+distribuição das classes sem realizar tratamento imediato.
+
+```{r}
+# Exibe a frequência das classes no conjunto de treinamento
+table(train_data$y)
+```
+
+```{r}
+# Faz o balanceamento das classes
+train_data_no  <- train_data[train_data$y == "no",]
+train_data_yes <- train_data[train_data$y == "yes",] 
+
+randomNoIdx   <- sample(1:nrow(train_data_no), size=1.4*nrow(train_data_yes))
+subsamplingNo <- train_data_no[randomNoIdx,]
+train_data    <- rbind(train_data_yes, subsamplingNo)
+
+```
+
+```{r}
+table(train_data$y)
+```
+
+------------------------------------------------------------------------
+
+## Módulo 3: Modelo de Árvore de decisão
+
+A Árvore de Decisão é um modelo interpretável que segmenta os dados em
+nós com base em critérios de divisão.
+
+```{r}
+help(rpart)
+```
+
+**Parâmetros**
+
+-   `minsplit` = número mínimo de exemplos em um nó para que ele gere
+    nós filhos.
+
+-   `cp` = fator que determina o quanto o erro no conjunto de
+    treinamento deve ser reduzido para que a geração de filhos (split)
+    seja realizada.
+
+-   `xval` = número de validações cruzadas que serão realizadas.
+
+### Módulo 3.1 Treinamento da Árvore
+
+```{r}
+tree_model <- rpart(y ~ age + job + marital + education + default + 
+                       balance + housing + loan+ contact + day + 
+                       month + campaign + pdays + 
+                       previous + poutcome, 
+                     data=train_data, 
+                     method="class",
+                     control=rpart.control(minsplit=2, cp=0.0, xval=10),
+                     parms=list(split="information"))
+```
+
+**Cálculo do Ganho de Performance (CP)**
+
+A tabela exibe o ganho de performance (`CP`). O valor de `CP` na linha
+`i` é calculado da seguinte forma:
+
+$$
+CP[i] = \frac{rel\_error[i] - rel\_error[i+1]}{n\_split[i+1] - n\_split[i]}
+$$
+
+```{r}
+summary(tree_model)
+```
+
+### Módulo 3.2: Feature Importance
+
+```{r}
+importance_per_features <- tree_model$variable.importance
+relative_importance     <- importance_per_features/sum(importance_per_features)
+relative_importance
+```
+
+## Módulo 3.3: Post Prune
+
+Uma vez que o modelo está treinado, podemos realizar a poda para
+melhorar o overfitting, com base no parâmetro CP (Complexity Parameter).
+
+```{r}
+# Mostra a tabela com os CPs novamente
+printcp(tree_model)
+```
+
+```{r}
+# Poda a árvore com base no CP do menor erro no conjunto de validação.
+minCP <- tree_model$cptable[which.min(tree_model$cptable[,"xerror"]),"CP"]
+minCP
+```
+
+```{r}
+ptree <- prune(tree_model, cp=minCP)
+summary(ptree)
+```
+
+### Módulo 3.4: Cálculo das Métricas de Desempenho
+
+```{r}
+valid_pred <- predict(tree_model, valid_data, type="class")
+```
+
+```{r}
+# Calcula a matriz de confusão relativa 
+calculaMatrizConfusaoRelativa <- function(cm){
+    
+    # Aplicamos a transposição para garantir que a referencia
+    # fique nas linhas e a predicao nas colunas
+    cm_absolute = t(cm$table)
+    
+    cm_relative = cm_absolute
+    
+    cm_relative[1,1] = round(cm_absolute[1,1]/sum(cm_absolute[1,]), digits=2)
+    cm_relative[1,2] = round(cm_absolute[1,2]/sum(cm_absolute[1,]), digits=2)
+    cm_relative[2,1] = round(cm_absolute[2,1]/sum(cm_absolute[2,]), digits=2)
+    cm_relative[2,2] = round(cm_absolute[2,2]/sum(cm_absolute[2,]), digits=2)
+    
+    return(cm_relative)  
+}
+
+calculateMetrics <- function(cm) {
+  # Extrai TN, FP, FN, TP da matriz de confusão
+  # Assumindo a estrutura:
+  #           Reference
+  # Prediction   0     1
+  #         0   TN    FP
+  #         1   FN    TP
+  
+  TN <- cm[1, 1]
+  FP <- cm[1, 2]
+  FN <- cm[2, 1]  
+  TP <- cm[2, 2]  
+  
+  precision <- if (TP + FP == 0) 0 else TP / (TP + FP)
+  recall    <- if (TP + FN == 0) 0 else TP / (TP + FN)
+  f1        <- if (precision + recall == 0) 0 else (2 * precision * recall) / (precision + recall)
+  bal_acc   <- ( (TN / (TN + FP)) + (TP / (TP + FN)) ) / 2
+  
+  return(c(Precision = precision, Recall = recall, F1 = f1, BalAcc = bal_acc))
+}
+```
+
+```{r}
+cat("Valid\n")
+cm <- confusionMatrix(data=as.factor(valid_pred), 
+                      reference=as.factor(valid_data$y), 
+                      positive='yes')
+
+valid_cm_relative <- calculaMatrizConfusaoRelativa(cm)
+valid_cm_relative
+```
+
+```{r}
+# Calculando as métricas para o conjunto de validação
+valid_metrics_baseline = calculateMetrics(cm$table)
+valid_metrics_baseline
+```
+
+```{r}
+## Poda
+valid_pred <- predict(ptree, valid_data, type="class")
+
+cat("Valid\n")
+cm <- confusionMatrix(data=as.factor(valid_pred), 
+                      reference=as.factor(valid_data$y), 
+                      positive='yes')
+
+valid_cm_relative <- calculaMatrizConfusaoRelativa(cm)
+valid_cm_relative
+```
+
+```{r}
+# Calculando as métricas para o conjunto de validação
+valid_metrics_poda = calculateMetrics(cm$table)
+valid_metrics_poda
+```
+
+------------------------------------------------------------------------
+
+## Módulo 4: Variação de Parâmetros
+
+Vamos ver como as acuracias de treinamento e de validacao se comportam
+conforme variamos o tamanho da arvore de decisao.
+
+### Módulo 4.1: Treinamento
+
+```{r}
+AccPerDepth  <- data.frame(depth=numeric(20), TrainAcc=numeric(20), ValidAcc=numeric(20))
+
+for(i in 1:20){  
+  cat("MaxDepth", i, '\n')
+  
+  # Treinamento do modelo
+  model <- rpart(formula=y ~ age + job + marital + education + default +
+                   balance + housing + loan + contact + day + month + 
+                   campaign + pdays + previous + poutcome,
+                   data=train_data, 
+                   method="class",
+                   control=rpart.control(minsplit=2, cp=0.0, maxdepth=i, xval = 0),
+                  parms= list(split="information"))
+  
+  # Predicao do modelo
+  train_pred <- predict(model, train_data, type="class")
+  valid_pred <- predict(model, valid_data, type="class")
+  
+  # Calcula a matriz de confusão
+  train_cm <- confusionMatrix(data=as.factor(train_pred), 
+                        reference=as.factor(train_data$y), 
+                        positive='yes')
+  
+  valid_cm <- confusionMatrix(data=as.factor(valid_pred), 
+                        reference=as.factor(valid_data$y), 
+                        positive='yes')
+  
+  train_metrics = calculateMetrics(train_cm$table)
+  valid_metrics = calculateMetrics(valid_cm$table)
+
+  AccPerDepth[i,]  <- c(i, train_metrics["BalAcc"], valid_metrics["BalAcc"])
+}
+```
+
+### Módulo 4.2: Curva de Viés e Variância
+
+```{r}
+AccPerDepthMelt <- melt(AccPerDepth, id="depth")
+
+p <- ggplot(data=AccPerDepthMelt, aes(x=depth, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("ACC") + scale_x_discrete(name="Depth", limits=as.character(1:20))
+
+p + theme(legend.position = c(0.2, 0.1), legend.title = element_blank())
+
+```
+
+------------------------------------------------------------------------
+
+## Módulo 5: Random Forest
+
+```{r}
+help(randomForest)
+```
+
+```{r}
+# mtry é o número de features que cada árvore da floresta apresentará.
+# Para cada árvore, mtry features são aleatoriamente amostradas para treinamento.
+
+rfModel <- randomForest(formula = y ~ age + job + marital + education + 
+                                default + balance + housing + loan + 
+                                contact + day + month + campaign + pdays +
+                                previous + poutcome, 
+                        data = train_data, 
+                        ntree = 100, 
+                        mtry = 7)
+```
+
+### Módulo 5.1: Análise do Erro Out-Of-Bag (OOB)
+
+O erro Out-Of-Bag (OOB) é calculado da seguinte forma:
+
+-   Cada árvore da floresta é treinada com amostragem aleatória com
+    reposição.
+
+-   Os exemplos não amostrados para o treinamento dessa árvore
+    específica são usados para validá-la.
+
+-   Como árvores diferentes usam exemplos distintos, não podemos
+    comparar individualmente suas performances.
+
+-   Portanto, tomamos a média da performance de cada árvore sobre seu
+    respectivo conjunto de validação.
+
+-   Esse valor médio é chamado de Erro Out-Of-Bag (OOB Error).
+
+**Importante:** O erro OOB não é sinônimo de erro no conjunto de
+validação! Ele é um tipo de validação interna do Random Forest. Ainda
+assim, sempre utilizamos um conjunto de validação externo para
+comparação dos modelos.
+
+```{r}
+layout(matrix(c(1,2), nrow = 1), width = c(4,1)) 
+par(mar = c(5,4,4,0)) # Sem margem no lado direito 
+plot(rfModel, log = "y")
+
+par(mar = c(5,0,4,2)) # Sem margem no lado esquerdo
+plot(c(0,1), type = "n", axes = FALSE, xlab = "", ylab = "")
+legend("top", colnames(rfModel$err.rate), col = 1:4, cex = 1, fill = 1:4)
+```
+
+### Módulo 5.2: Desempenho
+
+```{r}
+valid_pred <- predict(rfModel, valid_data, type="class")
+
+cat("Valid\n")
+cm <- confusionMatrix(data=as.factor(valid_pred), 
+                      reference=as.factor(valid_data$y), 
+                      positive='yes')
+
+valid_cm_relative <- calculaMatrizConfusaoRelativa(cm)
+valid_cm_relative
+```
+
+```{r}
+valid_metrics_rforest = calculateMetrics(cm$table)
+valid_metrics_rforest
+```
+
+### Módulo 5.3: GridSearch
+
+```{r}
+nTreeList   <- c(1, 5, 10, 25, 50, 100, 250, 500)
+AccPerNTree <- data.frame(ntree=numeric(length(nTreeList)), 
+                          TrainAcc=numeric(length(nTreeList)),
+                          ValidAcc=numeric(length(nTreeList)))
+
+for(i in 1:length(nTreeList)){  
+  cat("NTree:", nTreeList[i], '\n')
+  
+  # Treinamento do modelo
+  model <- randomForest(formula=y ~ age + job + marital + education + 
+                                default + balance + housing + loan + 
+                                contact + day + month + campaign + pdays +
+                                previous + poutcome,  
+                        data= train_data, 
+                        ntree=nTreeList[i], 
+                        mtry=3)
+  
+  # Predicao do modelo
+  train_pred <- predict(model, train_data, type="class")
+  valid_pred <- predict(model, valid_data, type="class")
+  
+  # Calcula a matriz de confusão
+  train_cm <- confusionMatrix(data=as.factor(train_pred), 
+                        reference=as.factor(train_data$y), 
+                        positive='yes')
+  
+  valid_cm <- confusionMatrix(data=as.factor(valid_pred), 
+                        reference=as.factor(valid_data$y), 
+                        positive='yes')
+  
+  train_metrics = calculateMetrics(train_cm$table)
+  valid_metrics = calculateMetrics(valid_cm$table)
+
+  AccPerNTree[i,]  <- c(i, train_metrics["BalAcc"], valid_metrics["BalAcc"])
+}
+```
+
+```{r}
+AccPerNTreeMelt <- melt(AccPerNTree, id="ntree")
+
+p <- ggplot(data=AccPerNTreeMelt, aes(x=ntree, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("ACC") + scale_x_discrete(name="Depth", limits=as.character(1:length(nTreeList)))
+
+p + theme(legend.position = c(0.2, 0.1), legend.title = element_blank())
+```
+
+------------------------------------------------------------------------
+
+## Módulo 6: Conjunto de Teste
+
+Após o treinamento e a validação de diferentes modelos, é necessário
+selecionar o melhor modelo com base no conjunto de validação para
+avaliá-lo no conjunto de teste.
+
+**Importante:** O conjunto de teste deve ser utilizado **apenas uma
+vez**. O desempenho do modelo no conjunto de teste reflete sua
+capacidade de generalização para o mundo real.
+
+### Módulo 6.1: Avaliando o Desempenho dos Modelos
+
+```{r}
+cat("Árvore de decisão sem Poda\n\tAcurácia Balanceada:", valid_metrics_baseline["BalAcc"], "\n")
+cat("Árvore de decisão com Poda\n\tAcurácia Balanceada:", valid_metrics_poda["BalAcc"], "\n")
+cat("Árvore de decisão (Profundidade)\n\tAcurácia Balanceada:", max(AccPerDepth$ValidAcc), "\n")
+```
+
+```{r}
+cat("Random Forest baseline\n\tAcurácia Balanceada:", valid_metrics_rforest["BalAcc"], "\n")
+cat("Random Forest (NTree)\n\tAcurácia Balanceada:", max(AccPerNTree$ValidAcc), "\n")
+```
+
+```{r}
+# Verifica a existência de valores ausentes
+if (any(is.na(test_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de teste\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de teste\n")
+}
+```
+
+```{r}
+model <- randomForest(formula=y ~ age + job + marital + education + 
+                              default + balance + housing + loan + 
+                              contact + day + month + campaign + pdays +
+                              previous + poutcome,  
+                      data= train_data, 
+                      ntree=which.max(AccPerNTree$ValidAcc), 
+                      mtry=3)
+  
+test_pred <- predict(model, test_data, type="class")
+
+cat("Test\n")
+cm <- confusionMatrix(data=as.factor(test_pred), 
+                      reference=as.factor(test_data$y), 
+                      positive='yes')
+
+test_cm_relative <- calculaMatrizConfusaoRelativa(cm)
+test_cm_relative
+```
+
+```{r}
+test_metrics = calculateMetrics(cm$table)
+test_metrics
+```

@@ -1,0 +1,420 @@
+---
+title: INF0615 -- Aprendizado Supervisionado I
+output: pdf_document
+subtitle: Exercício 06 - Um-contra-Todos
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(
+  echo    = TRUE,   # Exibir código nos chunks
+  error   = FALSE,  # Ocultar mensagens de erro
+  message = FALSE,  # Ocultar mensagens informativas
+  warning = FALSE,  # Ocultar avisos
+  tidy    = FALSE   # Não reformatar automaticamente o código
+)
+
+options(digits = 4) # Definição do número de casas decimais padrão
+```
+
+Neste exercício, exploraremos conceitos de aprendizado supervisionado aplicados à previsão ...
+
+------------------------------------------------------------------------
+
+## Módulo 0: Instalando Dependências
+
+Antes de prosseguir, verifique se as bibliotecas necessárias estão instaladas. Caso não estejam, remova o `#` das linhas abaixo para instalá-las:
+
+```{r install-packages, eval = FALSE}
+# install.packages("glmnet")
+# install.packages("caret")
+```
+
+------------------------------------------------------------------------
+
+## Módulo 1: Configuração do Ambiente
+
+Carregue as bibliotecas necessárias e define uma semente aleatória para reprodutibilidade:
+
+```{r}
+library(glmnet)    # Para modelagem de regressão
+library(caret)     # Para treinamento de modelos
+
+set.seed(42)  # Garante reprodutibilidade dos resultados
+```
+
+------------------------------------------------------------------------
+
+## Módulo 2: Carregamento do Dataset
+
+Carregue os conjuntos de dados de **treinamento** e **validação**, que serão utilizados para treinar e avaliar os modelos:
+
+```{r}
+train_data <- read.csv("OvA_training_set.csv", stringsAsFactors = TRUE)
+valid_data <- read.csv("OvA_validation_set.csv", stringsAsFactors = TRUE)
+```
+
+### Módulo 2.1: Explorando os Dados
+
+A seguir, analisamos algumas informações básicas sobre os conjuntos de dados.
+
+#### Módulo 2.1.1: Dados de Treinamento
+
+```{r}
+# Visualiza as primeiras linhas do dataset
+head(train_data)
+
+# Exibe as dimensões do dataset
+cat("Amostras:", nrow(train_data), "Features:", ncol(train_data) - 1, "\n")
+
+# Resumo estatístico dos dados
+summary(train_data)
+
+# Verifica a existência de valores ausentes
+if (any(is.na(train_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de treinamento.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de treinamento.\n")
+}
+```
+
+#### Módulo 2.1.2: Dados de Validação
+
+```{r}
+# Visualiza as primeiras linhas do dataset
+head(valid_data)
+
+# Exibe as dimensões do dataset
+cat("Amostras:", nrow(valid_data), "Features:", ncol(valid_data) - 1, "\n")
+
+# Resumo estatístico dos dados
+summary(valid_data)
+
+# Verifica a existência de valores ausentes
+if (any(is.na(valid_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de validação.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de validação.\n")
+}
+```
+
+### Etapa 2.2: Normalização dos Dados
+
+Normalização é um processo que ajusta os valores das features para uma escala comum, melhorando a performance dos modelos. A formula do Z-norm é a seguinte:
+
+$$x_{Znorm} = \frac{x - mean(x)}{sd(x)}$$
+
+```{r}
+# Calculando a média e o desvio padrão para normalização
+mean_features <- apply(train_data[, 1:(ncol(train_data)-1)], 2, mean)
+sd_features   <- apply(train_data[, 1:(ncol(train_data)-1)], 2, sd)
+
+print("Médias das features")
+print(mean_features)
+print("Desvios padrão das features")
+print(sd_features)
+```
+
+```{r}
+# Aplicando a normalização Min-Max nos dados de treino e validação
+train_data[, 1:(ncol(train_data)-1)] <- sweep(train_data[, 1:(ncol(train_data)-1)], 2, mean_features, "-")
+train_data[, 1:(ncol(train_data)-1)] <- sweep(train_data[, 1:(ncol(train_data)-1)], 2, sd_features, "/")
+
+valid_data[, 1:(ncol(valid_data)-1)] <- sweep(valid_data[, 1:(ncol(valid_data)-1)], 2, mean_features, "-")
+valid_data[, 1:(ncol(valid_data)-1)] <- sweep(valid_data[, 1:(ncol(valid_data)-1)], 2, sd_features, "/")
+```
+
+```{r}
+summary(train_data)
+```
+
+------------------------------------------------------------------------
+
+## Módulo 3: Protocolo One-Contra-Todos
+
+Vamos treinar `N` modelos, no qual `N` se refere a quantidade de classes
+
+```{r}
+hypothesis <- formula(target ~ .)
+```
+
+### Módulo 3.1: South America VS Rest
+
+```{r}
+positive_train_data <- train_data[train_data$continent == "South America",]
+negative_train_data <- train_data[train_data$continent != "South America",]
+
+# Remove a coluna continente
+positive_train_data$continent <- NULL
+negative_train_data$continent <- NULL 
+
+# Refazemos os labels, no qual 1 representa amostras da South America e 0 o restante
+positive_train_data$target <- 1
+negative_train_data$target <- 0
+
+train <- rbind(positive_train_data, negative_train_data)
+table(train$target)
+```
+
+```{r}
+x_train <- model.matrix(hypothesis, train)
+y_train <- train$target
+
+logReg01 <-  glmnet(x_train, y_train,  family="binomial", 
+                    standardize = FALSE, alpha=0, lambda = 1e-6)
+```
+
+### Módulo 3.2: Central America VS Rest
+
+```{r}
+positive_train_data <- train_data[train_data$continent == "Central America",]
+negative_train_data <- train_data[train_data$continent != "Central America",]
+
+# Remove a coluna continente
+positive_train_data$continent <- NULL
+negative_train_data$continent <- NULL 
+
+# Refazemos os labels, no qual 1 representa amostras da Central America e 0 o restante
+positive_train_data$target <- 1
+negative_train_data$target <- 0
+
+train <- rbind(positive_train_data, negative_train_data)
+table(train$target)
+```
+
+```{r}
+x_train <- model.matrix(hypothesis, train)
+y_train <- train$target
+
+logReg02 <-  glmnet(x_train, y_train,  family="binomial", 
+                    standardize = FALSE, alpha=0, lambda = 1e-6)
+```
+
+### Módulo 3.3: Eastern Africa VS Rest
+
+```{r}
+positive_train_data <- train_data[train_data$continent == "Eastern Africa",]
+negative_train_data <- train_data[train_data$continent != "Eastern Africa",]
+
+# Remove a coluna continente
+positive_train_data$continent <- NULL
+negative_train_data$continent <- NULL 
+
+# Refazemos os labels, no qual 1 representa amostras da Eastern Africa e 0 o restante
+positive_train_data$target <- 1
+negative_train_data$target <- 0
+
+train <- rbind(positive_train_data, negative_train_data)
+table(train$target)
+```
+
+```{r}
+x_train <- model.matrix(hypothesis, train)
+y_train <- train$target
+
+logReg03 <-  glmnet(x_train, y_train,  family="binomial", 
+                    standardize = FALSE, alpha=0, lambda = 1e-6)
+```
+
+### Módulo 3.4: South-Eastern Asia VS Rest
+
+```{r}
+positive_train_data <- train_data[train_data$continent == "South-Eastern Asia",]
+negative_train_data <- train_data[train_data$continent != "South-Eastern Asia",]
+
+# Remove a coluna continente
+positive_train_data$continent <- NULL
+negative_train_data$continent <- NULL 
+
+# Refazemos os labels, no qual 1 representa amostras da South-Eastern Asia e 0 o restante
+positive_train_data$target <- 1
+negative_train_data$target <- 0
+
+train <- rbind(positive_train_data, negative_train_data)
+table(train$target)
+```
+
+```{r}
+x_train <- model.matrix(hypothesis, train)
+y_train <- train$target
+
+logReg04 <-  glmnet(x_train, y_train,  family="binomial", 
+                    standardize = FALSE, alpha=0, lambda = 1e-6)
+```
+
+### Módulo 3.5: Western Europe VS Rest
+
+```{r}
+positive_train_data <- train_data[train_data$continent == "Western Europe",]
+negative_train_data <- train_data[train_data$continent != "Western Europe",]
+
+# Remove a coluna continente
+positive_train_data$continent <- NULL
+negative_train_data$continent <- NULL 
+
+# Refazemos os labels, no qual 1 representa amostras da Western Europe e 0 o restante
+positive_train_data$target <- 1
+negative_train_data$target <- 0
+
+train <- rbind(positive_train_data, negative_train_data)
+table(train$target)
+```
+
+```{r}
+x_train <- model.matrix(hypothesis, train)
+y_train <- train$target
+
+logReg05 <-  glmnet(x_train, y_train,  family="binomial", 
+                    standardize = FALSE, alpha=0, lambda = 1e-6)
+```
+
+### Módulo 3.6: Predição
+
+Uma vez que o modelo está treinado, podemos realizar previsões tanto para os dados de treino quanto para os dados de validação.
+
+```{r}
+# Criamos a coluna target para o conjunto de validação. Para controle, colocamos o valor -1
+valid_data$target <- -1
+
+# Armazenamos o valor Ground Truth em outra variável
+gt_valid_data        <- valid_data$continent
+valid_data$continent <- NULL
+```
+
+```{r}
+x_val <- model.matrix(hypothesis, valid_data)
+
+valPred01 <- predict(logReg01, newx = x_val, type="response")
+valPred02 <- predict(logReg02, newx = x_val, type="response")
+valPred03 <- predict(logReg03, newx = x_val, type="response")
+valPred04 <- predict(logReg04, newx = x_val, type="response")
+valPred05 <- predict(logReg05, newx = x_val, type="response")
+```
+
+```{r}
+### To count the votes, we will define a one-hot encoding template
+### for each class. Then, we will get the minimum Manhattan distance
+### between the predicted vector of probabilities and the templates.
+### The lowest distance is the predicted class
+valPred <- cbind(valPred01, valPred02, valPred03, valPred04, valPred05)
+valPred
+
+classVectors <- diag(5)
+colnames(classVectors) <- c("South America", "Central America",
+                            "Eastern Africa","South-Eastern Asia", 
+                            "Western Europe")
+
+classVectors
+
+valDists <- c()
+for (idx in 1:nrow(valPred)) {
+    dist <- apply(classVectors, 1, 
+                  function(x){ 
+                      dist(rbind(valPred[idx,],x), method="manhattan")
+                  })
+    valDists <- rbind(valDists, dist)
+}
+
+colnames(valDists) <- c("South America", "Central America",
+                        "Eastern Africa","South-Eastern Asia", 
+                        "Western Europe")
+valDists[1:5,]
+
+#### Let is get the minimum distance in each row. The respective class
+#### is the predicted class.
+valClass <- colnames(valDists)[apply(valDists, 1, which.min)]
+valClass
+```
+
+### Módulo 3.3: Cálculo das Métricas de Desempenho
+
+#### Módulo 3.5: Matriz de Confusão
+
+A matriz de confusão é uma tabela utilizada para descrever o desempenho de um modelo de classificação. A partir dessa matriz, podemos calcular métricas importantes como precisão, recall e accuracy.
+
+-   **Verdadeiros Positivos (TP)**: Casos que foram corretamente identificados como positivos.
+
+-   **Falsos Positivos (FP)**: Casos negativos erroneamente classificados como positivos.
+
+-   **Verdadeiros Negativos (TN)**: Casos que foram corretamente identificados como negativos.
+
+-   **Falsos Negativos (FN)**: Casos positivos erroneamente classificados como negativos.
+
+![Fig 1. Matriz de confusão](figures/matrizConfusao.png){width="315"}
+
+```{r}
+# Calcula a matriz de confusao relativa 
+calculaMatrizConfusaoRelativa <- function(cm){
+    
+    # Aplicamos a transposicao para garantir que a referencia
+    # fique nas linhas e a predicao nas colunas
+    cm_absolute = t(cm$table)
+    
+    # SEMPRE construam e reportem a matriz de confusao relativa!
+    cm_relative = cm_absolute
+    
+    cm_relative[1,] = round(cm_absolute[1,]/sum(cm_absolute[1,]), digits=2)
+    cm_relative[2,] = round(cm_absolute[2,]/sum(cm_absolute[2,]), digits=2)
+    cm_relative[3,] = round(cm_absolute[3,]/sum(cm_absolute[3,]), digits=2)
+    cm_relative[4,] = round(cm_absolute[4,]/sum(cm_absolute[4,]), digits=2)
+    cm_relative[5,] = round(cm_absolute[5,]/sum(cm_absolute[5,]), digits=2)
+   
+    return(cm_relative)  
+}
+```
+
+```{r}
+cat("Valid\n")
+cm <- confusionMatrix(data=as.factor(valClass), 
+                      reference=as.factor(gt_valid_data))
+
+valid_cm_relative <- calculaMatrizConfusaoRelativa(cm)
+valid_cm_relative
+```
+
+### Módulo 3.4: Avaliação do Modelo
+
+A partir da matriz de confusão relativa, podemos calcular métricas de avaliação do modelo:
+
+-   **Precisão:** Mede a proporção de verdadeiros positivos entre os itens classificados como positivos.
+
+    $$ precision = \frac{TP}{TP + FP}$$
+
+-   **Recall:** Mede a proporção de verdadeiros positivos entre todos os itens verdadeiramente positivos.
+
+    $$ recall = \frac{TP}{TP + FN}$$
+
+-   **F1 Score:** É a média harmônica da precisão e do recall, útil para encontrar um equilíbrio entre os dois.
+
+    $$ F1Score = \frac{2\cdot precision\cdot recall}{precision + recall}$$
+
+-   **Acurácia Balanceada:**
+
+    $$ BalancedAccuracy = \frac{1}{2}(\frac{TP}{TP + FN} + \frac{TN}{TN+FP})$$
+
+```{r}
+calculateMetrics <- function(cm) {
+  # Extrai TN, FP, FN, TP da matriz de confusão
+  # Assumindo a estrutura:
+  #           Reference
+  # Prediction   0     1
+  #         0   TN    FP
+  #         1   FN    TP
+  
+  TN <- cm[1, 1]
+  FP <- cm[1, 2]
+  FN <- cm[2, 1]  
+  TP <- cm[2, 2]  
+  
+  precision <- if (TP + FP == 0) 0 else TP / (TP + FP)
+  recall    <- if (TP + FN == 0) 0 else TP / (TP + FN)
+  f1        <- if (precision + recall == 0) 0 else (2 * precision * recall) / (precision + recall)
+  bal_acc   <- ( (TN / (TN + FP)) + (TP / (TP + FN)) ) / 2
+  
+  return(c(Precision = precision, Recall = recall, F1 = f1, BalAcc = bal_acc))
+}
+
+
+valid_metrics = calculateMetrics(cm$table)
+valid_metrics
+```

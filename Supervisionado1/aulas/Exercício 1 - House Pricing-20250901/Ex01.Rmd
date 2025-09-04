@@ -1,0 +1,845 @@
+---
+title: INF0615 -- Aprendizado Supervisionado I
+output: pdf_document
+subtitle: Exercício 01 - House Pricing
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(
+  echo = TRUE,      # Exibir código nos chunks
+  error = FALSE,    # Ocultar mensagens de erro
+  message = FALSE,  # Ocultar mensagens informativas
+  warning = FALSE,  # Ocultar avisos
+  tidy = FALSE      # Não reformatar automaticamente o código
+)
+
+options(digits = 3) # Definição do número de casas decimais padrão
+```
+
+Neste exercício, iremos explorar conceitos fundamentais de aprendizado supervisionado, aplicando-os a um problema de **precificação de imóveis**. Trabalharemos com as seguintes técnicas:
+
+-   **Regressão Linear**: Modelagem da relação entre variáveis preditoras e o preço do imóvel.
+-   **Combinação de Features**: Uso de transformações e combinações de atributos para melhorar a performance do modelo.
+-   **Regressão Polinomial**: Introdução de termos não lineares para capturar padrões mais complexos nos dados.
+
+------------------------------------------------------------------------
+
+## Módulo 0: Instalando Dependências
+
+Antes de prosseguir, verifique se as bibliotecas necessárias estão instaladas. Caso não estejam, remova o `#` das linhas abaixo para instalá-las:
+
+```{r install-packages, eval = FALSE}
+install.packages("ggplot2")  # Para visualização de dados
+install.packages("reshape2") # Para manipulação de dados
+install.packages("corrplot") # Para visualização de correlações
+```
+
+------------------------------------------------------------------------
+
+## Módulo 1: Configuração do Ambiente
+
+Carrega as bibliotecas necessárias e define uma semente aleatória para reprodutibilidade:
+
+```{r}
+library(ggplot2)  # Visualização de dados
+library(reshape2) # Manipulação de dados
+library(corrplot) # Visualização de correlações
+set.seed(42)      # Garantir reprodutibilidade dos experimentos
+```
+
+------------------------------------------------------------------------
+
+## Módulo 2: Carregamento do Dataset
+
+Carregue os conjuntos de dados de **treinamento** e **validação**, que serão utilizados para treinar e avaliar os modelos:
+
+```{r}
+train_data <- read.csv("housePricing_train_set.csv", 
+                       header=TRUE, stringsAsFactors=TRUE)
+
+valid_data <- read.csv("housePricing_val_set.csv", 
+                       header=TRUE, stringsAsFactors=TRUE)
+```
+
+### Módulo 2.1: Explorando os Dados
+
+A seguir, vamos analisar algumas informações básicas sobre os conjuntos de dados.
+
+#### Módulo 2.1.1: Dados de Treinamento
+
+```{r}
+# Exibir as primeiras linhas do dataset
+display_head <- head(train_data)
+print(display_head)
+
+# Dimensões do dataset
+cat("Amostras:", nrow(train_data), "\nFeatures:", ncol(train_data)-1, "\n")
+
+# Resumo estatístico dos dados
+summary(train_data)
+
+# Verificar se há valores ausentes
+if (any(is.na(train_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de treinamento.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de treinamento.\n")
+}
+```
+
+#### Módulo 2.1.2: Dados de Validação
+
+```{r}
+# Exibir as primeiras linhas do dataset
+display_head <- head(valid_data)
+print(display_head)
+
+# Dimensões do dataset
+cat("Amostras:", nrow(valid_data), "\nFeatures:", ncol(valid_data)-1, "\n")
+
+# Resumo estatístico dos dados
+summary(valid_data)
+
+# Verificar se há valores ausentes
+if (any(is.na(valid_data))) {
+  cat("Aviso: Existem valores ausentes no conjunto de validação.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de validação.\n")
+}
+```
+
+### Módulo 2.2: One-Hot-Encoding
+
+One-Hot-Encoding é um método de transformação de variáveis categóricas em variáveis numéricas, no qual cada categoria é representada como uma coluna binária (0 ou 1).
+
+::: {style="text-align: center;"}
+![Fig 1. Exemplo de One Hot Encoder](OneHotEncoder.svg)
+:::
+
+Aqui, temos dois exemplos de como realizar essa transformação: manualmente e automaticamente.
+
+#### Módulo 2.2.1: Transformação Manual
+
+```{r}
+train_encoded <- train_data
+valid_encoded <- valid_data
+
+# Criando colunas binárias para cada categoria de "ocean_proximity"
+categories     <- c("<1H OCEAN", "INLAND", "ISLAND", "NEAR BAY", "NEAR OCEAN")
+new_categories <- c('less1Hocean', 'inland', 'island', 'nearbay', 'nearocean')
+
+# Looping sobre as categorias
+for (i in seq_along(categories)) {
+  cat     <- categories[i]
+  new_cat <- new_categories[i]
+  
+  # Criando colunas binárias para o treino e a validação
+  train_encoded[[new_cat]] <- as.numeric(train_encoded$ocean_proximity == cat)
+  valid_encoded[[new_cat]] <- as.numeric(valid_encoded$ocean_proximity == cat)
+}
+
+# Removendo a coluna original categórica
+train_encoded$ocean_proximity <- NULL
+valid_encoded$ocean_proximity <- NULL
+```
+
+```{r}
+summary(train_encoded)
+```
+
+```{r}
+summary(valid_encoded)
+```
+
+#### Módulo 2.2.2: Transformação Automática
+
+```{r}
+auto_one_hot <- model.matrix(~ocean_proximity - 1, data = train_data)
+auto_one_hot <- cbind(train_data, auto_one_hot)
+
+auto_one_hot$ocean_proximity <- NULL
+
+summary(auto_one_hot)
+```
+
+### Módulo 2.3: Normalização dos Dados
+
+Normalização é um processo que ajusta os valores das features para uma escala comum, melhorando a performance dos modelos. Aqui, há exemplo de dois métodos de normalização: Min-Max e Z-Normalização.
+
+#### Módulo 2.3.1: Min-Max Normalization
+
+A formula do Min-Max é a seguinte:
+
+$$x_{MinMax} = \frac{x - min(x)}{max(x) - min(x)}$$
+
+```{r}
+# Calculando os valores mínimos e máximos de cada variável
+min_features <- apply(train_encoded[, 1:8], 2, min)
+max_features <- apply(train_encoded[, 1:8], 2, max)
+diff         <- max_features - min_features
+
+print("Valores mínimos")
+print(min_features)
+print("Valores máximos")
+print(max_features)
+print("Diferença entre máximos e mínimos")
+print(diff)
+```
+
+```{r}
+# Aplicando a normalização Min-Max nos dados de treino e validação
+train_normalized <- train_encoded
+valid_normalized <- valid_encoded
+
+train_normalized[, 1:8] <- sweep(train_normalized[, 1:8], 2, min_features, "-")
+train_normalized[, 1:8] <- sweep(train_normalized[, 1:8], 2, diff, "/")
+
+valid_normalized[, 1:8] <- sweep(valid_normalized[, 1:8], 2, min_features, "-")
+valid_normalized[, 1:8] <- sweep(valid_normalized[, 1:8], 2, diff, "/")
+```
+
+```{r}
+summary(train_normalized)
+```
+
+```{r}
+summary(valid_normalized)
+```
+
+```{r}
+valid_normalized[, 1:8] <- as.data.frame(lapply(valid_normalized[, 1:8], function(x) pmax(0, pmin(1, x))))
+summary(valid_normalized)
+```
+
+#### Módulo 2.3.2: Z-Normalization
+
+A formula do Z-norm é a seguinte:
+
+$$x_{Znorm} = \frac{x - mean(x)}{sd(x)}$$
+
+```{r}
+# Calculando a média e o desvio padrão para normalização
+mean_features <- apply(train_encoded[, 1:8], 2, mean)
+sd_features   <- apply(train_encoded[, 1:8], 2, sd)
+
+print("Médias das features")
+print(mean_features)
+print("Desvios padrão das features")
+print(sd_features)
+```
+
+```{r}
+# Aplicando a normalização Z-Score nos dados de treino
+z_norm_data <- train_encoded
+
+z_norm_data[, 1:8] <- sweep(z_norm_data[, 1:8], 2, mean_features, "-")
+z_norm_data[, 1:8] <- sweep(z_norm_data[, 1:8], 2, sd_features, "/")
+
+summary(z_norm_data)
+```
+
+### Módulo 2.4: Análises estastísticas
+
+Há diversas análises que podemos realizar. Aqui, apresentamos um exemplo de correlação entre as features, o que pode ser útil para identificar relações entre as variáveis e orientar a combinação de features no modelo.
+
+```{r}
+# Calculando a matriz de correlação
+correlation <- cor(train_data[, 1:8])
+print(correlation)
+```
+
+```{r}
+# Visualizando a matriz de correlação com um heatmap
+par(mar = c(2, 2, 2, 2))  # Ajusta as margens do gráfico
+par(cex = 1.2)            # Ajusta o tamanho do texto
+
+dev.new(width = 15, height = 15, unit = "in", noRStudioGD = TRUE)
+
+corrplot(correlation, method = "color", type = "upper",
+         addCoef.col = "black", tl.col = "black", tl.srt = 45, number.cex = 1)
+```
+
+------------------------------------------------------------------------
+
+## Módulo 3: Regressão Linear
+
+Vamos trabalhar com regressão linear com múltiplas variáveis. Lembrando que a fórmula é:
+
+$$h_{\theta}(x) = \theta_0 + \theta_1x_1 + \theta_2x_2 + \dots + \theta_nx_n$$
+
+Para avaliar o desempenho de novas técnicas de modelagem, é importante ter um modelo baseline (de referência) para comparar se as novas abordagens realmente melhoram os resultados. Neste Módulo, treinaremos uma regressão linear simples, utilizando apenas as variáveis contínuas presentes nos dados.
+
+### Módulo 3.1: Treinamento do Modelo
+
+Por padrão, a biblioteca `lm()` utiliza a equação normal para ajustar os coeficientes do modelo. Caso o modelo se torne mais complexo ou os dados sejam muito grandes, o R automaticamente recorre ao método de descida de gradiente para otimizar os coeficientes.
+
+```{r}
+# Treinando o modelo de regressão linear com as variáveis contínuas
+baseline <- lm(formula = median_house_value ~ longitude + latitude
+               + housing_median_age + total_rooms + total_bedrooms
+               + population + households + median_income, 
+               data=train_normalized)
+
+# Exibindo o resumo do modelo ajustado
+summary(baseline)
+```
+
+### Módulo 3.2: Predição
+
+Uma vez que o modelo está treinado, podemos realizar previsões tanto para os dados de treino quanto para os dados de validação.
+
+```{r}
+# Realizando previsões nos dados de treino e validação
+train_pred <- predict(baseline, train_normalized)
+valid_pred <- predict(baseline, valid_normalized)
+```
+
+### Módulo 3.3: Cálculo das Métricas de Desempenho
+
+A seguir, implementamos três métricas importantes para avaliar o desempenho do modelo:
+
+1.  Erro Absoluto Médio (MAE): $$MAE = \frac{1}{m}\sum^m_{i=1}|h_{\theta}(x^i)-y^i|$$
+2.  Erro Quadrático Médio (MSE): $$MSE = \frac{1}{m}\sum^m_{i=1}(h_{\theta}(x^i)-y^i)^2$$
+3.  Coeficiente de Determinação (R²): $$R^2 = 1 - \frac{RSS}{TSS} = 1 - \frac{\sum^m_{i=1}(h_{\theta}(x^i)-y^i)^2}{\sum^m_{i=1}(y^i - \bar{y})^2}$$
+
+```{r}
+# Função para calcular o MAE
+MAE <- function(preds, labels) {
+  mae_values <- sum(abs(preds - labels)) / length(preds)
+  return(mae_values)
+}
+
+# Função para calcular o MSE
+MSE <- function(preds, labels) {
+  mse_values <- sum((preds - labels)^2) / length(preds)
+  return(mse_values)
+}
+
+# Função para calcular o R²
+R2 <- function(pred, true) {
+  rss <- sum((pred - true)^2)
+  tss <- sum((true - mean(true))^2)
+  r2 <- 1 - rss / tss
+  return(r2)
+}
+```
+
+### Módulo 3.4: Avaliação do Modelo
+
+```{r}
+# Calculando as métricas para o conjunto de treino
+mae_train <- MAE(train_pred, train_normalized$median_house_value)
+mse_train <- MSE(train_pred, train_normalized$median_house_value)
+r2_train  <- R2(train_pred, train_normalized$median_house_value)
+
+# Calculando as métricas para o conjunto de validação
+mae_valid <- MAE(valid_pred, valid_normalized$median_house_value)
+mse_valid <- MSE(valid_pred, valid_normalized$median_house_value)
+r2_valid  <- R2(valid_pred, valid_normalized$median_house_value)
+
+
+# Organizando os resultados em um dataframe
+results_baseline <- data.frame(
+  Metric = c("MAE", "MSE", "R2"),
+  Train = c(mae_train, mse_train, r2_train),
+  Valid = c(mae_valid, mse_valid, r2_valid)
+)
+
+# Formatando os resultados para melhor leitura
+results_baseline$Train <- as.numeric(results_baseline$Train)
+results_baseline$Valid <- as.numeric(results_baseline$Valid)
+
+# Evitando notação científica na exibição dos resultados
+results_baseline$Train <- format(results_baseline$Train, scientific = FALSE)
+results_baseline$Valid <- format(results_baseline$Valid, scientific = FALSE)
+
+# Exibindo os resultados
+results_baseline
+```
+
+------------------------------------------------------------------------
+
+## Módulo 4: Combinação de Features
+
+Uma estratégia para melhorar o desempenho do modelo de regressão linear é criar combinações de features. Isso pode ajudar a fornecer informações mais explícitas ao modelo. Uma maneira eficaz de realizar essa combinação é verificar as correlações entre as variáveis, combinando aquelas com baixa correlação entre si e descartando as que têm alta correlação, pois elas podem fornecer informações redundantes.
+
+A seguir, apresentamos exemplos de como criar combinações de features no modelo:
+
+### Módulo 4.1: Definição das Fórmulas
+
+```{r}
+
+# Fórmula com interações de ordem 2 entre as variáveis
+f01 <- formula(median_house_value ~ longitude + latitude + housing_median_age
+               + total_rooms + total_bedrooms + population + households
+               + median_income + (longitude + latitude + housing_median_age
+               + total_rooms + total_bedrooms + population + households
+               + median_income)^2)
+
+# Fórmula com interações de ordem 3 entre as variáveis
+f02 <- formula(median_house_value ~ longitude + latitude + housing_median_age
+               + total_rooms + total_bedrooms + population + households
+               + median_income + (longitude + latitude + housing_median_age 
+               + total_rooms + total_bedrooms + population + households
+               + median_income)^3)
+
+# Fórmula com interações de ordem 4 entre as variáveis
+f03 <- formula(median_house_value ~ longitude + latitude + housing_median_age
+               + total_rooms + total_bedrooms + population + households
+               + median_income + (longitude + latitude + housing_median_age
+               + total_rooms + total_bedrooms + population + households
+               + median_income)^4)
+```
+
+### Módulo 4.2: Treinamento do Modelo
+
+```{r}
+formulas <- c(f01, f02, f03)
+
+MaePerCombination <- data.frame(Formula  = numeric(length(formulas)), 
+                                TrainMAE = numeric(length(formulas)),
+                                ValMAE   = numeric(length(formulas)))
+
+i <- 1
+for(f in formulas){
+  # Treinando o modelo com a fórmula atual
+  model <- lm(formula = f, data = train_normalized)
+  
+  # Realizando previsões para os dados de treino e validação
+  train_pred <- predict(model, train_normalized)
+  valid_pred <- predict(model, valid_normalized)
+  
+  # Calculando o MAE para o conjunto de treino e validação
+  mae_train <- MAE(train_pred, train_normalized$median_house_value)
+  mae_val   <- MAE(valid_pred, valid_normalized$median_house_value)
+  
+  # Armazenando os resultados
+  MaePerCombination[i, ] <- c(i, mae_train, mae_val)
+  i <- i + 1
+}
+```
+
+### Módulo 4.3: Curva de Viés e Variância
+
+Uma maneira de avaliar a complexidade do modelo é por meio da curva de viés e variância. Essa curva ajuda a entender se a complexidade do modelo está sendo um fator positivo ou negativo para o desempenho, fornecendo insights sobre o risco de underfitting ou overfitting.
+
+```{r}
+MaePerCombination
+MaePerCombinationMelt <- melt(MaePerCombination, id = "Formula")
+
+# Criando o gráfico da curva de viés/variância
+p <- ggplot(data = MaePerCombinationMelt, aes(x = Formula, y = value, colour = variable)) + 
+  geom_line() + 
+  geom_point() + 
+  ggtitle("Curva Viés/Variância") + 
+  ylab("MAE") + 
+  scale_x_discrete(name = "Fórmula", 
+                   limits = as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.85), legend.title = element_blank())
+```
+
+## Módulo 5: Ajuda de IA
+
+Uma abordagem interessante para criar combinações de features é utilizar ferramentas de IA generativa, como o ChatGPT. Abaixo está um exemplo de como um prompt foi usado para gerar combinações não-lineares de features, com o objetivo de melhorar o modelo preditivo para estimar o valor do imóvel.
+
+O prompt enviado ao ChatGPT e Maritaka AI foi o seguinte:
+
+-   `Prompt: Considere as seguintes features em minha base de dados sobre imóveis, com a qual devemos prever o valor do imóvel (median_house_value): longitude, latitude, housing_median_age, total_rooms, total_bedrooms, population, households, median_income. Gere novas features por meio da combinação não-linear das features a cima em R`
+
+```{r}
+## ChatGPT
+f01 <- formula(median_house_value ~ longitude + latitude + housing_median_age 
+               + total_rooms + total_bedrooms + population + households
+               + median_income + longitude*latitude)
+
+f02 <- formula(median_house_value ~ longitude + latitude + housing_median_age
+               + total_rooms + total_bedrooms + population + households
+               + median_income + total_rooms/households + total_bedrooms/total_rooms)
+
+f03 <- formula(median_house_value ~ longitude + latitude + housing_median_age
+               + total_rooms + total_bedrooms + population + households
+               + median_income + longitude*latitude + total_rooms/households
+               + total_bedrooms/total_rooms)
+
+## Maritaca AI
+f04 <- formula(median_house_value ~ longitude + latitude + housing_median_age +
+               total_rooms + total_bedrooms + population + households +
+               median_income + housing_median_age * median_income)
+
+f05 <- formula(median_house_value ~ longitude + latitude + housing_median_age +
+               total_rooms + total_bedrooms + population + households +
+               median_income + longitude * latitude + population/total_rooms)
+
+f06 <- formula(median_house_value ~ longitude + latitude + housing_median_age +
+               total_rooms + total_bedrooms + population + households +
+               median_income + longitude * latitude * median_income +
+               population/households)
+```
+
+### Módulo 5.1: Treinamento
+
+```{r}
+formulas <- c(f01, f02, f03, f04, f05, f06)
+
+MaePerCombinationAI <- data.frame(combination = numeric(length(formulas)), 
+                                       TrainMAE    = numeric(length(formulas)),
+                                       ValMAE      = numeric(length(formulas)))
+
+i <- 1
+for(f in formulas){
+  # Treinando o modelo com a fórmula atual
+  model <- lm(formula = f, data = train_normalized)
+  
+  # Realizando previsões para os dados de treino e validação
+  valPred   <- predict(model, valid_normalized)
+  trainPred <- predict(model, train_normalized)
+  
+  # Calculando o MAE para o conjunto de treino e validação
+  mae_train <- MAE(trainPred, train_normalized$median_house_value)
+  mae_val   <- MAE(valPred, valid_normalized$median_house_value)
+  
+  # Armazenando os resultados
+  MaePerCombinationAI[i, ] <- c(i, mae_train, mae_val)
+  i <- i + 1
+}
+
+# Exibindo o resumo do modelo final
+summary(model)
+```
+
+```{r}
+MaePerCombinationAI
+MaePerCombinationAIMelt <- melt(MaePerCombinationAI, id = "combination")
+
+# Criando o gráfico de linha para a curva de viés e variância
+p <- ggplot(data = MaePerCombinationAIMelt, aes(x = combination, y = value, colour = variable)) + 
+  geom_line() + 
+  geom_point()
+
+p <- p + ggtitle("Curva Vies/Variância") + 
+  ylab("MAE") + 
+  scale_x_discrete(name = "Combination", limits = as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.75, 0.40), legend.title = element_blank())
+```
+
+------------------------------------------------------------------------
+
+## Módulo 6: Regressão Polinomial
+
+Outra forma para aumentar a complexidade do modelo é utilizar regressão polinomial. Isso pode melhorar o ajuste ao dado, especialmente quando as relações entre as variáveis não são lineares.
+
+### Módulo 6.1: Criando as Fórmulas Manualmente
+
+```{r}
+f01 <- formula(median_house_value ~ longitude + latitude + housing_median_age
+               + total_rooms + total_bedrooms + population + households
+               + median_income, data=train_normalized)
+
+f02 <- formula(median_house_value ~ longitude + latitude + housing_median_age
+               + total_rooms + total_bedrooms + population + households
+               + median_income + I(longitude^2) + I(latitude^2)
+               + I(housing_median_age^2) + I(total_rooms^2) + I(total_bedrooms^2)
+               + I(population^2) + I(households^2) + I(median_income^2), 
+               data=train_normalized)
+
+f03 <- formula(median_house_value ~ longitude + latitude + housing_median_age
+               + total_rooms + total_bedrooms + population + households
+               + median_income + I(longitude^2) + I(latitude^2)
+               + I(housing_median_age^2) + I(total_rooms^2) + I(total_bedrooms^2)
+               + I(population^2) + I(households^2) + I(median_income^2)
+               + I(longitude^3)  + I(latitude^3) + I(housing_median_age^3)
+               + I(total_rooms^3) + I(total_bedrooms^3) + I(population^3)
+               + I(households^3) + I(median_income^3), data=train_normalized)
+
+f04 <- formula(median_house_value ~ longitude + latitude + housing_median_age
+               + total_rooms + total_bedrooms + population + households
+               + median_income + I(longitude^2) + I(latitude^2)
+               + I(housing_median_age^2) + I(total_rooms^2) + I(total_bedrooms^2)
+               + I(population^2) + I(households^2) + I(median_income^2)
+               + I(longitude^3) + I(latitude^3) + I(housing_median_age^3)
+               + I(total_rooms^3) + I(total_bedrooms^3) + I(population^3)
+               + I(households^3) + I(median_income^3) + I(longitude^4)
+               + I(latitude^4) + I(housing_median_age^4) + I(total_rooms^4)
+               + I(total_bedrooms^4) + I(population^4) + I(households^4)
+               + I(median_income^4), data=train_normalized)
+
+# Fórmulas com maior grau podem ser criadas da mesma maneira...
+```
+
+### Módulo 6.2: Função para criar fórmulas automaticamente
+
+```{r}
+
+getHypothesis <- function(real_feature_names, degree){
+  hypothesis_string <- "hypothesis <- formula(median_house_value ~ "
+  
+  for(d in 1:degree){
+    for(i in 1:length(real_feature_names)){
+      hypothesis_string <- paste(hypothesis_string, 
+                                 "I(", real_feature_names[i], "^", d, ") + ",
+                                 sep = "")
+    }
+  }
+  
+  hypothesis_string <- substr(hypothesis_string, 1, nchar(hypothesis_string)-3)
+  hypothesis_string <- paste(hypothesis_string, ")")
+  hypothesis <- eval(parse(text=hypothesis_string))
+  return(hypothesis)
+}
+```
+
+```{r}
+f01 <- getHypothesis(colnames(train_normalized)[1:8], degree=1)
+f02 <- getHypothesis(colnames(train_normalized)[1:8], degree=2)
+f03 <- getHypothesis(colnames(train_normalized)[1:8], degree=3)
+f04 <- getHypothesis(colnames(train_normalized)[1:8], degree=4)
+f05 <- getHypothesis(colnames(train_normalized)[1:8], degree=5)
+f06 <- getHypothesis(colnames(train_normalized)[1:8], degree=6)
+f07 <- getHypothesis(colnames(train_normalized)[1:8], degree=7)
+f08 <- getHypothesis(colnames(train_normalized)[1:8], degree=8)
+f09 <- getHypothesis(colnames(train_normalized)[1:8], degree=9)
+f10 <- getHypothesis(colnames(train_normalized)[1:8], degree=10)
+
+f10
+```
+
+### Módulo 6.3: Treinamento
+
+```{r}
+formulas <- list(f01, f02, f03, f04, f05, f06, f07, f08, f09, f10)
+MaePerDegree <- data.frame(Degree   = numeric(length(formulas)), 
+                           TrainMAE = numeric(length(formulas)),
+                           ValMAE   = numeric(length(formulas)))
+
+i <- 1
+for(f in formulas){
+  model <- lm(formula=f, data=train_normalized)
+  
+  train_pred <- predict(model, train_normalized)
+  valid_pred <- predict(model, valid_normalized)
+  
+  mae_train <- MAE(train_pred, train_normalized$median_house_value)
+  mae_val   <- MAE(valid_pred, valid_normalized$median_house_value)
+ 
+  MaePerDegree[i,] = c(i, mae_train, mae_val)
+  i <- i + 1
+}
+```
+
+### Módulo 6.4: Curva de Viés e Variância
+
+```{r}
+MaePerDegree
+
+MaePerDegreeMelt <- melt(MaePerDegree, id="Degree")
+
+p <- ggplot(data=MaePerDegreeMelt, aes(x=Degree, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("MAE") + scale_x_discrete(name ="Degree", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.85), legend.title = element_blank())
+```
+
+------------------------------------------------------------------------
+
+## Módulo 7: Inserção de Features Categóricas
+
+Neste Módulo, vamos expandir o modelo para incluir as **features categóricas**.
+
+### Módulo 7.1: Modelo Baseline com Features Categóricas
+
+```{r}
+cat_model <- lm(formula = median_house_value ~ longitude + latitude 
+                + housing_median_age + total_rooms + total_bedrooms
+                + population + households + median_income + less1Hocean + inland
+                + island + nearbay + nearocean, data = train_normalized)
+
+summary(cat_model)
+```
+
+### Módulo 7.2: Treinamento e Validação
+
+```{r}
+
+# Predição nos dados de treino e validação
+train_pred <- predict(cat_model, train_normalized)
+valid_pred <- predict(cat_model, valid_normalized)
+
+# Cálculo das métricas de erro
+mae_train <- MAE(train_pred, train_normalized$median_house_value)
+mse_train <- MSE(train_pred, train_normalized$median_house_value)
+r2_train  <- R2(train_pred,  train_normalized$median_house_value)
+
+mae_valid <- MAE(valid_pred, valid_normalized$median_house_value)
+mse_valid <- MSE(valid_pred, valid_normalized$median_house_value)
+r2_valid  <- R2(valid_pred,  valid_normalized$median_house_value)
+
+results_cat <- data.frame(
+  Metric = c("MAE", "MSE", "R2"),
+  Train  = c(mae_train, mse_train, r2_train),
+  Valid  = c(mae_valid, mse_valid, r2_valid)
+)
+
+results_cat$Train <- as.numeric(results_cat$Train)
+results_cat$Valid <- as.numeric(results_cat$Valid)
+results_cat$Train <- format(results_cat$Train, scientific = FALSE)
+results_cat$Valid <- format(results_cat$Valid, scientific = FALSE)
+
+results_cat
+```
+
+### Módulo 7.3: Combinação de Features
+
+```{r}
+f01_cat <- formula(median_house_value ~ longitude + latitude + housing_median_age
+                   + total_rooms + total_bedrooms + households + median_income
+                   + population + (longitude + latitude + housing_median_age
+                   + total_rooms + total_bedrooms + households + median_income
+                   + population)^2 + less1Hocean + inland + island + nearbay
+                   + nearocean)
+
+f02_cat <- formula(median_house_value ~ longitude + latitude + housing_median_age
+                   + total_rooms + total_bedrooms + households + median_income
+                   + population + (longitude + latitude + housing_median_age
+                   + total_rooms + total_bedrooms + households + median_income
+                   + population)^3 +less1Hocean + inland + island + nearbay
+                   + nearocean)
+
+f03_cat <- formula(median_house_value ~ longitude + latitude + housing_median_age
+                   + total_rooms + total_bedrooms + households + median_income
+                   + (longitude + latitude + housing_median_age + total_rooms
+                   + total_bedrooms + households + median_income + population)^4
+                   + less1Hocean + inland + island + nearbay + nearocean)
+```
+
+```{r}
+formulas <- c(f01_cat, f02_cat, f03_cat)
+MaePerCombinationCat <- data.frame(Formula  = numeric(length(formulas)), 
+                                TrainCATMAE = numeric(length(formulas)),
+                                ValCATMAE   = numeric(length(formulas)))
+
+i <- 1
+for(f in formulas){
+  
+  model <- lm(formula=f, data=train_normalized)
+  
+  train_pred <- predict(model, train_normalized)
+  valid_pred <- predict(model, valid_normalized)
+  
+  mae_train <- MAE(train_pred, train_normalized$median_house_value)
+  mae_val   <- MAE(valid_pred, valid_normalized$median_house_value)
+ 
+  MaePerCombinationCat[i,] = c(i, mae_train, mae_val)
+  i <- i + 1
+}
+```
+
+## Módulo 7.4: Curva de Viés e Variância
+
+```{r}
+MaePerCombinationCat
+MaePerCombinationCatMelt <- melt(MaePerCombinationCat, id = "Formula")
+
+# Criando o gráfico da curva de viés e variância
+p <- ggplot(data = MaePerCombinationCatMelt, aes(x = Formula, y = value, colour = variable)) +
+  geom_line(linetype = "dashed") + 
+  geom_point()
+
+
+p <- p + ggtitle("Curva Viés/Variância") +
+  ylab("MAE") +
+  scale_x_discrete(name = "Formula", limits = as.character(1:length(formulas)))
+
+
+p <- p + theme(legend.position = c(0.7, 0.85), legend.title = element_blank())
+p <- p + geom_line(data = MaePerCombinationMelt) + 
+  geom_point(data = MaePerCombinationMelt)
+p + scale_color_manual(values = c("TrainMAE" = "red", "TrainCATMAE" = "orange",
+                                  "ValMAE" = "blue", "ValCATMAE" = "deepskyblue3"))
+```
+
+------------------------------------------------------------------------
+
+## Módulo 8: Conjunto de Teste
+
+Após o treinamento e a validação de diferentes modelos, é necessário selecionar o melhor modelo com base no conjunto de validação para avaliá-lo no conjunto de teste.
+
+**Importante:** O conjunto de teste deve ser utilizado **apenas uma vez**. O desempenho do modelo no conjunto de teste reflete sua capacidade de generalização para o mundo real.
+
+### Módulo 8.1: Avaliando o Desempenho dos Modelos
+
+```{r}
+min(MaePerCombination$ValMAE)        # Modelo baseado em combinações
+min(MaePerCombinationAI$ValMAE) # Modelo com ChatGPT
+min(MaePerDegree$ValMAE)             # Modelo baseado em graus
+min(MaePerCombinationCat$ValCATMAE)  # Modelo baseado em características categóricas
+```
+
+```{r}
+# Exibindo o MAE do modelo categórico
+MaePerCombinationCat$ValCATMAE
+```
+
+### Módulo 8.2: Preparando o Conjunto de Teste
+
+```{r}
+test_data <- read.csv("housePricing_test_set.csv", 
+                      header=TRUE, stringsAsFactors=TRUE)
+
+any(is.na(test_data))
+```
+
+```{r}
+test_encoded <- test_data
+
+categories     <- c("<1H OCEAN", "INLAND", "ISLAND", "NEAR BAY", "NEAR OCEAN")
+new_categories <- c('less1Hocean', 'inland', 'island', 'nearbay', 'nearocean')
+
+for (i in seq_along(categories)) {
+  cat     <- categories[i]
+  new_cat <- new_categories[i]
+  
+  test_encoded[[new_cat]] <- as.numeric(test_encoded$ocean_proximity == cat)
+}
+
+test_encoded$ocean_proximity <- NULL
+```
+
+```{r}
+test_normalized <- test_encoded
+
+test_normalized[,1:8]  <- sweep(test_normalized[,1:8], 2, min_features, "-")
+test_normalized[,1:8]  <- sweep(test_normalized[,1:8], 2, diff, "/")
+
+test_normalized[, 1:8] <- as.data.frame(lapply(test_normalized[, 1:8], function(x) pmax(0, pmin(1, x))))
+```
+
+### Módulo 8.3: Avaliando o modelo
+
+```{r}
+best_model <- lm(formula=median_house_value ~ longitude + latitude
+                 + housing_median_age + total_rooms + total_bedrooms
+                 + households + median_income + (longitude + latitude
+                 + housing_median_age + total_rooms + total_bedrooms 
+                 + households + median_income + population)^4 + less1Hocean
+                 + inland + island + nearbay + nearocean, data=train_normalized)
+
+
+test_pred <- predict(best_model, test_normalized)
+
+mae_test <- MAE(test_pred, test_normalized$median_house_value)
+mse_test <- MSE(test_pred, test_normalized$median_house_value)
+r2_test  <- R2(test_pred,  test_normalized$median_house_value)
+
+results_cat <- data.frame(
+  Metric = c("MAE", "MSE", "R2"),
+  Test = c(mae_test, mse_test, r2_test)
+)
+
+results_cat$Test <- as.numeric(results_cat$Test)
+results_cat$Test <- format(results_cat$Test, scientific = FALSE)
+
+results_cat
+```
