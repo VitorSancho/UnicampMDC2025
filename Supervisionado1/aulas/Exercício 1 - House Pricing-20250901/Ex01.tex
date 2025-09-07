@@ -1,0 +1,1850 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\usepackage{svg}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={INF0615 -- Aprendizado Supervisionado I},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{INF0615 -- Aprendizado Supervisionado I}
+\usepackage{etoolbox}
+\makeatletter
+\providecommand{\subtitle}[1]{% add subtitle to \maketitle
+  \apptocmd{\@title}{\par {\large #1 \par}}{}{}
+}
+\makeatother
+\subtitle{Exercício 01 - House Pricing}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+Neste exercício, iremos explorar conceitos fundamentais de aprendizado
+supervisionado, aplicando-os a um problema de \textbf{precificação de
+imóveis}. Trabalharemos com as seguintes técnicas:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Regressão Linear}: Modelagem da relação entre variáveis
+  preditoras e o preço do imóvel.
+\item
+  \textbf{Combinação de Features}: Uso de transformações e combinações
+  de atributos para melhorar a performance do modelo.
+\item
+  \textbf{Regressão Polinomial}: Introdução de termos não lineares para
+  capturar padrões mais complexos nos dados.
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Módulo 0: Instalando
+Dependências}\label{muxf3dulo-0-instalando-dependuxeancias}
+
+Antes de prosseguir, verifique se as bibliotecas necessárias estão
+instaladas. Caso não estejam, remova o \texttt{\#} das linhas abaixo
+para instalá-las:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{install.packages}\NormalTok{(}\StringTok{"ggplot2"}\NormalTok{)  }\CommentTok{\# Para visualização de dados}
+\FunctionTok{install.packages}\NormalTok{(}\StringTok{"reshape2"}\NormalTok{) }\CommentTok{\# Para manipulação de dados}
+\FunctionTok{install.packages}\NormalTok{(}\StringTok{"corrplot"}\NormalTok{) }\CommentTok{\# Para visualização de correlações}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Módulo 1: Configuração do
+Ambiente}\label{muxf3dulo-1-configurauxe7uxe3o-do-ambiente}
+
+Carrega as bibliotecas necessárias e define uma semente aleatória para
+reprodutibilidade:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(ggplot2)  }\CommentTok{\# Visualização de dados}
+\FunctionTok{library}\NormalTok{(reshape2) }\CommentTok{\# Manipulação de dados}
+\FunctionTok{library}\NormalTok{(corrplot) }\CommentTok{\# Visualização de correlações}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{42}\NormalTok{)      }\CommentTok{\# Garantir reprodutibilidade dos experimentos}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Módulo 2: Carregamento do
+Dataset}\label{muxf3dulo-2-carregamento-do-dataset}
+
+Carregue os conjuntos de dados de \textbf{treinamento} e
+\textbf{validação}, que serão utilizados para treinar e avaliar os
+modelos:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{train\_data }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"housePricing\_train\_set.csv"}\NormalTok{, }
+                       \AttributeTok{header=}\ConstantTok{TRUE}\NormalTok{, }\AttributeTok{stringsAsFactors=}\ConstantTok{TRUE}\NormalTok{)}
+
+\NormalTok{valid\_data }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"housePricing\_val\_set.csv"}\NormalTok{, }
+                       \AttributeTok{header=}\ConstantTok{TRUE}\NormalTok{, }\AttributeTok{stringsAsFactors=}\ConstantTok{TRUE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Módulo 2.1: Explorando os
+Dados}\label{muxf3dulo-2.1-explorando-os-dados}
+
+A seguir, vamos analisar algumas informações básicas sobre os conjuntos
+de dados.
+
+\paragraph{Módulo 2.1.1: Dados de
+Treinamento}\label{muxf3dulo-2.1.1-dados-de-treinamento}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Exibir as primeiras linhas do dataset}
+\NormalTok{display\_head }\OtherTok{\textless{}{-}} \FunctionTok{head}\NormalTok{(train\_data)}
+\FunctionTok{print}\NormalTok{(display\_head)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   longitude latitude housing_median_age total_rooms total_bedrooms population
+## 1      -118     34.0                 52        1754            452       1849
+## 2      -118     34.0                 46        1217            322        662
+## 3      -122     38.0                 33          44              6         23
+## 4      -119     35.4                 35         120             35        477
+## 5      -119     34.2                 33        5252            760       2041
+## 6      -118     33.5                  4        3623            734       1129
+##   households median_income median_house_value ocean_proximity
+## 1        445          2.37             122800       <1H OCEAN
+## 2        305          3.17             140300       <1H OCEAN
+## 3         11          4.12             212500        NEAR BAY
+## 4         41          1.91              47500          INLAND
+## 5        730          6.80             389700       <1H OCEAN
+## 6        530          5.73             500001       <1H OCEAN
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Dimensões do dataset}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Amostras:"}\NormalTok{, }\FunctionTok{nrow}\NormalTok{(train\_data), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Features:"}\NormalTok{, }\FunctionTok{ncol}\NormalTok{(train\_data)}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Amostras: 12268 
+## Features: 9
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Resumo estatístico dos dados}
+\FunctionTok{summary}\NormalTok{(train\_data)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    longitude       latitude    housing_median_age  total_rooms   
+##  Min.   :-124   Min.   :32.5   Min.   : 1.0       Min.   :   15  
+##  1st Qu.:-122   1st Qu.:33.9   1st Qu.:18.0       1st Qu.: 1461  
+##  Median :-119   Median :34.3   Median :29.0       Median : 2130  
+##  Mean   :-120   Mean   :35.6   Mean   :28.8       Mean   : 2641  
+##  3rd Qu.:-118   3rd Qu.:37.7   3rd Qu.:37.0       3rd Qu.: 3131  
+##  Max.   :-114   Max.   :42.0   Max.   :52.0       Max.   :37937  
+##  total_bedrooms   population      households   median_income  
+##  Min.   :   3   Min.   :    3   Min.   :   2   Min.   : 0.50  
+##  1st Qu.: 297   1st Qu.:  793   1st Qu.: 281   1st Qu.: 2.56  
+##  Median : 437   Median : 1169   Median : 411   Median : 3.54  
+##  Mean   : 539   Mean   : 1430   Mean   : 500   Mean   : 3.87  
+##  3rd Qu.: 647   3rd Qu.: 1720   3rd Qu.: 603   3rd Qu.: 4.76  
+##  Max.   :6445   Max.   :35682   Max.   :6082   Max.   :15.00  
+##  median_house_value   ocean_proximity
+##  Min.   : 14999     <1H OCEAN :5361  
+##  1st Qu.:119600     INLAND    :3892  
+##  Median :180300     ISLAND    :   3  
+##  Mean   :206918     NEAR BAY  :1396  
+##  3rd Qu.:265000     NEAR OCEAN:1616  
+##  Max.   :500001
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Verificar se há valores ausentes}
+\ControlFlowTok{if}\NormalTok{ (}\FunctionTok{any}\NormalTok{(}\FunctionTok{is.na}\NormalTok{(train\_data))) \{}
+  \FunctionTok{cat}\NormalTok{(}\StringTok{"Aviso: Existem valores ausentes no conjunto de treinamento.}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\NormalTok{\} }\ControlFlowTok{else}\NormalTok{ \{}
+  \FunctionTok{cat}\NormalTok{(}\StringTok{"Nenhum valor ausente encontrado no conjunto de treinamento.}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Nenhum valor ausente encontrado no conjunto de treinamento.
+\end{verbatim}
+
+\paragraph{Módulo 2.1.2: Dados de
+Validação}\label{muxf3dulo-2.1.2-dados-de-validauxe7uxe3o}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Exibir as primeiras linhas do dataset}
+\NormalTok{display\_head }\OtherTok{\textless{}{-}} \FunctionTok{head}\NormalTok{(valid\_data)}
+\FunctionTok{print}\NormalTok{(display\_head)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   longitude latitude housing_median_age total_rooms total_bedrooms population
+## 1      -116     33.7                 14        2774            566       1530
+## 2      -122     37.2                 12       10236           1878       5674
+## 3      -119     34.1                 35        3795            690       1521
+## 4      -118     34.2                 19        9259           1653       3963
+## 5      -117     33.0                  5        2276            311       1158
+## 6      -118     34.1                 35        2501            651       1182
+##   households median_income median_house_value ocean_proximity
+## 1        505          3.07             104100          INLAND
+## 2       1816          4.75             261100       <1H OCEAN
+## 3        653          5.87             448100       <1H OCEAN
+## 4       1595          6.00             228700       <1H OCEAN
+## 5        317          6.43             271900       <1H OCEAN
+## 6        591          1.45             113200          INLAND
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Dimensões do dataset}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Amostras:"}\NormalTok{, }\FunctionTok{nrow}\NormalTok{(valid\_data), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Features:"}\NormalTok{, }\FunctionTok{ncol}\NormalTok{(valid\_data)}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Amostras: 4084 
+## Features: 9
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Resumo estatístico dos dados}
+\FunctionTok{summary}\NormalTok{(valid\_data)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    longitude       latitude    housing_median_age  total_rooms   
+##  Min.   :-124   Min.   :32.5   Min.   : 1.0       Min.   :    6  
+##  1st Qu.:-122   1st Qu.:33.9   1st Qu.:18.0       1st Qu.: 1465  
+##  Median :-118   Median :34.3   Median :28.0       Median : 2152  
+##  Mean   :-120   Mean   :35.6   Mean   :28.2       Mean   : 2648  
+##  3rd Qu.:-118   3rd Qu.:37.7   3rd Qu.:36.0       3rd Qu.: 3183  
+##  Max.   :-115   Max.   :42.0   Max.   :52.0       Max.   :39320  
+##  total_bedrooms   population      households   median_income  
+##  Min.   :   2   Min.   :    8   Min.   :   2   Min.   : 0.50  
+##  1st Qu.: 300   1st Qu.:  810   1st Qu.: 285   1st Qu.: 2.56  
+##  Median : 438   Median : 1168   Median : 416   Median : 3.51  
+##  Mean   : 542   Mean   : 1425   Mean   : 504   Mean   : 3.87  
+##  3rd Qu.: 658   3rd Qu.: 1743   3rd Qu.: 614   3rd Qu.: 4.72  
+##  Max.   :6210   Max.   :16305   Max.   :5358   Max.   :15.00  
+##  median_house_value   ocean_proximity
+##  Min.   : 14999     <1H OCEAN :1827  
+##  1st Qu.:120000     INLAND    :1325  
+##  Median :180950     NEAR BAY  : 423  
+##  Mean   :207295     NEAR OCEAN: 509  
+##  3rd Qu.:265200                      
+##  Max.   :500001
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Verificar se há valores ausentes}
+\ControlFlowTok{if}\NormalTok{ (}\FunctionTok{any}\NormalTok{(}\FunctionTok{is.na}\NormalTok{(valid\_data))) \{}
+  \FunctionTok{cat}\NormalTok{(}\StringTok{"Aviso: Existem valores ausentes no conjunto de validação.}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\NormalTok{\} }\ControlFlowTok{else}\NormalTok{ \{}
+  \FunctionTok{cat}\NormalTok{(}\StringTok{"Nenhum valor ausente encontrado no conjunto de validação.}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Nenhum valor ausente encontrado no conjunto de validação.
+\end{verbatim}
+
+\subsubsection{Módulo 2.2:
+One-Hot-Encoding}\label{muxf3dulo-2.2-one-hot-encoding}
+
+One-Hot-Encoding é um método de transformação de variáveis categóricas
+em variáveis numéricas, no qual cada categoria é representada como uma
+coluna binária (0 ou 1).
+
+\begin{figure}
+\centering
+\pandocbounded{\includesvg[keepaspectratio]{OneHotEncoder.svg}}
+\caption{Fig 1. Exemplo de One Hot Encoder}
+\end{figure}
+
+Aqui, temos dois exemplos de como realizar essa transformação:
+manualmente e automaticamente.
+
+\paragraph{Módulo 2.2.1: Transformação
+Manual}\label{muxf3dulo-2.2.1-transformauxe7uxe3o-manual}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{train\_encoded }\OtherTok{\textless{}{-}}\NormalTok{ train\_data}
+\NormalTok{valid\_encoded }\OtherTok{\textless{}{-}}\NormalTok{ valid\_data}
+
+\CommentTok{\# Criando colunas binárias para cada categoria de "ocean\_proximity"}
+\NormalTok{categories     }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"\textless{}1H OCEAN"}\NormalTok{, }\StringTok{"INLAND"}\NormalTok{, }\StringTok{"ISLAND"}\NormalTok{, }\StringTok{"NEAR BAY"}\NormalTok{, }\StringTok{"NEAR OCEAN"}\NormalTok{)}
+\NormalTok{new\_categories }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{\textquotesingle{}less1Hocean\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}inland\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}island\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}nearbay\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}nearocean\textquotesingle{}}\NormalTok{)}
+
+\CommentTok{\# Looping sobre as categorias}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \FunctionTok{seq\_along}\NormalTok{(categories)) \{}
+\NormalTok{  cat     }\OtherTok{\textless{}{-}}\NormalTok{ categories[i]}
+\NormalTok{  new\_cat }\OtherTok{\textless{}{-}}\NormalTok{ new\_categories[i]}
+  
+  \CommentTok{\# Criando colunas binárias para o treino e a validação}
+\NormalTok{  train\_encoded[[new\_cat]] }\OtherTok{\textless{}{-}} \FunctionTok{as.numeric}\NormalTok{(train\_encoded}\SpecialCharTok{$}\NormalTok{ocean\_proximity }\SpecialCharTok{==}\NormalTok{ cat)}
+\NormalTok{  valid\_encoded[[new\_cat]] }\OtherTok{\textless{}{-}} \FunctionTok{as.numeric}\NormalTok{(valid\_encoded}\SpecialCharTok{$}\NormalTok{ocean\_proximity }\SpecialCharTok{==}\NormalTok{ cat)}
+\NormalTok{\}}
+
+\CommentTok{\# Removendo a coluna original categórica}
+\NormalTok{train\_encoded}\SpecialCharTok{$}\NormalTok{ocean\_proximity }\OtherTok{\textless{}{-}} \ConstantTok{NULL}
+\NormalTok{valid\_encoded}\SpecialCharTok{$}\NormalTok{ocean\_proximity }\OtherTok{\textless{}{-}} \ConstantTok{NULL}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(train\_encoded)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    longitude       latitude    housing_median_age  total_rooms   
+##  Min.   :-124   Min.   :32.5   Min.   : 1.0       Min.   :   15  
+##  1st Qu.:-122   1st Qu.:33.9   1st Qu.:18.0       1st Qu.: 1461  
+##  Median :-119   Median :34.3   Median :29.0       Median : 2130  
+##  Mean   :-120   Mean   :35.6   Mean   :28.8       Mean   : 2641  
+##  3rd Qu.:-118   3rd Qu.:37.7   3rd Qu.:37.0       3rd Qu.: 3131  
+##  Max.   :-114   Max.   :42.0   Max.   :52.0       Max.   :37937  
+##  total_bedrooms   population      households   median_income  
+##  Min.   :   3   Min.   :    3   Min.   :   2   Min.   : 0.50  
+##  1st Qu.: 297   1st Qu.:  793   1st Qu.: 281   1st Qu.: 2.56  
+##  Median : 437   Median : 1169   Median : 411   Median : 3.54  
+##  Mean   : 539   Mean   : 1430   Mean   : 500   Mean   : 3.87  
+##  3rd Qu.: 647   3rd Qu.: 1720   3rd Qu.: 603   3rd Qu.: 4.76  
+##  Max.   :6445   Max.   :35682   Max.   :6082   Max.   :15.00  
+##  median_house_value  less1Hocean        inland          island        
+##  Min.   : 14999     Min.   :0.000   Min.   :0.000   Min.   :0.000000  
+##  1st Qu.:119600     1st Qu.:0.000   1st Qu.:0.000   1st Qu.:0.000000  
+##  Median :180300     Median :0.000   Median :0.000   Median :0.000000  
+##  Mean   :206918     Mean   :0.437   Mean   :0.317   Mean   :0.000244  
+##  3rd Qu.:265000     3rd Qu.:1.000   3rd Qu.:1.000   3rd Qu.:0.000000  
+##  Max.   :500001     Max.   :1.000   Max.   :1.000   Max.   :1.000000  
+##     nearbay        nearocean    
+##  Min.   :0.000   Min.   :0.000  
+##  1st Qu.:0.000   1st Qu.:0.000  
+##  Median :0.000   Median :0.000  
+##  Mean   :0.114   Mean   :0.132  
+##  3rd Qu.:0.000   3rd Qu.:0.000  
+##  Max.   :1.000   Max.   :1.000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(valid\_encoded)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    longitude       latitude    housing_median_age  total_rooms   
+##  Min.   :-124   Min.   :32.5   Min.   : 1.0       Min.   :    6  
+##  1st Qu.:-122   1st Qu.:33.9   1st Qu.:18.0       1st Qu.: 1465  
+##  Median :-118   Median :34.3   Median :28.0       Median : 2152  
+##  Mean   :-120   Mean   :35.6   Mean   :28.2       Mean   : 2648  
+##  3rd Qu.:-118   3rd Qu.:37.7   3rd Qu.:36.0       3rd Qu.: 3183  
+##  Max.   :-115   Max.   :42.0   Max.   :52.0       Max.   :39320  
+##  total_bedrooms   population      households   median_income  
+##  Min.   :   2   Min.   :    8   Min.   :   2   Min.   : 0.50  
+##  1st Qu.: 300   1st Qu.:  810   1st Qu.: 285   1st Qu.: 2.56  
+##  Median : 438   Median : 1168   Median : 416   Median : 3.51  
+##  Mean   : 542   Mean   : 1425   Mean   : 504   Mean   : 3.87  
+##  3rd Qu.: 658   3rd Qu.: 1743   3rd Qu.: 614   3rd Qu.: 4.72  
+##  Max.   :6210   Max.   :16305   Max.   :5358   Max.   :15.00  
+##  median_house_value  less1Hocean        inland          island     nearbay     
+##  Min.   : 14999     Min.   :0.000   Min.   :0.000   Min.   :0   Min.   :0.000  
+##  1st Qu.:120000     1st Qu.:0.000   1st Qu.:0.000   1st Qu.:0   1st Qu.:0.000  
+##  Median :180950     Median :0.000   Median :0.000   Median :0   Median :0.000  
+##  Mean   :207295     Mean   :0.447   Mean   :0.324   Mean   :0   Mean   :0.104  
+##  3rd Qu.:265200     3rd Qu.:1.000   3rd Qu.:1.000   3rd Qu.:0   3rd Qu.:0.000  
+##  Max.   :500001     Max.   :1.000   Max.   :1.000   Max.   :0   Max.   :1.000  
+##    nearocean    
+##  Min.   :0.000  
+##  1st Qu.:0.000  
+##  Median :0.000  
+##  Mean   :0.125  
+##  3rd Qu.:0.000  
+##  Max.   :1.000
+\end{verbatim}
+
+\paragraph{Módulo 2.2.2: Transformação
+Automática}\label{muxf3dulo-2.2.2-transformauxe7uxe3o-automuxe1tica}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{auto\_one\_hot }\OtherTok{\textless{}{-}} \FunctionTok{model.matrix}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\NormalTok{ocean\_proximity }\SpecialCharTok{{-}} \DecValTok{1}\NormalTok{, }\AttributeTok{data =}\NormalTok{ train\_data)}
+\NormalTok{auto\_one\_hot }\OtherTok{\textless{}{-}} \FunctionTok{cbind}\NormalTok{(train\_data, auto\_one\_hot)}
+
+\NormalTok{auto\_one\_hot}\SpecialCharTok{$}\NormalTok{ocean\_proximity }\OtherTok{\textless{}{-}} \ConstantTok{NULL}
+
+\FunctionTok{summary}\NormalTok{(auto\_one\_hot)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    longitude       latitude    housing_median_age  total_rooms   
+##  Min.   :-124   Min.   :32.5   Min.   : 1.0       Min.   :   15  
+##  1st Qu.:-122   1st Qu.:33.9   1st Qu.:18.0       1st Qu.: 1461  
+##  Median :-119   Median :34.3   Median :29.0       Median : 2130  
+##  Mean   :-120   Mean   :35.6   Mean   :28.8       Mean   : 2641  
+##  3rd Qu.:-118   3rd Qu.:37.7   3rd Qu.:37.0       3rd Qu.: 3131  
+##  Max.   :-114   Max.   :42.0   Max.   :52.0       Max.   :37937  
+##  total_bedrooms   population      households   median_income  
+##  Min.   :   3   Min.   :    3   Min.   :   2   Min.   : 0.50  
+##  1st Qu.: 297   1st Qu.:  793   1st Qu.: 281   1st Qu.: 2.56  
+##  Median : 437   Median : 1169   Median : 411   Median : 3.54  
+##  Mean   : 539   Mean   : 1430   Mean   : 500   Mean   : 3.87  
+##  3rd Qu.: 647   3rd Qu.: 1720   3rd Qu.: 603   3rd Qu.: 4.76  
+##  Max.   :6445   Max.   :35682   Max.   :6082   Max.   :15.00  
+##  median_house_value ocean_proximity<1H OCEAN ocean_proximityINLAND
+##  Min.   : 14999     Min.   :0.000            Min.   :0.000        
+##  1st Qu.:119600     1st Qu.:0.000            1st Qu.:0.000        
+##  Median :180300     Median :0.000            Median :0.000        
+##  Mean   :206918     Mean   :0.437            Mean   :0.317        
+##  3rd Qu.:265000     3rd Qu.:1.000            3rd Qu.:1.000        
+##  Max.   :500001     Max.   :1.000            Max.   :1.000        
+##  ocean_proximityISLAND ocean_proximityNEAR BAY ocean_proximityNEAR OCEAN
+##  Min.   :0.000000      Min.   :0.000           Min.   :0.000            
+##  1st Qu.:0.000000      1st Qu.:0.000           1st Qu.:0.000            
+##  Median :0.000000      Median :0.000           Median :0.000            
+##  Mean   :0.000244      Mean   :0.114           Mean   :0.132            
+##  3rd Qu.:0.000000      3rd Qu.:0.000           3rd Qu.:0.000            
+##  Max.   :1.000000      Max.   :1.000           Max.   :1.000
+\end{verbatim}
+
+\subsubsection{Módulo 2.3: Normalização dos
+Dados}\label{muxf3dulo-2.3-normalizauxe7uxe3o-dos-dados}
+
+Normalização é um processo que ajusta os valores das features para uma
+escala comum, melhorando a performance dos modelos. Aqui, há exemplo de
+dois métodos de normalização: Min-Max e Z-Normalização.
+
+\paragraph{Módulo 2.3.1: Min-Max
+Normalization}\label{muxf3dulo-2.3.1-min-max-normalization}
+
+A formula do Min-Max é a seguinte:
+
+\[x_{MinMax} = \frac{x - min(x)}{max(x) - min(x)}\]
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Calculando os valores mínimos e máximos de cada variável}
+\NormalTok{min\_features }\OtherTok{\textless{}{-}} \FunctionTok{apply}\NormalTok{(train\_encoded[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\DecValTok{2}\NormalTok{, min)}
+\NormalTok{max\_features }\OtherTok{\textless{}{-}} \FunctionTok{apply}\NormalTok{(train\_encoded[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\DecValTok{2}\NormalTok{, max)}
+\NormalTok{diff         }\OtherTok{\textless{}{-}}\NormalTok{ max\_features }\SpecialCharTok{{-}}\NormalTok{ min\_features}
+
+\FunctionTok{print}\NormalTok{(}\StringTok{"Valores mínimos"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Valores mínimos"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(min\_features)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##          longitude           latitude housing_median_age        total_rooms 
+##             -124.3               32.5                1.0               15.0 
+##     total_bedrooms         population         households      median_income 
+##                3.0                3.0                2.0                0.5
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Valores máximos"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Valores máximos"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(max\_features)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##          longitude           latitude housing_median_age        total_rooms 
+##               -114                 42                 52              37937 
+##     total_bedrooms         population         households      median_income 
+##               6445              35682               6082                 15
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Diferença entre máximos e mínimos"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Diferença entre máximos e mínimos"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(diff)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##          longitude           latitude housing_median_age        total_rooms 
+##               10.0                9.4               51.0            37922.0 
+##     total_bedrooms         population         households      median_income 
+##             6442.0            35679.0             6080.0               14.5
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Aplicando a normalização Min{-}Max nos dados de treino e validação}
+\NormalTok{train\_normalized }\OtherTok{\textless{}{-}}\NormalTok{ train\_encoded}
+\NormalTok{valid\_normalized }\OtherTok{\textless{}{-}}\NormalTok{ valid\_encoded}
+
+\NormalTok{train\_normalized[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{] }\OtherTok{\textless{}{-}} \FunctionTok{sweep}\NormalTok{(train\_normalized[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\DecValTok{2}\NormalTok{, min\_features, }\StringTok{"{-}"}\NormalTok{)}
+\NormalTok{train\_normalized[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{] }\OtherTok{\textless{}{-}} \FunctionTok{sweep}\NormalTok{(train\_normalized[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\DecValTok{2}\NormalTok{, diff, }\StringTok{"/"}\NormalTok{)}
+
+\NormalTok{valid\_normalized[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{] }\OtherTok{\textless{}{-}} \FunctionTok{sweep}\NormalTok{(valid\_normalized[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\DecValTok{2}\NormalTok{, min\_features, }\StringTok{"{-}"}\NormalTok{)}
+\NormalTok{valid\_normalized[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{] }\OtherTok{\textless{}{-}} \FunctionTok{sweep}\NormalTok{(valid\_normalized[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\DecValTok{2}\NormalTok{, diff, }\StringTok{"/"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(train\_normalized)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    longitude        latitude     housing_median_age  total_rooms    
+##  Min.   :0.000   Min.   :0.000   Min.   :0.000      Min.   :0.0000  
+##  1st Qu.:0.253   1st Qu.:0.148   1st Qu.:0.333      1st Qu.:0.0381  
+##  Median :0.582   Median :0.182   Median :0.549      Median :0.0558  
+##  Mean   :0.475   Mean   :0.329   Mean   :0.544      Mean   :0.0692  
+##  3rd Qu.:0.632   3rd Qu.:0.551   3rd Qu.:0.706      3rd Qu.:0.0822  
+##  Max.   :1.000   Max.   :1.000   Max.   :1.000      Max.   :1.0000  
+##  total_bedrooms     population       households     median_income  
+##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :0.000  
+##  1st Qu.:0.0456   1st Qu.:0.0221   1st Qu.:0.0459   1st Qu.:0.142  
+##  Median :0.0674   Median :0.0327   Median :0.0673   Median :0.210  
+##  Mean   :0.0832   Mean   :0.0400   Mean   :0.0819   Mean   :0.232  
+##  3rd Qu.:0.1000   3rd Qu.:0.0481   3rd Qu.:0.0988   3rd Qu.:0.294  
+##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :1.000  
+##  median_house_value  less1Hocean        inland          island        
+##  Min.   : 14999     Min.   :0.000   Min.   :0.000   Min.   :0.000000  
+##  1st Qu.:119600     1st Qu.:0.000   1st Qu.:0.000   1st Qu.:0.000000  
+##  Median :180300     Median :0.000   Median :0.000   Median :0.000000  
+##  Mean   :206918     Mean   :0.437   Mean   :0.317   Mean   :0.000244  
+##  3rd Qu.:265000     3rd Qu.:1.000   3rd Qu.:1.000   3rd Qu.:0.000000  
+##  Max.   :500001     Max.   :1.000   Max.   :1.000   Max.   :1.000000  
+##     nearbay        nearocean    
+##  Min.   :0.000   Min.   :0.000  
+##  1st Qu.:0.000   1st Qu.:0.000  
+##  Median :0.000   Median :0.000  
+##  Mean   :0.114   Mean   :0.132  
+##  3rd Qu.:0.000   3rd Qu.:0.000  
+##  Max.   :1.000   Max.   :1.000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(valid\_normalized)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    longitude        latitude        housing_median_age  total_rooms       
+##  Min.   :0.012   Min.   :-0.00106   Min.   :0.000      Min.   :-0.000237  
+##  1st Qu.:0.264   1st Qu.: 0.14574   1st Qu.:0.333      1st Qu.: 0.038236  
+##  Median :0.585   Median : 0.18298   Median :0.529      Median : 0.056339  
+##  Mean   :0.478   Mean   : 0.32698   Mean   :0.533      Mean   : 0.069430  
+##  3rd Qu.:0.631   3rd Qu.: 0.54681   3rd Qu.:0.686      3rd Qu.: 0.083546  
+##  Max.   :0.971   Max.   : 1.00000   Max.   :1.000      Max.   : 1.036470  
+##  total_bedrooms        population        households     median_income  
+##  Min.   :-0.000155   Min.   :0.00014   Min.   :0.0000   Min.   :0.000  
+##  1st Qu.: 0.046104   1st Qu.:0.02261   1st Qu.:0.0465   1st Qu.:0.142  
+##  Median : 0.067603   Median :0.03267   Median :0.0681   Median :0.208  
+##  Mean   : 0.083603   Mean   :0.03985   Mean   :0.0826   Mean   :0.233  
+##  3rd Qu.: 0.101677   3rd Qu.:0.04877   3rd Qu.:0.1007   3rd Qu.:0.291  
+##  Max.   : 0.963521   Max.   :0.45691   Max.   :0.8809   Max.   :1.000  
+##  median_house_value  less1Hocean        inland          island     nearbay     
+##  Min.   : 14999     Min.   :0.000   Min.   :0.000   Min.   :0   Min.   :0.000  
+##  1st Qu.:120000     1st Qu.:0.000   1st Qu.:0.000   1st Qu.:0   1st Qu.:0.000  
+##  Median :180950     Median :0.000   Median :0.000   Median :0   Median :0.000  
+##  Mean   :207295     Mean   :0.447   Mean   :0.324   Mean   :0   Mean   :0.104  
+##  3rd Qu.:265200     3rd Qu.:1.000   3rd Qu.:1.000   3rd Qu.:0   3rd Qu.:0.000  
+##  Max.   :500001     Max.   :1.000   Max.   :1.000   Max.   :0   Max.   :1.000  
+##    nearocean    
+##  Min.   :0.000  
+##  1st Qu.:0.000  
+##  Median :0.000  
+##  Mean   :0.125  
+##  3rd Qu.:0.000  
+##  Max.   :1.000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{valid\_normalized[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{] }\OtherTok{\textless{}{-}} \FunctionTok{as.data.frame}\NormalTok{(}\FunctionTok{lapply}\NormalTok{(valid\_normalized[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\ControlFlowTok{function}\NormalTok{(x) }\FunctionTok{pmax}\NormalTok{(}\DecValTok{0}\NormalTok{, }\FunctionTok{pmin}\NormalTok{(}\DecValTok{1}\NormalTok{, x))))}
+\FunctionTok{summary}\NormalTok{(valid\_normalized)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    longitude        latitude     housing_median_age  total_rooms    
+##  Min.   :0.012   Min.   :0.000   Min.   :0.000      Min.   :0.0000  
+##  1st Qu.:0.264   1st Qu.:0.146   1st Qu.:0.333      1st Qu.:0.0382  
+##  Median :0.585   Median :0.183   Median :0.529      Median :0.0563  
+##  Mean   :0.478   Mean   :0.327   Mean   :0.533      Mean   :0.0694  
+##  3rd Qu.:0.631   3rd Qu.:0.547   3rd Qu.:0.686      3rd Qu.:0.0835  
+##  Max.   :0.971   Max.   :1.000   Max.   :1.000      Max.   :1.0000  
+##  total_bedrooms     population        households     median_income  
+##  Min.   :0.0000   Min.   :0.00014   Min.   :0.0000   Min.   :0.000  
+##  1st Qu.:0.0461   1st Qu.:0.02261   1st Qu.:0.0465   1st Qu.:0.142  
+##  Median :0.0676   Median :0.03267   Median :0.0681   Median :0.208  
+##  Mean   :0.0836   Mean   :0.03985   Mean   :0.0826   Mean   :0.233  
+##  3rd Qu.:0.1017   3rd Qu.:0.04877   3rd Qu.:0.1007   3rd Qu.:0.291  
+##  Max.   :0.9635   Max.   :0.45691   Max.   :0.8809   Max.   :1.000  
+##  median_house_value  less1Hocean        inland          island     nearbay     
+##  Min.   : 14999     Min.   :0.000   Min.   :0.000   Min.   :0   Min.   :0.000  
+##  1st Qu.:120000     1st Qu.:0.000   1st Qu.:0.000   1st Qu.:0   1st Qu.:0.000  
+##  Median :180950     Median :0.000   Median :0.000   Median :0   Median :0.000  
+##  Mean   :207295     Mean   :0.447   Mean   :0.324   Mean   :0   Mean   :0.104  
+##  3rd Qu.:265200     3rd Qu.:1.000   3rd Qu.:1.000   3rd Qu.:0   3rd Qu.:0.000  
+##  Max.   :500001     Max.   :1.000   Max.   :1.000   Max.   :0   Max.   :1.000  
+##    nearocean    
+##  Min.   :0.000  
+##  1st Qu.:0.000  
+##  Median :0.000  
+##  Mean   :0.125  
+##  3rd Qu.:0.000  
+##  Max.   :1.000
+\end{verbatim}
+
+\paragraph{Módulo 2.3.2:
+Z-Normalization}\label{muxf3dulo-2.3.2-z-normalization}
+
+A formula do Z-norm é a seguinte:
+
+\[x_{Znorm} = \frac{x - mean(x)}{sd(x)}\]
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Calculando a média e o desvio padrão para normalização}
+\NormalTok{mean\_features }\OtherTok{\textless{}{-}} \FunctionTok{apply}\NormalTok{(train\_encoded[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\DecValTok{2}\NormalTok{, mean)}
+\NormalTok{sd\_features   }\OtherTok{\textless{}{-}} \FunctionTok{apply}\NormalTok{(train\_encoded[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\DecValTok{2}\NormalTok{, sd)}
+
+\FunctionTok{print}\NormalTok{(}\StringTok{"Médias das features"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Médias das features"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(mean\_features)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##          longitude           latitude housing_median_age        total_rooms 
+##            -119.58              35.64              28.76            2640.81 
+##     total_bedrooms         population         households      median_income 
+##             538.82            1429.55             500.01               3.87
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Desvios padrão das features"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Desvios padrão das features"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(sd\_features)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##          longitude           latitude housing_median_age        total_rooms 
+##               2.01               2.14              12.62            2185.67 
+##     total_bedrooms         population         households      median_income 
+##             421.63            1150.94             382.11               1.89
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Aplicando a normalização Z{-}Score nos dados de treino}
+\NormalTok{z\_norm\_data }\OtherTok{\textless{}{-}}\NormalTok{ train\_encoded}
+
+\NormalTok{z\_norm\_data[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{] }\OtherTok{\textless{}{-}} \FunctionTok{sweep}\NormalTok{(z\_norm\_data[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\DecValTok{2}\NormalTok{, mean\_features, }\StringTok{"{-}"}\NormalTok{)}
+\NormalTok{z\_norm\_data[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{] }\OtherTok{\textless{}{-}} \FunctionTok{sweep}\NormalTok{(z\_norm\_data[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\DecValTok{2}\NormalTok{, sd\_features, }\StringTok{"/"}\NormalTok{)}
+
+\FunctionTok{summary}\NormalTok{(z\_norm\_data)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    longitude         latitude      housing_median_age  total_rooms    
+##  Min.   :-2.369   Min.   :-1.442   Min.   :-2.201     Min.   :-1.201  
+##  1st Qu.:-1.108   1st Qu.:-0.793   1st Qu.:-0.853     1st Qu.:-0.540  
+##  Median : 0.532   Median :-0.644   Median : 0.019     Median :-0.234  
+##  Mean   : 0.000   Mean   : 0.000   Mean   : 0.000     Mean   : 0.000  
+##  3rd Qu.: 0.785   3rd Qu.: 0.975   3rd Qu.: 0.653     3rd Qu.: 0.224  
+##  Max.   : 2.618   Max.   : 2.944   Max.   : 1.842     Max.   :16.149  
+##  total_bedrooms     population       households     median_income   
+##  Min.   :-1.271   Min.   :-1.239   Min.   :-1.303   Min.   :-1.779  
+##  1st Qu.:-0.574   1st Qu.:-0.553   1st Qu.:-0.573   1st Qu.:-0.692  
+##  Median :-0.241   Median :-0.226   Median :-0.233   Median :-0.173  
+##  Mean   : 0.000   Mean   : 0.000   Mean   : 0.000   Mean   : 0.000  
+##  3rd Qu.: 0.257   3rd Qu.: 0.252   3rd Qu.: 0.270   3rd Qu.: 0.470  
+##  Max.   :14.008   Max.   :29.760   Max.   :14.608   Max.   : 5.878  
+##  median_house_value  less1Hocean        inland          island        
+##  Min.   : 14999     Min.   :0.000   Min.   :0.000   Min.   :0.000000  
+##  1st Qu.:119600     1st Qu.:0.000   1st Qu.:0.000   1st Qu.:0.000000  
+##  Median :180300     Median :0.000   Median :0.000   Median :0.000000  
+##  Mean   :206918     Mean   :0.437   Mean   :0.317   Mean   :0.000244  
+##  3rd Qu.:265000     3rd Qu.:1.000   3rd Qu.:1.000   3rd Qu.:0.000000  
+##  Max.   :500001     Max.   :1.000   Max.   :1.000   Max.   :1.000000  
+##     nearbay        nearocean    
+##  Min.   :0.000   Min.   :0.000  
+##  1st Qu.:0.000   1st Qu.:0.000  
+##  Median :0.000   Median :0.000  
+##  Mean   :0.114   Mean   :0.132  
+##  3rd Qu.:0.000   3rd Qu.:0.000  
+##  Max.   :1.000   Max.   :1.000
+\end{verbatim}
+
+\subsubsection{Módulo 2.4: Análises
+estastísticas}\label{muxf3dulo-2.4-anuxe1lises-estastuxedsticas}
+
+Há diversas análises que podemos realizar. Aqui, apresentamos um exemplo
+de correlação entre as features, o que pode ser útil para identificar
+relações entre as variáveis e orientar a combinação de features no
+modelo.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Calculando a matriz de correlação}
+\NormalTok{correlation }\OtherTok{\textless{}{-}} \FunctionTok{cor}\NormalTok{(train\_data[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{])}
+\FunctionTok{print}\NormalTok{(correlation)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                    longitude latitude housing_median_age total_rooms
+## longitude             1.0000  -0.9252            -0.1165      0.0474
+## latitude             -0.9252   1.0000             0.0185     -0.0381
+## housing_median_age   -0.1165   0.0185             1.0000     -0.3611
+## total_rooms           0.0474  -0.0381            -0.3611      1.0000
+## total_bedrooms        0.0701  -0.0667            -0.3173      0.9309
+## population            0.0981  -0.1070            -0.2917      0.8478
+## households            0.0553  -0.0708            -0.3004      0.9175
+## median_income        -0.0111  -0.0837            -0.1243      0.1976
+##                    total_bedrooms population households median_income
+## longitude                 0.07011    0.09814     0.0553      -0.01114
+## latitude                 -0.06674   -0.10698    -0.0708      -0.08372
+## housing_median_age       -0.31726   -0.29165    -0.3004      -0.12425
+## total_rooms               0.93086    0.84776     0.9175       0.19760
+## total_bedrooms            1.00000    0.86821     0.9783      -0.00942
+## population                0.86821    1.00000     0.8989       0.00313
+## households                0.97834    0.89891     1.0000       0.01266
+## median_income            -0.00942    0.00313     0.0127       1.00000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Visualizando a matriz de correlação com um heatmap}
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mar =} \FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{))  }\CommentTok{\# Ajusta as margens do gráfico}
+\FunctionTok{par}\NormalTok{(}\AttributeTok{cex =} \FloatTok{1.2}\NormalTok{)            }\CommentTok{\# Ajusta o tamanho do texto}
+
+\FunctionTok{dev.new}\NormalTok{(}\AttributeTok{width =} \DecValTok{15}\NormalTok{, }\AttributeTok{height =} \DecValTok{15}\NormalTok{, }\AttributeTok{unit =} \StringTok{"in"}\NormalTok{, }\AttributeTok{noRStudioGD =} \ConstantTok{TRUE}\NormalTok{)}
+
+\FunctionTok{corrplot}\NormalTok{(correlation, }\AttributeTok{method =} \StringTok{"color"}\NormalTok{, }\AttributeTok{type =} \StringTok{"upper"}\NormalTok{,}
+         \AttributeTok{addCoef.col =} \StringTok{"black"}\NormalTok{, }\AttributeTok{tl.col =} \StringTok{"black"}\NormalTok{, }\AttributeTok{tl.srt =} \DecValTok{45}\NormalTok{, }\AttributeTok{number.cex =} \DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Módulo 3: Regressão
+Linear}\label{muxf3dulo-3-regressuxe3o-linear}
+
+Vamos trabalhar com regressão linear com múltiplas variáveis. Lembrando
+que a fórmula é:
+
+\[h_{\theta}(x) = \theta_0 + \theta_1x_1 + \theta_2x_2 + \dots + \theta_nx_n\]
+
+Para avaliar o desempenho de novas técnicas de modelagem, é importante
+ter um modelo baseline (de referência) para comparar se as novas
+abordagens realmente melhoram os resultados. Neste Módulo, treinaremos
+uma regressão linear simples, utilizando apenas as variáveis contínuas
+presentes nos dados.
+
+\subsubsection{Módulo 3.1: Treinamento do
+Modelo}\label{muxf3dulo-3.1-treinamento-do-modelo}
+
+Por padrão, a biblioteca \texttt{lm()} utiliza a equação normal para
+ajustar os coeficientes do modelo. Caso o modelo se torne mais complexo
+ou os dados sejam muito grandes, o R automaticamente recorre ao método
+de descida de gradiente para otimizar os coeficientes.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Treinando o modelo de regressão linear com as variáveis contínuas}
+\NormalTok{baseline }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude}
+               \SpecialCharTok{+}\NormalTok{ housing\_median\_age }\SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms}
+               \SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households }\SpecialCharTok{+}\NormalTok{ median\_income, }
+               \AttributeTok{data=}\NormalTok{train\_normalized)}
+
+\CommentTok{\# Exibindo o resumo do modelo ajustado}
+\FunctionTok{summary}\NormalTok{(baseline)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = median_house_value ~ longitude + latitude + housing_median_age + 
+##     total_rooms + total_bedrooms + population + households + 
+##     median_income, data = train_normalized)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -382945  -43701  -11292   30209  712694 
+## 
+## Coefficients:
+##                    Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)          354024       8389   42.20   <2e-16 ***
+## longitude           -420680       9244  -45.51   <2e-16 ***
+## latitude            -391010       8173  -47.84   <2e-16 ***
+## housing_median_age    62799       2834   22.16   <2e-16 ***
+## total_rooms         -388388      38750  -10.02   <2e-16 ***
+## total_bedrooms       798615      56189   14.21   <2e-16 ***
+## population         -1223436      46634  -26.23   <2e-16 ***
+## households           221795      56615    3.92    9e-05 ***
+## median_income        595214       6312   94.29   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 69100 on 12259 degrees of freedom
+## Multiple R-squared:  0.64,   Adjusted R-squared:  0.639 
+## F-statistic: 2.72e+03 on 8 and 12259 DF,  p-value: <2e-16
+\end{verbatim}
+
+\subsubsection{Módulo 3.2: Predição}\label{muxf3dulo-3.2-prediuxe7uxe3o}
+
+Uma vez que o modelo está treinado, podemos realizar previsões tanto
+para os dados de treino quanto para os dados de validação.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Realizando previsões nos dados de treino e validação}
+\NormalTok{train\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(baseline, train\_normalized)}
+\NormalTok{valid\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(baseline, valid\_normalized)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Módulo 3.3: Cálculo das Métricas de
+Desempenho}\label{muxf3dulo-3.3-cuxe1lculo-das-muxe9tricas-de-desempenho}
+
+A seguir, implementamos três métricas importantes para avaliar o
+desempenho do modelo:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Erro Absoluto Médio (MAE):
+  \[MAE = \frac{1}{m}\sum^m_{i=1}|h_{\theta}(x^i)-y^i|\]
+\item
+  Erro Quadrático Médio (MSE):
+  \[MSE = \frac{1}{m}\sum^m_{i=1}(h_{\theta}(x^i)-y^i)^2\]
+\item
+  Coeficiente de Determinação (R²):
+  \[R^2 = 1 - \frac{RSS}{TSS} = 1 - \frac{\sum^m_{i=1}(h_{\theta}(x^i)-y^i)^2}{\sum^m_{i=1}(y^i - \bar{y})^2}\]
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Função para calcular o MAE}
+\NormalTok{MAE }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(preds, labels) \{}
+\NormalTok{  mae\_values }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(}\FunctionTok{abs}\NormalTok{(preds }\SpecialCharTok{{-}}\NormalTok{ labels)) }\SpecialCharTok{/} \FunctionTok{length}\NormalTok{(preds)}
+  \FunctionTok{return}\NormalTok{(mae\_values)}
+\NormalTok{\}}
+
+\CommentTok{\# Função para calcular o MSE}
+\NormalTok{MSE }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(preds, labels) \{}
+\NormalTok{  mse\_values }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{((preds }\SpecialCharTok{{-}}\NormalTok{ labels)}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{/} \FunctionTok{length}\NormalTok{(preds)}
+  \FunctionTok{return}\NormalTok{(mse\_values)}
+\NormalTok{\}}
+
+\CommentTok{\# Função para calcular o R²}
+\NormalTok{R2 }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(pred, true) \{}
+\NormalTok{  rss }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{((pred }\SpecialCharTok{{-}}\NormalTok{ true)}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+\NormalTok{  tss }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{((true }\SpecialCharTok{{-}} \FunctionTok{mean}\NormalTok{(true))}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+\NormalTok{  r2 }\OtherTok{\textless{}{-}} \DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ rss }\SpecialCharTok{/}\NormalTok{ tss}
+  \FunctionTok{return}\NormalTok{(r2)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Módulo 3.4: Avaliação do
+Modelo}\label{muxf3dulo-3.4-avaliauxe7uxe3o-do-modelo}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Calculando as métricas para o conjunto de treino}
+\NormalTok{mae\_train }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(train\_pred, train\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{mse\_train }\OtherTok{\textless{}{-}} \FunctionTok{MSE}\NormalTok{(train\_pred, train\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{r2\_train  }\OtherTok{\textless{}{-}} \FunctionTok{R2}\NormalTok{(train\_pred, train\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+
+\CommentTok{\# Calculando as métricas para o conjunto de validação}
+\NormalTok{mae\_valid }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(valid\_pred, valid\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{mse\_valid }\OtherTok{\textless{}{-}} \FunctionTok{MSE}\NormalTok{(valid\_pred, valid\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{r2\_valid  }\OtherTok{\textless{}{-}} \FunctionTok{R2}\NormalTok{(valid\_pred, valid\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+
+
+\CommentTok{\# Organizando os resultados em um dataframe}
+\NormalTok{results\_baseline }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}
+  \AttributeTok{Metric =} \FunctionTok{c}\NormalTok{(}\StringTok{"MAE"}\NormalTok{, }\StringTok{"MSE"}\NormalTok{, }\StringTok{"R2"}\NormalTok{),}
+  \AttributeTok{Train =} \FunctionTok{c}\NormalTok{(mae\_train, mse\_train, r2\_train),}
+  \AttributeTok{Valid =} \FunctionTok{c}\NormalTok{(mae\_valid, mse\_valid, r2\_valid)}
+\NormalTok{)}
+
+\CommentTok{\# Formatando os resultados para melhor leitura}
+\NormalTok{results\_baseline}\SpecialCharTok{$}\NormalTok{Train }\OtherTok{\textless{}{-}} \FunctionTok{as.numeric}\NormalTok{(results\_baseline}\SpecialCharTok{$}\NormalTok{Train)}
+\NormalTok{results\_baseline}\SpecialCharTok{$}\NormalTok{Valid }\OtherTok{\textless{}{-}} \FunctionTok{as.numeric}\NormalTok{(results\_baseline}\SpecialCharTok{$}\NormalTok{Valid)}
+
+\CommentTok{\# Evitando notação científica na exibição dos resultados}
+\NormalTok{results\_baseline}\SpecialCharTok{$}\NormalTok{Train }\OtherTok{\textless{}{-}} \FunctionTok{format}\NormalTok{(results\_baseline}\SpecialCharTok{$}\NormalTok{Train, }\AttributeTok{scientific =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{results\_baseline}\SpecialCharTok{$}\NormalTok{Valid }\OtherTok{\textless{}{-}} \FunctionTok{format}\NormalTok{(results\_baseline}\SpecialCharTok{$}\NormalTok{Valid, }\AttributeTok{scientific =} \ConstantTok{FALSE}\NormalTok{)}
+
+\CommentTok{\# Exibindo os resultados}
+\NormalTok{results\_baseline}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   Metric         Train          Valid
+## 1    MAE      50608.57      51593.898
+## 2    MSE 4765275558.77 5039378617.876
+## 3     R2          0.64          0.625
+\end{verbatim}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Módulo 4: Combinação de
+Features}\label{muxf3dulo-4-combinauxe7uxe3o-de-features}
+
+Uma estratégia para melhorar o desempenho do modelo de regressão linear
+é criar combinações de features. Isso pode ajudar a fornecer informações
+mais explícitas ao modelo. Uma maneira eficaz de realizar essa
+combinação é verificar as correlações entre as variáveis, combinando
+aquelas com baixa correlação entre si e descartando as que têm alta
+correlação, pois elas podem fornecer informações redundantes.
+
+A seguir, apresentamos exemplos de como criar combinações de features no
+modelo:
+
+\subsubsection{Módulo 4.1: Definição das
+Fórmulas}\label{muxf3dulo-4.1-definiuxe7uxe3o-das-fuxf3rmulas}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Fórmula com interações de ordem 2 entre as variáveis}
+\NormalTok{f01 }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+               \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households}
+               \SpecialCharTok{+}\NormalTok{ median\_income }\SpecialCharTok{+}\NormalTok{ (longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+               \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households}
+               \SpecialCharTok{+}\NormalTok{ median\_income)}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+
+\CommentTok{\# Fórmula com interações de ordem 3 entre as variáveis}
+\NormalTok{f02 }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+               \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households}
+               \SpecialCharTok{+}\NormalTok{ median\_income }\SpecialCharTok{+}\NormalTok{ (longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age }
+               \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households}
+               \SpecialCharTok{+}\NormalTok{ median\_income)}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{)}
+
+\CommentTok{\# Fórmula com interações de ordem 4 entre as variáveis}
+\NormalTok{f03 }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+               \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households}
+               \SpecialCharTok{+}\NormalTok{ median\_income }\SpecialCharTok{+}\NormalTok{ (longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+               \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households}
+               \SpecialCharTok{+}\NormalTok{ median\_income)}\SpecialCharTok{\^{}}\DecValTok{4}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Módulo 4.2: Treinamento do
+Modelo}\label{muxf3dulo-4.2-treinamento-do-modelo}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{formulas }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(f01, f02, f03)}
+
+\NormalTok{MaePerCombination }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{Formula  =} \FunctionTok{numeric}\NormalTok{(}\FunctionTok{length}\NormalTok{(formulas)), }
+                                \AttributeTok{TrainMAE =} \FunctionTok{numeric}\NormalTok{(}\FunctionTok{length}\NormalTok{(formulas)),}
+                                \AttributeTok{ValMAE   =} \FunctionTok{numeric}\NormalTok{(}\FunctionTok{length}\NormalTok{(formulas)))}
+
+\NormalTok{i }\OtherTok{\textless{}{-}} \DecValTok{1}
+\ControlFlowTok{for}\NormalTok{(f }\ControlFlowTok{in}\NormalTok{ formulas)\{}
+  \CommentTok{\# Treinando o modelo com a fórmula atual}
+\NormalTok{  model }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ f, }\AttributeTok{data =}\NormalTok{ train\_normalized)}
+  
+  \CommentTok{\# Realizando previsões para os dados de treino e validação}
+\NormalTok{  train\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(model, train\_normalized)}
+\NormalTok{  valid\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(model, valid\_normalized)}
+  
+  \CommentTok{\# Calculando o MAE para o conjunto de treino e validação}
+\NormalTok{  mae\_train }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(train\_pred, train\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{  mae\_val   }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(valid\_pred, valid\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+  
+  \CommentTok{\# Armazenando os resultados}
+\NormalTok{  MaePerCombination[i, ] }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(i, mae\_train, mae\_val)}
+\NormalTok{  i }\OtherTok{\textless{}{-}}\NormalTok{ i }\SpecialCharTok{+} \DecValTok{1}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Módulo 4.3: Curva de Viés e
+Variância}\label{muxf3dulo-4.3-curva-de-viuxe9s-e-variuxe2ncia}
+
+Uma maneira de avaliar a complexidade do modelo é por meio da curva de
+viés e variância. Essa curva ajuda a entender se a complexidade do
+modelo está sendo um fator positivo ou negativo para o desempenho,
+fornecendo insights sobre o risco de underfitting ou overfitting.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MaePerCombination}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   Formula TrainMAE ValMAE
+## 1       1    46534  47783
+## 2       2    44686  46023
+## 3       3    43782  45618
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MaePerCombinationMelt }\OtherTok{\textless{}{-}} \FunctionTok{melt}\NormalTok{(MaePerCombination, }\AttributeTok{id =} \StringTok{"Formula"}\NormalTok{)}
+
+\CommentTok{\# Criando o gráfico da curva de viés/variância}
+\NormalTok{p }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ MaePerCombinationMelt, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Formula, }\AttributeTok{y =}\NormalTok{ value, }\AttributeTok{colour =}\NormalTok{ variable)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_line}\NormalTok{() }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{() }\SpecialCharTok{+} 
+  \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"Curva Viés/Variância"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{ylab}\NormalTok{(}\StringTok{"MAE"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{scale\_x\_discrete}\NormalTok{(}\AttributeTok{name =} \StringTok{"Fórmula"}\NormalTok{, }
+                   \AttributeTok{limits =} \FunctionTok{as.character}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(formulas)))}
+
+\NormalTok{p }\SpecialCharTok{+} \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.7}\NormalTok{, }\FloatTok{0.85}\NormalTok{), }\AttributeTok{legend.title =} \FunctionTok{element\_blank}\NormalTok{())}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Ex01_files/figure-latex/unnamed-chunk-24-1.pdf}}
+
+\subsection{Módulo 5: Ajuda de IA}\label{muxf3dulo-5-ajuda-de-ia}
+
+Uma abordagem interessante para criar combinações de features é utilizar
+ferramentas de IA generativa, como o ChatGPT. Abaixo está um exemplo de
+como um prompt foi usado para gerar combinações não-lineares de
+features, com o objetivo de melhorar o modelo preditivo para estimar o
+valor do imóvel.
+
+O prompt enviado ao ChatGPT e Maritaka AI foi o seguinte:
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{Prompt:\ Considere\ as\ seguintes\ features\ em\ minha\ base\ de\ dados\ sobre\ imóveis,\ com\ a\ qual\ devemos\ prever\ o\ valor\ do\ imóvel\ (median\_house\_value):\ longitude,\ latitude,\ housing\_median\_age,\ total\_rooms,\ total\_bedrooms,\ population,\ households,\ median\_income.\ Gere\ novas\ features\ por\ meio\ da\ combinação\ não-linear\ das\ features\ a\ cima\ em\ R}
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\# ChatGPT}
+\NormalTok{f01 }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age }
+               \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households}
+               \SpecialCharTok{+}\NormalTok{ median\_income }\SpecialCharTok{+}\NormalTok{ longitude}\SpecialCharTok{*}\NormalTok{latitude)}
+
+\NormalTok{f02 }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+               \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households}
+               \SpecialCharTok{+}\NormalTok{ median\_income }\SpecialCharTok{+}\NormalTok{ total\_rooms}\SpecialCharTok{/}\NormalTok{households }\SpecialCharTok{+}\NormalTok{ total\_bedrooms}\SpecialCharTok{/}\NormalTok{total\_rooms)}
+
+\NormalTok{f03 }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+               \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households}
+               \SpecialCharTok{+}\NormalTok{ median\_income }\SpecialCharTok{+}\NormalTok{ longitude}\SpecialCharTok{*}\NormalTok{latitude }\SpecialCharTok{+}\NormalTok{ total\_rooms}\SpecialCharTok{/}\NormalTok{households}
+               \SpecialCharTok{+}\NormalTok{ total\_bedrooms}\SpecialCharTok{/}\NormalTok{total\_rooms)}
+
+\DocumentationTok{\#\# Maritaca AI}
+\NormalTok{f04 }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age }\SpecialCharTok{+}
+\NormalTok{               total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households }\SpecialCharTok{+}
+\NormalTok{               median\_income }\SpecialCharTok{+}\NormalTok{ housing\_median\_age }\SpecialCharTok{*}\NormalTok{ median\_income)}
+
+\NormalTok{f05 }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age }\SpecialCharTok{+}
+\NormalTok{               total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households }\SpecialCharTok{+}
+\NormalTok{               median\_income }\SpecialCharTok{+}\NormalTok{ longitude }\SpecialCharTok{*}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ population}\SpecialCharTok{/}\NormalTok{total\_rooms)}
+
+\NormalTok{f06 }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age }\SpecialCharTok{+}
+\NormalTok{               total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households }\SpecialCharTok{+}
+\NormalTok{               median\_income }\SpecialCharTok{+}\NormalTok{ longitude }\SpecialCharTok{*}\NormalTok{ latitude }\SpecialCharTok{*}\NormalTok{ median\_income }\SpecialCharTok{+}
+\NormalTok{               population}\SpecialCharTok{/}\NormalTok{households)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Módulo 5.1: Treinamento}\label{muxf3dulo-5.1-treinamento}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{formulas }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(f01, f02, f03, f04, f05, f06)}
+
+\NormalTok{MaePerCombinationAI }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{combination =} \FunctionTok{numeric}\NormalTok{(}\FunctionTok{length}\NormalTok{(formulas)), }
+                                       \AttributeTok{TrainMAE    =} \FunctionTok{numeric}\NormalTok{(}\FunctionTok{length}\NormalTok{(formulas)),}
+                                       \AttributeTok{ValMAE      =} \FunctionTok{numeric}\NormalTok{(}\FunctionTok{length}\NormalTok{(formulas)))}
+
+\NormalTok{i }\OtherTok{\textless{}{-}} \DecValTok{1}
+\ControlFlowTok{for}\NormalTok{(f }\ControlFlowTok{in}\NormalTok{ formulas)\{}
+  \CommentTok{\# Treinando o modelo com a fórmula atual}
+\NormalTok{  model }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ f, }\AttributeTok{data =}\NormalTok{ train\_normalized)}
+  
+  \CommentTok{\# Realizando previsões para os dados de treino e validação}
+\NormalTok{  valPred   }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(model, valid\_normalized)}
+\NormalTok{  trainPred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(model, train\_normalized)}
+  
+  \CommentTok{\# Calculando o MAE para o conjunto de treino e validação}
+\NormalTok{  mae\_train }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(trainPred, train\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{  mae\_val   }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(valPred, valid\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+  
+  \CommentTok{\# Armazenando os resultados}
+\NormalTok{  MaePerCombinationAI[i, ] }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(i, mae\_train, mae\_val)}
+\NormalTok{  i }\OtherTok{\textless{}{-}}\NormalTok{ i }\SpecialCharTok{+} \DecValTok{1}
+\NormalTok{\}}
+
+\CommentTok{\# Exibindo o resumo do modelo final}
+\FunctionTok{summary}\NormalTok{(model)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = f, data = train_normalized)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -383541  -42693  -11357   30110  527680 
+## 
+## Coefficients:
+##                                  Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)                        247531      15042   16.46  < 2e-16 ***
+## longitude                         -280269      21194  -13.22  < 2e-16 ***
+## latitude                          -270650      21997  -12.30  < 2e-16 ***
+## housing_median_age                  57569       2845   20.23  < 2e-16 ***
+## total_rooms                       -382189      38736   -9.87  < 2e-16 ***
+## total_bedrooms                     762723      55942   13.63  < 2e-16 ***
+## population                       -1378108      54034  -25.50  < 2e-16 ***
+## households                         242566      56311    4.31  1.7e-05 ***
+## median_income                     1289100      67112   19.21  < 2e-16 ***
+## longitude:latitude                 102149      41585    2.46    0.014 *  
+## longitude:median_income           -891652      99083   -9.00  < 2e-16 ***
+## latitude:median_income            -838196     109887   -7.63  2.6e-14 ***
+## population:households              435410      72033    6.04  1.5e-09 ***
+## longitude:latitude:median_income  -190996     208398   -0.92    0.359    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 68500 on 12254 degrees of freedom
+## Multiple R-squared:  0.645,  Adjusted R-squared:  0.645 
+## F-statistic: 1.72e+03 on 13 and 12254 DF,  p-value: <2e-16
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MaePerCombinationAI}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   combination TrainMAE ValMAE
+## 1           1    50613  51602
+## 2           2    50458  51435
+## 3           3    50459  51439
+## 4           4    50352  51564
+## 5           5    50577  51690
+## 6           6    49992  51253
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MaePerCombinationAIMelt }\OtherTok{\textless{}{-}} \FunctionTok{melt}\NormalTok{(MaePerCombinationAI, }\AttributeTok{id =} \StringTok{"combination"}\NormalTok{)}
+
+\CommentTok{\# Criando o gráfico de linha para a curva de viés e variância}
+\NormalTok{p }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ MaePerCombinationAIMelt, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ combination, }\AttributeTok{y =}\NormalTok{ value, }\AttributeTok{colour =}\NormalTok{ variable)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_line}\NormalTok{() }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{()}
+
+\NormalTok{p }\OtherTok{\textless{}{-}}\NormalTok{ p }\SpecialCharTok{+} \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"Curva Vies/Variância"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{ylab}\NormalTok{(}\StringTok{"MAE"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{scale\_x\_discrete}\NormalTok{(}\AttributeTok{name =} \StringTok{"Combination"}\NormalTok{, }\AttributeTok{limits =} \FunctionTok{as.character}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(formulas)))}
+
+\NormalTok{p }\SpecialCharTok{+} \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.75}\NormalTok{, }\FloatTok{0.40}\NormalTok{), }\AttributeTok{legend.title =} \FunctionTok{element\_blank}\NormalTok{())}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Ex01_files/figure-latex/unnamed-chunk-27-1.pdf}}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Módulo 6: Regressão
+Polinomial}\label{muxf3dulo-6-regressuxe3o-polinomial}
+
+Outra forma para aumentar a complexidade do modelo é utilizar regressão
+polinomial. Isso pode melhorar o ajuste ao dado, especialmente quando as
+relações entre as variáveis não são lineares.
+
+\subsubsection{Módulo 6.1: Criando as Fórmulas
+Manualmente}\label{muxf3dulo-6.1-criando-as-fuxf3rmulas-manualmente}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{f01 }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+               \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households}
+               \SpecialCharTok{+}\NormalTok{ median\_income, }\AttributeTok{data=}\NormalTok{train\_normalized)}
+
+\NormalTok{f02 }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+               \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households}
+               \SpecialCharTok{+}\NormalTok{ median\_income }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(longitude}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(latitude}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(housing\_median\_age}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(total\_rooms}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(total\_bedrooms}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(population}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(households}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(median\_income}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{), }
+               \AttributeTok{data=}\NormalTok{train\_normalized)}
+
+\NormalTok{f03 }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+               \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households}
+               \SpecialCharTok{+}\NormalTok{ median\_income }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(longitude}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(latitude}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(housing\_median\_age}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(total\_rooms}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(total\_bedrooms}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(population}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(households}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(median\_income}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(longitude}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{)  }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(latitude}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(housing\_median\_age}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(total\_rooms}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(total\_bedrooms}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(population}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(households}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(median\_income}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{), }\AttributeTok{data=}\NormalTok{train\_normalized)}
+
+\NormalTok{f04 }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+               \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households}
+               \SpecialCharTok{+}\NormalTok{ median\_income }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(longitude}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(latitude}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(housing\_median\_age}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(total\_rooms}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(total\_bedrooms}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(population}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(households}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(median\_income}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(longitude}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(latitude}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(housing\_median\_age}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(total\_rooms}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(total\_bedrooms}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(population}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(households}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(median\_income}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(longitude}\SpecialCharTok{\^{}}\DecValTok{4}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(latitude}\SpecialCharTok{\^{}}\DecValTok{4}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(housing\_median\_age}\SpecialCharTok{\^{}}\DecValTok{4}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(total\_rooms}\SpecialCharTok{\^{}}\DecValTok{4}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(total\_bedrooms}\SpecialCharTok{\^{}}\DecValTok{4}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(population}\SpecialCharTok{\^{}}\DecValTok{4}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{I}\NormalTok{(households}\SpecialCharTok{\^{}}\DecValTok{4}\NormalTok{)}
+               \SpecialCharTok{+} \FunctionTok{I}\NormalTok{(median\_income}\SpecialCharTok{\^{}}\DecValTok{4}\NormalTok{), }\AttributeTok{data=}\NormalTok{train\_normalized)}
+
+\CommentTok{\# Fórmulas com maior grau podem ser criadas da mesma maneira...}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Módulo 6.2: Função para criar fórmulas
+automaticamente}\label{muxf3dulo-6.2-funuxe7uxe3o-para-criar-fuxf3rmulas-automaticamente}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{getHypothesis }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(real\_feature\_names, degree)\{}
+\NormalTok{  hypothesis\_string }\OtherTok{\textless{}{-}} \StringTok{"hypothesis \textless{}{-} formula(median\_house\_value \textasciitilde{} "}
+  
+  \ControlFlowTok{for}\NormalTok{(d }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{degree)\{}
+    \ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(real\_feature\_names))\{}
+\NormalTok{      hypothesis\_string }\OtherTok{\textless{}{-}} \FunctionTok{paste}\NormalTok{(hypothesis\_string, }
+                                 \StringTok{"I("}\NormalTok{, real\_feature\_names[i], }\StringTok{"\^{}"}\NormalTok{, d, }\StringTok{") + "}\NormalTok{,}
+                                 \AttributeTok{sep =} \StringTok{""}\NormalTok{)}
+\NormalTok{    \}}
+\NormalTok{  \}}
+  
+\NormalTok{  hypothesis\_string }\OtherTok{\textless{}{-}} \FunctionTok{substr}\NormalTok{(hypothesis\_string, }\DecValTok{1}\NormalTok{, }\FunctionTok{nchar}\NormalTok{(hypothesis\_string)}\SpecialCharTok{{-}}\DecValTok{3}\NormalTok{)}
+\NormalTok{  hypothesis\_string }\OtherTok{\textless{}{-}} \FunctionTok{paste}\NormalTok{(hypothesis\_string, }\StringTok{")"}\NormalTok{)}
+\NormalTok{  hypothesis }\OtherTok{\textless{}{-}} \FunctionTok{eval}\NormalTok{(}\FunctionTok{parse}\NormalTok{(}\AttributeTok{text=}\NormalTok{hypothesis\_string))}
+  \FunctionTok{return}\NormalTok{(hypothesis)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{f01 }\OtherTok{\textless{}{-}} \FunctionTok{getHypothesis}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(train\_normalized)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\AttributeTok{degree=}\DecValTok{1}\NormalTok{)}
+\NormalTok{f02 }\OtherTok{\textless{}{-}} \FunctionTok{getHypothesis}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(train\_normalized)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\AttributeTok{degree=}\DecValTok{2}\NormalTok{)}
+\NormalTok{f03 }\OtherTok{\textless{}{-}} \FunctionTok{getHypothesis}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(train\_normalized)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\AttributeTok{degree=}\DecValTok{3}\NormalTok{)}
+\NormalTok{f04 }\OtherTok{\textless{}{-}} \FunctionTok{getHypothesis}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(train\_normalized)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\AttributeTok{degree=}\DecValTok{4}\NormalTok{)}
+\NormalTok{f05 }\OtherTok{\textless{}{-}} \FunctionTok{getHypothesis}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(train\_normalized)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\AttributeTok{degree=}\DecValTok{5}\NormalTok{)}
+\NormalTok{f06 }\OtherTok{\textless{}{-}} \FunctionTok{getHypothesis}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(train\_normalized)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\AttributeTok{degree=}\DecValTok{6}\NormalTok{)}
+\NormalTok{f07 }\OtherTok{\textless{}{-}} \FunctionTok{getHypothesis}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(train\_normalized)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\AttributeTok{degree=}\DecValTok{7}\NormalTok{)}
+\NormalTok{f08 }\OtherTok{\textless{}{-}} \FunctionTok{getHypothesis}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(train\_normalized)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\AttributeTok{degree=}\DecValTok{8}\NormalTok{)}
+\NormalTok{f09 }\OtherTok{\textless{}{-}} \FunctionTok{getHypothesis}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(train\_normalized)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\AttributeTok{degree=}\DecValTok{9}\NormalTok{)}
+\NormalTok{f10 }\OtherTok{\textless{}{-}} \FunctionTok{getHypothesis}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(train\_normalized)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\AttributeTok{degree=}\DecValTok{10}\NormalTok{)}
+
+\NormalTok{f10}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## median_house_value ~ I(longitude^1) + I(latitude^1) + I(housing_median_age^1) + 
+##     I(total_rooms^1) + I(total_bedrooms^1) + I(population^1) + 
+##     I(households^1) + I(median_income^1) + I(longitude^2) + I(latitude^2) + 
+##     I(housing_median_age^2) + I(total_rooms^2) + I(total_bedrooms^2) + 
+##     I(population^2) + I(households^2) + I(median_income^2) + 
+##     I(longitude^3) + I(latitude^3) + I(housing_median_age^3) + 
+##     I(total_rooms^3) + I(total_bedrooms^3) + I(population^3) + 
+##     I(households^3) + I(median_income^3) + I(longitude^4) + I(latitude^4) + 
+##     I(housing_median_age^4) + I(total_rooms^4) + I(total_bedrooms^4) + 
+##     I(population^4) + I(households^4) + I(median_income^4) + 
+##     I(longitude^5) + I(latitude^5) + I(housing_median_age^5) + 
+##     I(total_rooms^5) + I(total_bedrooms^5) + I(population^5) + 
+##     I(households^5) + I(median_income^5) + I(longitude^6) + I(latitude^6) + 
+##     I(housing_median_age^6) + I(total_rooms^6) + I(total_bedrooms^6) + 
+##     I(population^6) + I(households^6) + I(median_income^6) + 
+##     I(longitude^7) + I(latitude^7) + I(housing_median_age^7) + 
+##     I(total_rooms^7) + I(total_bedrooms^7) + I(population^7) + 
+##     I(households^7) + I(median_income^7) + I(longitude^8) + I(latitude^8) + 
+##     I(housing_median_age^8) + I(total_rooms^8) + I(total_bedrooms^8) + 
+##     I(population^8) + I(households^8) + I(median_income^8) + 
+##     I(longitude^9) + I(latitude^9) + I(housing_median_age^9) + 
+##     I(total_rooms^9) + I(total_bedrooms^9) + I(population^9) + 
+##     I(households^9) + I(median_income^9) + I(longitude^10) + 
+##     I(latitude^10) + I(housing_median_age^10) + I(total_rooms^10) + 
+##     I(total_bedrooms^10) + I(population^10) + I(households^10) + 
+##     I(median_income^10)
+## <environment: 0x0000018ce426c268>
+\end{verbatim}
+
+\subsubsection{Módulo 6.3: Treinamento}\label{muxf3dulo-6.3-treinamento}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{formulas }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(f01, f02, f03, f04, f05, f06, f07, f08, f09, f10)}
+\NormalTok{MaePerDegree }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{Degree   =} \FunctionTok{numeric}\NormalTok{(}\FunctionTok{length}\NormalTok{(formulas)), }
+                           \AttributeTok{TrainMAE =} \FunctionTok{numeric}\NormalTok{(}\FunctionTok{length}\NormalTok{(formulas)),}
+                           \AttributeTok{ValMAE   =} \FunctionTok{numeric}\NormalTok{(}\FunctionTok{length}\NormalTok{(formulas)))}
+
+\NormalTok{i }\OtherTok{\textless{}{-}} \DecValTok{1}
+\ControlFlowTok{for}\NormalTok{(f }\ControlFlowTok{in}\NormalTok{ formulas)\{}
+\NormalTok{  model }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(}\AttributeTok{formula=}\NormalTok{f, }\AttributeTok{data=}\NormalTok{train\_normalized)}
+  
+\NormalTok{  train\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(model, train\_normalized)}
+\NormalTok{  valid\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(model, valid\_normalized)}
+  
+\NormalTok{  mae\_train }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(train\_pred, train\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{  mae\_val   }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(valid\_pred, valid\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+ 
+\NormalTok{  MaePerDegree[i,] }\OtherTok{=} \FunctionTok{c}\NormalTok{(i, mae\_train, mae\_val)}
+\NormalTok{  i }\OtherTok{\textless{}{-}}\NormalTok{ i }\SpecialCharTok{+} \DecValTok{1}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Módulo 6.4: Curva de Viés e
+Variância}\label{muxf3dulo-6.4-curva-de-viuxe9s-e-variuxe2ncia}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MaePerDegree}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Degree TrainMAE ValMAE
+## 1       1    50609  51594
+## 2       2    49265  50234
+## 3       3    46721  47583
+## 4       4    45980  46871
+## 5       5    45225  46102
+## 6       6    44995  45905
+## 7       7    44696  45649
+## 8       8    44475  47372
+## 9       9    44453  45441
+## 10     10    44038  55193
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MaePerDegreeMelt }\OtherTok{\textless{}{-}} \FunctionTok{melt}\NormalTok{(MaePerDegree, }\AttributeTok{id=}\StringTok{"Degree"}\NormalTok{)}
+
+\NormalTok{p }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data=}\NormalTok{MaePerDegreeMelt, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{Degree, }\AttributeTok{y=}\NormalTok{value, }\AttributeTok{colour=}\NormalTok{variable)) }\SpecialCharTok{+} \FunctionTok{geom\_line}\NormalTok{() }\SpecialCharTok{+} \FunctionTok{geom\_point}\NormalTok{()}
+
+\NormalTok{p }\OtherTok{\textless{}{-}}\NormalTok{ p }\SpecialCharTok{+} \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"Curva vies/variancia"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{ylab}\NormalTok{(}\StringTok{"MAE"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{scale\_x\_discrete}\NormalTok{(}\AttributeTok{name =}\StringTok{"Degree"}\NormalTok{, }\AttributeTok{limits=}\FunctionTok{as.character}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(formulas)))}
+
+\NormalTok{p }\SpecialCharTok{+} \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.7}\NormalTok{, }\FloatTok{0.85}\NormalTok{), }\AttributeTok{legend.title =} \FunctionTok{element\_blank}\NormalTok{())}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Ex01_files/figure-latex/unnamed-chunk-32-1.pdf}}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Módulo 7: Inserção de Features
+Categóricas}\label{muxf3dulo-7-inseruxe7uxe3o-de-features-categuxf3ricas}
+
+Neste Módulo, vamos expandir o modelo para incluir as \textbf{features
+categóricas}.
+
+\subsubsection{Módulo 7.1: Modelo Baseline com Features
+Categóricas}\label{muxf3dulo-7.1-modelo-baseline-com-features-categuxf3ricas}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cat\_model }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }
+                \SpecialCharTok{+}\NormalTok{ housing\_median\_age }\SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms}
+                \SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ households }\SpecialCharTok{+}\NormalTok{ median\_income }\SpecialCharTok{+}\NormalTok{ less1Hocean }\SpecialCharTok{+}\NormalTok{ inland}
+                \SpecialCharTok{+}\NormalTok{ island }\SpecialCharTok{+}\NormalTok{ nearbay }\SpecialCharTok{+}\NormalTok{ nearocean, }\AttributeTok{data =}\NormalTok{ train\_normalized)}
+
+\FunctionTok{summary}\NormalTok{(cat\_model)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = median_house_value ~ longitude + latitude + housing_median_age + 
+##     total_rooms + total_bedrooms + population + households + 
+##     median_income + less1Hocean + inland + island + nearbay + 
+##     nearocean, data = train_normalized)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -381603  -42799  -10205   29004  687391 
+## 
+## Coefficients: (1 not defined because of singularities)
+##                    Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)          249765      10251   24.37  < 2e-16 ***
+## longitude           -261908      13164  -19.90  < 2e-16 ***
+## latitude            -233440      12122  -19.26  < 2e-16 ***
+## housing_median_age    57712       2874   20.08  < 2e-16 ***
+## total_rooms         -317994      38562   -8.25  < 2e-16 ***
+## total_bedrooms       708333      55751   12.71  < 2e-16 ***
+## population         -1201354      46304  -25.95  < 2e-16 ***
+## households           239104      55927    4.28  1.9e-05 ***
+## median_income        581228       6320   91.97  < 2e-16 ***
+## less1Hocean           -4931       1997   -2.47    0.014 *  
+## inland               -43068       2872  -15.00  < 2e-16 ***
+## island               155555      39417    3.95  8.0e-05 ***
+## nearbay               -7316       2758   -2.65    0.008 ** 
+## nearocean                NA         NA      NA       NA    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 68200 on 12255 degrees of freedom
+## Multiple R-squared:  0.649,  Adjusted R-squared:  0.649 
+## F-statistic: 1.89e+03 on 12 and 12255 DF,  p-value: <2e-16
+\end{verbatim}
+
+\subsubsection{Módulo 7.2: Treinamento e
+Validação}\label{muxf3dulo-7.2-treinamento-e-validauxe7uxe3o}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Predição nos dados de treino e validação}
+\NormalTok{train\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(cat\_model, train\_normalized)}
+\NormalTok{valid\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(cat\_model, valid\_normalized)}
+
+\CommentTok{\# Cálculo das métricas de erro}
+\NormalTok{mae\_train }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(train\_pred, train\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{mse\_train }\OtherTok{\textless{}{-}} \FunctionTok{MSE}\NormalTok{(train\_pred, train\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{r2\_train  }\OtherTok{\textless{}{-}} \FunctionTok{R2}\NormalTok{(train\_pred,  train\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+
+\NormalTok{mae\_valid }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(valid\_pred, valid\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{mse\_valid }\OtherTok{\textless{}{-}} \FunctionTok{MSE}\NormalTok{(valid\_pred, valid\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{r2\_valid  }\OtherTok{\textless{}{-}} \FunctionTok{R2}\NormalTok{(valid\_pred,  valid\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+
+\NormalTok{results\_cat }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}
+  \AttributeTok{Metric =} \FunctionTok{c}\NormalTok{(}\StringTok{"MAE"}\NormalTok{, }\StringTok{"MSE"}\NormalTok{, }\StringTok{"R2"}\NormalTok{),}
+  \AttributeTok{Train  =} \FunctionTok{c}\NormalTok{(mae\_train, mse\_train, r2\_train),}
+  \AttributeTok{Valid  =} \FunctionTok{c}\NormalTok{(mae\_valid, mse\_valid, r2\_valid)}
+\NormalTok{)}
+
+\NormalTok{results\_cat}\SpecialCharTok{$}\NormalTok{Train }\OtherTok{\textless{}{-}} \FunctionTok{as.numeric}\NormalTok{(results\_cat}\SpecialCharTok{$}\NormalTok{Train)}
+\NormalTok{results\_cat}\SpecialCharTok{$}\NormalTok{Valid }\OtherTok{\textless{}{-}} \FunctionTok{as.numeric}\NormalTok{(results\_cat}\SpecialCharTok{$}\NormalTok{Valid)}
+\NormalTok{results\_cat}\SpecialCharTok{$}\NormalTok{Train }\OtherTok{\textless{}{-}} \FunctionTok{format}\NormalTok{(results\_cat}\SpecialCharTok{$}\NormalTok{Train, }\AttributeTok{scientific =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{results\_cat}\SpecialCharTok{$}\NormalTok{Valid }\OtherTok{\textless{}{-}} \FunctionTok{format}\NormalTok{(results\_cat}\SpecialCharTok{$}\NormalTok{Valid, }\AttributeTok{scientific =} \ConstantTok{FALSE}\NormalTok{)}
+
+\NormalTok{results\_cat}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   Metric          Train          Valid
+## 1    MAE      49604.590      50473.328
+## 2    MSE 4642657714.665 4916793798.668
+## 3     R2          0.649          0.634
+\end{verbatim}
+
+\subsubsection{Módulo 7.3: Combinação de
+Features}\label{muxf3dulo-7.3-combinauxe7uxe3o-de-features}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{f01\_cat }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+                   \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ households }\SpecialCharTok{+}\NormalTok{ median\_income}
+                   \SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ (longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+                   \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ households }\SpecialCharTok{+}\NormalTok{ median\_income}
+                   \SpecialCharTok{+}\NormalTok{ population)}\SpecialCharTok{\^{}}\DecValTok{2} \SpecialCharTok{+}\NormalTok{ less1Hocean }\SpecialCharTok{+}\NormalTok{ inland }\SpecialCharTok{+}\NormalTok{ island }\SpecialCharTok{+}\NormalTok{ nearbay}
+                   \SpecialCharTok{+}\NormalTok{ nearocean)}
+
+\NormalTok{f02\_cat }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+                   \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ households }\SpecialCharTok{+}\NormalTok{ median\_income}
+                   \SpecialCharTok{+}\NormalTok{ population }\SpecialCharTok{+}\NormalTok{ (longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+                   \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ households }\SpecialCharTok{+}\NormalTok{ median\_income}
+                   \SpecialCharTok{+}\NormalTok{ population)}\SpecialCharTok{\^{}}\DecValTok{3} \SpecialCharTok{+}\NormalTok{less1Hocean }\SpecialCharTok{+}\NormalTok{ inland }\SpecialCharTok{+}\NormalTok{ island }\SpecialCharTok{+}\NormalTok{ nearbay}
+                   \SpecialCharTok{+}\NormalTok{ nearocean)}
+
+\NormalTok{f03\_cat }\OtherTok{\textless{}{-}} \FunctionTok{formula}\NormalTok{(median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age}
+                   \SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ households }\SpecialCharTok{+}\NormalTok{ median\_income}
+                   \SpecialCharTok{+}\NormalTok{ (longitude }\SpecialCharTok{+}\NormalTok{ latitude }\SpecialCharTok{+}\NormalTok{ housing\_median\_age }\SpecialCharTok{+}\NormalTok{ total\_rooms}
+                   \SpecialCharTok{+}\NormalTok{ total\_bedrooms }\SpecialCharTok{+}\NormalTok{ households }\SpecialCharTok{+}\NormalTok{ median\_income }\SpecialCharTok{+}\NormalTok{ population)}\SpecialCharTok{\^{}}\DecValTok{4}
+                   \SpecialCharTok{+}\NormalTok{ less1Hocean }\SpecialCharTok{+}\NormalTok{ inland }\SpecialCharTok{+}\NormalTok{ island }\SpecialCharTok{+}\NormalTok{ nearbay }\SpecialCharTok{+}\NormalTok{ nearocean)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{formulas }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(f01\_cat, f02\_cat, f03\_cat)}
+\NormalTok{MaePerCombinationCat }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{Formula  =} \FunctionTok{numeric}\NormalTok{(}\FunctionTok{length}\NormalTok{(formulas)), }
+                                \AttributeTok{TrainCATMAE =} \FunctionTok{numeric}\NormalTok{(}\FunctionTok{length}\NormalTok{(formulas)),}
+                                \AttributeTok{ValCATMAE   =} \FunctionTok{numeric}\NormalTok{(}\FunctionTok{length}\NormalTok{(formulas)))}
+
+\NormalTok{i }\OtherTok{\textless{}{-}} \DecValTok{1}
+\ControlFlowTok{for}\NormalTok{(f }\ControlFlowTok{in}\NormalTok{ formulas)\{}
+  
+\NormalTok{  model }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(}\AttributeTok{formula=}\NormalTok{f, }\AttributeTok{data=}\NormalTok{train\_normalized)}
+  
+\NormalTok{  train\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(model, train\_normalized)}
+\NormalTok{  valid\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(model, valid\_normalized)}
+  
+\NormalTok{  mae\_train }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(train\_pred, train\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{  mae\_val   }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(valid\_pred, valid\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+ 
+\NormalTok{  MaePerCombinationCat[i,] }\OtherTok{=} \FunctionTok{c}\NormalTok{(i, mae\_train, mae\_val)}
+\NormalTok{  i }\OtherTok{\textless{}{-}}\NormalTok{ i }\SpecialCharTok{+} \DecValTok{1}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Módulo 7.4: Curva de Viés e
+Variância}\label{muxf3dulo-7.4-curva-de-viuxe9s-e-variuxe2ncia}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MaePerCombinationCat}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   Formula TrainCATMAE ValCATMAE
+## 1       1       45650     46842
+## 2       2       43926     45225
+## 3       3       43043     44916
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{MaePerCombinationCatMelt }\OtherTok{\textless{}{-}} \FunctionTok{melt}\NormalTok{(MaePerCombinationCat, }\AttributeTok{id =} \StringTok{"Formula"}\NormalTok{)}
+
+\CommentTok{\# Criando o gráfico da curva de viés e variância}
+\NormalTok{p }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ MaePerCombinationCatMelt, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Formula, }\AttributeTok{y =}\NormalTok{ value, }\AttributeTok{colour =}\NormalTok{ variable)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{()}
+
+
+\NormalTok{p }\OtherTok{\textless{}{-}}\NormalTok{ p }\SpecialCharTok{+} \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"Curva Viés/Variância"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{ylab}\NormalTok{(}\StringTok{"MAE"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_discrete}\NormalTok{(}\AttributeTok{name =} \StringTok{"Formula"}\NormalTok{, }\AttributeTok{limits =} \FunctionTok{as.character}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(formulas)))}
+
+
+\NormalTok{p }\OtherTok{\textless{}{-}}\NormalTok{ p }\SpecialCharTok{+} \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.7}\NormalTok{, }\FloatTok{0.85}\NormalTok{), }\AttributeTok{legend.title =} \FunctionTok{element\_blank}\NormalTok{())}
+\NormalTok{p }\OtherTok{\textless{}{-}}\NormalTok{ p }\SpecialCharTok{+} \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{data =}\NormalTok{ MaePerCombinationMelt) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{data =}\NormalTok{ MaePerCombinationMelt)}
+\NormalTok{p }\SpecialCharTok{+} \FunctionTok{scale\_color\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"TrainMAE"} \OtherTok{=} \StringTok{"red"}\NormalTok{, }\StringTok{"TrainCATMAE"} \OtherTok{=} \StringTok{"orange"}\NormalTok{,}
+                                  \StringTok{"ValMAE"} \OtherTok{=} \StringTok{"blue"}\NormalTok{, }\StringTok{"ValCATMAE"} \OtherTok{=} \StringTok{"deepskyblue3"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Ex01_files/figure-latex/unnamed-chunk-37-1.pdf}}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Módulo 8: Conjunto de
+Teste}\label{muxf3dulo-8-conjunto-de-teste}
+
+Após o treinamento e a validação de diferentes modelos, é necessário
+selecionar o melhor modelo com base no conjunto de validação para
+avaliá-lo no conjunto de teste.
+
+\textbf{Importante:} O conjunto de teste deve ser utilizado
+\textbf{apenas uma vez}. O desempenho do modelo no conjunto de teste
+reflete sua capacidade de generalização para o mundo real.
+
+\subsubsection{Módulo 8.1: Avaliando o Desempenho dos
+Modelos}\label{muxf3dulo-8.1-avaliando-o-desempenho-dos-modelos}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{min}\NormalTok{(MaePerCombination}\SpecialCharTok{$}\NormalTok{ValMAE)        }\CommentTok{\# Modelo baseado em combinações}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 45618
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{min}\NormalTok{(MaePerCombinationAI}\SpecialCharTok{$}\NormalTok{ValMAE) }\CommentTok{\# Modelo com ChatGPT}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 51253
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{min}\NormalTok{(MaePerDegree}\SpecialCharTok{$}\NormalTok{ValMAE)             }\CommentTok{\# Modelo baseado em graus}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 45441
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{min}\NormalTok{(MaePerCombinationCat}\SpecialCharTok{$}\NormalTok{ValCATMAE)  }\CommentTok{\# Modelo baseado em características categóricas}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 44916
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Exibindo o MAE do modelo categórico}
+\NormalTok{MaePerCombinationCat}\SpecialCharTok{$}\NormalTok{ValCATMAE}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 46842 45225 44916
+\end{verbatim}
+
+\subsubsection{Módulo 8.2: Preparando o Conjunto de
+Teste}\label{muxf3dulo-8.2-preparando-o-conjunto-de-teste}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{test\_data }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"housePricing\_test\_set.csv"}\NormalTok{, }
+                      \AttributeTok{header=}\ConstantTok{TRUE}\NormalTok{, }\AttributeTok{stringsAsFactors=}\ConstantTok{TRUE}\NormalTok{)}
+
+\FunctionTok{any}\NormalTok{(}\FunctionTok{is.na}\NormalTok{(test\_data))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{test\_encoded }\OtherTok{\textless{}{-}}\NormalTok{ test\_data}
+
+\NormalTok{categories     }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"\textless{}1H OCEAN"}\NormalTok{, }\StringTok{"INLAND"}\NormalTok{, }\StringTok{"ISLAND"}\NormalTok{, }\StringTok{"NEAR BAY"}\NormalTok{, }\StringTok{"NEAR OCEAN"}\NormalTok{)}
+\NormalTok{new\_categories }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{\textquotesingle{}less1Hocean\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}inland\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}island\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}nearbay\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}nearocean\textquotesingle{}}\NormalTok{)}
+
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \FunctionTok{seq\_along}\NormalTok{(categories)) \{}
+\NormalTok{  cat     }\OtherTok{\textless{}{-}}\NormalTok{ categories[i]}
+\NormalTok{  new\_cat }\OtherTok{\textless{}{-}}\NormalTok{ new\_categories[i]}
+  
+\NormalTok{  test\_encoded[[new\_cat]] }\OtherTok{\textless{}{-}} \FunctionTok{as.numeric}\NormalTok{(test\_encoded}\SpecialCharTok{$}\NormalTok{ocean\_proximity }\SpecialCharTok{==}\NormalTok{ cat)}
+\NormalTok{\}}
+
+\NormalTok{test\_encoded}\SpecialCharTok{$}\NormalTok{ocean\_proximity }\OtherTok{\textless{}{-}} \ConstantTok{NULL}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{test\_normalized }\OtherTok{\textless{}{-}}\NormalTok{ test\_encoded}
+
+\NormalTok{test\_normalized[,}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{]  }\OtherTok{\textless{}{-}} \FunctionTok{sweep}\NormalTok{(test\_normalized[,}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\DecValTok{2}\NormalTok{, min\_features, }\StringTok{"{-}"}\NormalTok{)}
+\NormalTok{test\_normalized[,}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{]  }\OtherTok{\textless{}{-}} \FunctionTok{sweep}\NormalTok{(test\_normalized[,}\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\DecValTok{2}\NormalTok{, diff, }\StringTok{"/"}\NormalTok{)}
+
+\NormalTok{test\_normalized[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{] }\OtherTok{\textless{}{-}} \FunctionTok{as.data.frame}\NormalTok{(}\FunctionTok{lapply}\NormalTok{(test\_normalized[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{8}\NormalTok{], }\ControlFlowTok{function}\NormalTok{(x) }\FunctionTok{pmax}\NormalTok{(}\DecValTok{0}\NormalTok{, }\FunctionTok{pmin}\NormalTok{(}\DecValTok{1}\NormalTok{, x))))}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Módulo 8.3: Avaliando o
+modelo}\label{muxf3dulo-8.3-avaliando-o-modelo}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{best\_model }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(}\AttributeTok{formula=}\NormalTok{median\_house\_value }\SpecialCharTok{\textasciitilde{}}\NormalTok{ longitude }\SpecialCharTok{+}\NormalTok{ latitude}
+                 \SpecialCharTok{+}\NormalTok{ housing\_median\_age }\SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms}
+                 \SpecialCharTok{+}\NormalTok{ households }\SpecialCharTok{+}\NormalTok{ median\_income }\SpecialCharTok{+}\NormalTok{ (longitude }\SpecialCharTok{+}\NormalTok{ latitude}
+                 \SpecialCharTok{+}\NormalTok{ housing\_median\_age }\SpecialCharTok{+}\NormalTok{ total\_rooms }\SpecialCharTok{+}\NormalTok{ total\_bedrooms }
+                 \SpecialCharTok{+}\NormalTok{ households }\SpecialCharTok{+}\NormalTok{ median\_income }\SpecialCharTok{+}\NormalTok{ population)}\SpecialCharTok{\^{}}\DecValTok{4} \SpecialCharTok{+}\NormalTok{ less1Hocean}
+                 \SpecialCharTok{+}\NormalTok{ inland }\SpecialCharTok{+}\NormalTok{ island }\SpecialCharTok{+}\NormalTok{ nearbay }\SpecialCharTok{+}\NormalTok{ nearocean, }\AttributeTok{data=}\NormalTok{train\_normalized)}
+
+
+\NormalTok{test\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(best\_model, test\_normalized)}
+
+\NormalTok{mae\_test }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(test\_pred, test\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{mse\_test }\OtherTok{\textless{}{-}} \FunctionTok{MSE}\NormalTok{(test\_pred, test\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+\NormalTok{r2\_test  }\OtherTok{\textless{}{-}} \FunctionTok{R2}\NormalTok{(test\_pred,  test\_normalized}\SpecialCharTok{$}\NormalTok{median\_house\_value)}
+
+\NormalTok{results\_cat }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}
+  \AttributeTok{Metric =} \FunctionTok{c}\NormalTok{(}\StringTok{"MAE"}\NormalTok{, }\StringTok{"MSE"}\NormalTok{, }\StringTok{"R2"}\NormalTok{),}
+  \AttributeTok{Test =} \FunctionTok{c}\NormalTok{(mae\_test, mse\_test, r2\_test)}
+\NormalTok{)}
+
+\NormalTok{results\_cat}\SpecialCharTok{$}\NormalTok{Test }\OtherTok{\textless{}{-}} \FunctionTok{as.numeric}\NormalTok{(results\_cat}\SpecialCharTok{$}\NormalTok{Test)}
+\NormalTok{results\_cat}\SpecialCharTok{$}\NormalTok{Test }\OtherTok{\textless{}{-}} \FunctionTok{format}\NormalTok{(results\_cat}\SpecialCharTok{$}\NormalTok{Test, }\AttributeTok{scientific =} \ConstantTok{FALSE}\NormalTok{)}
+
+\NormalTok{results\_cat}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   Metric           Test
+## 1    MAE      44057.497
+## 2    MSE 4493345391.622
+## 3     R2          0.667
+\end{verbatim}
+
+\end{document}

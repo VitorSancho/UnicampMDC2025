@@ -18,6 +18,9 @@ knitr::opts_chunk$set(
 )
 
 options(digits = 3) # Definição do número de casas decimais padrão
+library(ggplot2)
+library(corrplot)
+set.seed(42)
 ```
 
 ## 01 - Análise exploratória dos dados
@@ -29,57 +32,57 @@ dados_treino <- read.csv("T01_train_set.csv")
 dados_validacao <- read.csv("T01_valid_set.csv")
 
 paste("O dataframe de TREINO possui",nrow(dados_treino),"registros",sep=" ")
-paste("###################################################################")
 paste("summary TREINO:")
 summary(dados_treino)
-paste("###################################################################")
 paste("O dataframe de VALIDAÇÃO possui",nrow(dados_validacao),"registros",sep=" ")
-paste("###################################################################")
 paste("summary VALIDAÇÃO:")
 summary(dados_validacao)
-
-
-paste("###################################################################")
 ```
 Ao executar o summary é possível identificar que o conjunto de dados é composto por registros associados à prática de atividade física para uma pessoa. Os registros contêm dados sobre características da pessoa e indicadores da atividade física realizada. Cada registro possui 7 features: Gênero, Altura, Peso, Duração do exercício, Batimento Cardíaco, Temperatura Corporal e Idade. Por fim, cada registro possui seu valor de Calorias consumidas. Essa última coluna será utilizada como ground truth de nosso conjunto de dados.
 
 Além disso, o summary nos indica a presença de itens inválidos no conjunto de dados. Esses são determinados a partir da presença de NA em uma ou mais features do registro. Esses valores são removidos abaixo:
 
 ```{r}
-dados_treino_sem_NAs <- dados_treino[!is.na(dados_treino$Genero) & !is.na(dados_treino$Altura) & !is.na(dados_treino$Peso) & !is.na(dados_treino$Batimento.Cardiaco) & !is.na(dados_treino$Idade),]
+dados_treino_sem_NAs <- dados_treino[
+  !is.na(dados_treino$Genero) & 
+  !is.na(dados_treino$Altura) & 
+  !is.na(dados_treino$Peso) & 
+  !is.na(dados_treino$Batimento.Cardiaco) & 
+  !is.na(dados_treino$Idade),]
 
 
-paste("###################################################################")
-paste("summary após a remoção de regitros com NA:")
+paste("Summary após a remoção de registros com NA:")
 summary(dados_treino_sem_NAs)
 
-paste("###################################################################")
-paste("Foram removidos",nrow(dados_treino) - nrow(dados_treino_sem_NAs)," registros inválidos", sep=" ")
+NAs_removidos_treino <- nrow(dados_treino) - nrow(dados_treino_sem_NAs)
+paste("Foram removidos",NAs_removidos_treino," registros inválidos", sep=" ")
 
-paste("Versão final após limpeza dos dados possui",nrow(dados_treino_sem_NAs),"registros",sep=" ")
-
-paste("###################################################################")
-
-dados_validacao_sem_NAs <- dados_validacao[!is.na(dados_validacao$Duracao) & !is.na(dados_validacao$Temperatura.Corporal)& !is.na(dados_validacao$Peso),]
+paste("Versão final após limpeza dos dados possui",
+      nrow(dados_treino_sem_NAs),"registros",sep=" ")
 
 
-paste("###################################################################")
-paste("summary após a remoção de regitros com NA:")
+dados_validacao_sem_NAs <- dados_validacao[
+  !is.na(dados_validacao$Duracao) & 
+  !is.na(dados_validacao$Temperatura.Corporal)&
+  !is.na(dados_validacao$Peso),]
+
+
+paste("summary após a remoção de registros com NA:")
 summary(dados_validacao_sem_NAs)
 
-paste("###################################################################")
-paste("Foram removidos",nrow(dados_validacao) - nrow(dados_validacao_sem_NAs)," registros inválidos do dataset de VALIDAÇÃO", sep=" ")
+NAs_removidos_validacao <- nrow(dados_validacao) - nrow(dados_validacao_sem_NAs)
+paste("Foram removidos",NAs_removidos_validacao,
+      " registros inválidos do dataset de VALIDAÇÃO", sep=" ")
 
-paste("Versão final após limpeza dos dados possui",nrow(dados_validacao_sem_NAs),"registros",sep=" ")
-paste("###################################################################")
+paste("Versão final após limpeza dos dados possui",
+      nrow(dados_validacao_sem_NAs),"registros",sep=" ")
+
 ```
 
 Um outro ponto a se analisar é a distribuição de cada uma das features. É importante observar isso pois, caso existam features com valores muito desbalanceados, isso pode interferir na performance do modelo treinado. Além disso, essa observação nos permite realizar correções no modelo de forma a balancear esses valores.
 A distribuição de cada uma das features pode ser vista abaixo:
 
 ```{r}
-library(ggplot2)
-
 # Histograma da altura
 ggplot(dados_treino_sem_NAs, aes(x = Altura)) +
   geom_histogram(binwidth = 5, fill = "orange", color = "black") +
@@ -127,8 +130,6 @@ ggplot(dados_treino_sem_NAs, aes(x = Idade, fill = Idade)) +
 Abaixo podemos ver os mesmos gráficos para o conjunto de validação. É possível notar o mesmo comportamento para cada feature já analisada acima.
 
 ```{r}
-library(ggplot2)
-
 # Histograma da altura
 ggplot(dados_validacao_sem_NAs, aes(x = Altura)) +
   geom_histogram(binwidth = 5, fill = "orange", color = "black") +
@@ -176,10 +177,10 @@ Podemos ver uma amostra destas abaixo:
 ```{r}
 paste("Amostra de dados de idade:")
 head(dados_treino_sem_NAs$Idade)
-paste("###################################################################")
+
 paste("Amostra de dados de genero:")
 head(dados_treino_sem_NAs$Genero)
-paste("###################################################################")
+
 ```
 Como podemos ver acima, essas features possuem valores discretos, sendo classificadas como features categóricas. 
 Dado essa característica será necessário alterar os valores para essas features de forma que tenham valores numéricos.
@@ -187,7 +188,7 @@ Esse processo é denominado one-hot-encoding e é executado abaixo para as featu
 
 
 ```{r}
-paste("#####################################################")
+
 paste("One hot encoding para conjunto de TREINO")
 dados_para_encoding_treino <- dados_treino_sem_NAs
 idade_one_hot_encoding <- model.matrix(~Idade - 1, data = dados_para_encoding_treino)
@@ -200,7 +201,7 @@ dados_para_encoding_treino$Idade <- NULL
 dados_para_encoding_treino$Genero <- NULL
 colnames(dados_para_encoding_treino) <- gsub("-", "_", colnames(dados_para_encoding_treino))
 
-paste("#####################################################")
+
 paste("One hot encoding para conjunto de VALIDAÇÃO")
 
 dados_para_encoding_validacao <- dados_validacao_sem_NAs
@@ -358,14 +359,6 @@ Para melhorar o desempenho do modelo podemos realizar um estudo de correlação 
 Abaixo é possível observar o heatmap de correlação entre as features do data set.
 
 ```{r}
-# install.packages("corrplot")
-library(corrplot)
-# Visualizando a matriz de correlação com um heatmap
-# par(mar = c(2, 2, 2, 2))  # Ajusta as margens do gráfico
-# par(cex = 1.2)            # Ajusta o tamanho do texto
-
-# dev.new(width = 15, height = 15, unit = "in", noRStudioGD = TRUE)
-
 # Calculando a matriz de correlação
 correlation <- cor(treino_normalizado[,c(1:6, 13:14)])
 print(correlation)
@@ -375,8 +368,7 @@ corrplot(correlation, method = "color", type = "upper",
 ```
 No plot acima, é possível notar que mais features podem ser combinadas, pois possuem uma correlação elevada. As features Duração e Temperatura.Corporal tem um grau de correlação de 0.90. O valor de correlação de 0.85 é observado entre Duração e Batimento.Cardiaco, e 0.77 entre Batimento.Cardiaco e Temperatura.Corporal. Essas três são grande candidatas a serem combinadas numa só, além de ser possível combinar um par delas em somente uma. Em especial, as features Peso e Altura também tem uma correlação muito alta (0.96).
 
-Para abordar a alta correlação entre Peso e Altura e simplificar o modelo, iremos transformar as features Peso e Altura em uma, calculando o IMC, conforme a fórmula:
-$$IMC = \frac{Peso}{Altura^2}$$
+Para abordar a alta correlação entre Peso e Altura e simplificar o modelo, iremos transformar as features Peso e Altura em uma, calculando o IMC, conforme a fórmula: IMC = Peso/Altura^2
 
 
 ```{r}
