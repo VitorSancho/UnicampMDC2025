@@ -352,6 +352,60 @@ model_metrics(treino_normalizado, validacao_normalizado, baseline)
 
 Com base nas métricas de avaliação do modelo, podemos ver que capturamos cerca de 96% da variabilidade do dos dados com o modelo, e o comportamento dos erros foi estável (MSE baixo, significando erros pequenos, em média). Nas próximas seções, iremos estudar como utilizar as features presentes de forma a tentar melhorar estas métricas.
 
+
+## 03.1 Mudando a normalização aplicada 
+
+testando normalização de features usando z-score
+
+```{r}
+# Calculando a média e o desvio padrão para normalização
+treino_normalizado_z_score <- dados_para_encoding_treino
+validacao_normalizado_z_score <- dados_para_encoding_validacao
+
+mean_features <- apply(treino_normalizado_z_score[, 1:6], 2, mean)
+sd_features   <- apply(treino_normalizado_z_score[, 1:6], 2, sd)
+
+print("Médias das features")
+print(mean_features)
+print("Desvios padrão das features")
+print(sd_features)
+```
+
+```{r}
+# Aplicando a normalização Z-Score nos dados de treino
+treino_normalizado_z_score[, 1:8] <- sweep(treino_normalizado_z_score[, 1:8], 2, mean_features, "-")
+treino_normalizado_z_score[, 1:8] <- sweep(treino_normalizado_z_score[, 1:8], 2, sd_features, "/")
+
+validacao_normalizado_z_score[, 1:8] <- sweep(validacao_normalizado_z_score[, 1:8], 2, mean_features, "-")
+validacao_normalizado_z_score[, 1:8] <- sweep(validacao_normalizado_z_score[, 1:8], 2, sd_features, "/")
+
+summary(treino_normalizado_z_score)
+summary(validacao_normalizado_z_score)
+```
+
+
+
+```{r}
+# Treinando o modelo de regressão linear com as variáveis contínuas
+baseline_z_score <- lm(formula = Calorias ~ Altura + Peso
+               + Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+               Idade20_29 +
+                 Idade30_39 +
+                 Idade40_49 +
+                 Idade50_59 +
+                  Idade60_69 +
+                 Idade70_79 +
+                 Generofeminino + 
+                 Generomasculino
+               ,data=treino_normalizado_z_score)
+
+# Exibindo o resumo do modelo ajustado
+summary(baseline_z_score)
+
+model_metrics(treino_normalizado_z_score, validacao_normalizado_z_score, baseline_z_score)
+```
+
+
 ## 04 Combinando as features
 
 Para melhorar o desempenho do modelo podemos realizar um estudo de correlação entre as features do dataset.
