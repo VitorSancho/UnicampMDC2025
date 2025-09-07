@@ -424,10 +424,473 @@ model_metrics(treino_normalizado, validacao_normalizado, baseline)
 Vimos que a substituição do IMC piorou levemente o modelo.
 
 Além das análises de correlação, dado o número restrito de features, podemos também construir scatter plots de cada feature com a variável alvo, para observar relações não lineares que possamos incluir no modelo.
+
 ```{r}
 ggplot(treino_engineered, aes(x = IMC, y = Calorias)) + geom_point() + geom_smooth()
+ggplot(treino_normalizado, aes(x = Peso, y = Calorias)) + geom_point() + geom_smooth()
+ggplot(treino_normalizado, aes(x = Altura, y = Calorias)) + geom_point() + geom_smooth()
 ggplot(treino_engineered, aes(x = Duracao, y = Calorias)) + geom_point() + geom_smooth()
 ggplot(treino_engineered, aes(x = Batimento.Cardiaco, y = Calorias)) + geom_point() + geom_smooth()
 ggplot(treino_engineered, aes(x = Temperatura.Corporal, y = Calorias)) + geom_point() + geom_smooth()
 ```
+
 Analisando os scatter plots, podemos ver que a relação entre Temperatura.Corporal e Batimento.Cardiaco para Calorias parece ser algo que se aproxima de **quadrático**, sugerindo oportunidades de melhoria ao tentarmos fazer uma regressão polinomial. A baixa correlação do IMC (e, consequentemente, peso e altura) com as Calorias fica mais evidente, portanto, podemos remover esta feature do modelo daqui para frente, pois não tem boa explicabilidade dos dados.
+
+
+
+
+## Mais combinações entre features
+
+```{r}
+f01 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +
+                           (Batimento.Cardiaco * Temperatura.Corporal))
+
+f02 <- formula(Calorias ~ Duracao + 
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +
+                           (Batimento.Cardiaco * Temperatura.Corporal))
+
+f03 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +
+                           (Batimento.Cardiaco * Duracao))
+
+f04 <- formula(Calorias ~ Duracao +
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +
+                           (Batimento.Cardiaco * Duracao))
+
+f05 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +                 
+                           (Duracao * Temperatura.Corporal))
+
+f06 <- formula(Calorias ~ Batimento.Cardiaco +
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +                 
+                           (Duracao * Temperatura.Corporal))
+
+f07 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +                 
+                           (Duracao * Temperatura.Corporal * Batimento.Cardiaco))
+
+f08 <- formula(Calorias ~ 
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +                 
+                           (Duracao * Temperatura.Corporal * Batimento.Cardiaco))
+
+f09 <- formula(Calorias ~ Duracao + Batimento.Cardiaco +
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                 
+               (Duracao * Batimento.Cardiaco))
+
+f10 <- formula(Calorias ~ Batimento.Cardiaco + Temperatura.Corporal +
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                     
+               (Batimento.Cardiaco * Temperatura.Corporal))
+
+f11 <- formula(Calorias ~ Duracao + Temperatura.Corporal +
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                     
+               (Duracao * Temperatura.Corporal))
+
+f12 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + 
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                     
+               (Duracao * Batimento.Cardiaco * Temperatura.Corporal))
+
+f13 <- formula(Calorias ~ Duracao + Temperatura.Corporal + 
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                     
+               (Duracao * Temperatura.Corporal * Batimento.Cardiaco))
+
+f14 <- formula(Calorias ~ Batimento.Cardiaco + Temperatura.Corporal +
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                     
+               (Duracao * Batimento.Cardiaco * Temperatura.Corporal))
+
+f15 <- formula(Calorias ~ Batimento.Cardiaco + Temperatura.Corporal + Duracao +
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                     
+               (Duracao + Batimento.Cardiaco + Temperatura.Corporal)^2)
+
+f16 <- formula(Calorias ~ Batimento.Cardiaco + Temperatura.Corporal + Duracao +
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                     
+               (Duracao + Batimento.Cardiaco + Temperatura.Corporal)^3)
+
+f17 <- formula(Calorias ~ Batimento.Cardiaco + Temperatura.Corporal + Duracao +
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                     
+               (Duracao + Batimento.Cardiaco + Temperatura.Corporal)^4)
+
+# Lista completa de fórmulas
+formulas <- c(f01, f02, f03, f04, f05, f06, f07, f08,
+              f09, f10, f11, f12, f13, f14, f15, f16, f17)
+
+MaePerCombination <- data.frame(Formula  = numeric(length(formulas)), 
+                                TrainMAE = numeric(length(formulas)),
+                                ValMAE   = numeric(length(formulas)))
+
+i <- 1
+for(f in formulas){
+  model <- lm(formula = f, data = treino_normalizado)
+
+  # Previsões
+  train_pred <- predict(model, treino_normalizado)
+  valid_pred <- predict(model, validacao_normalizado)
+
+  # Erros
+  mae_train <- MAE(train_pred, treino_normalizado$Calorias)
+  mae_val   <- MAE(valid_pred, validacao_normalizado$Calorias)
+
+  # Resultados
+  MaePerCombination[i, ] <- c(i, mae_train, mae_val)
+  i <- i + 1
+}
+
+MaePerCombination
+
+```
+
+
+
+## Regressão polinomial
+
+
+```{r}
+# Polinomial de grau 2
+f02 <- formula(Calorias ~ Altura + Peso + Duracao + Batimento.Cardiaco + 
+                 Temperatura.Corporal +
+                 I(Altura^2) + I(Peso^2) + I(Duracao^2) + I(Batimento.Cardiaco^2) +
+                 I(Temperatura.Corporal^2) +
+                 Idade20_29 + Idade30_39 + Idade40_49 + Idade50_59 +
+                 Idade60_69 + Idade70_79 + Generofeminino + Generomasculino)
+
+# Polinomial de grau 3
+f03 <- formula(Calorias ~ Altura + Peso + Duracao + Batimento.Cardiaco + 
+                 Temperatura.Corporal +
+                 I(Altura^2) + I(Peso^2) + I(Duracao^2) + I(Batimento.Cardiaco^2) +
+                 I(Temperatura.Corporal^2) +
+                 I(Altura^3) + I(Peso^3) + I(Duracao^3) + I(Batimento.Cardiaco^3) +
+                 I(Temperatura.Corporal^3) +
+                 Idade20_29 + Idade30_39 + Idade40_49 + Idade50_59 +
+                 Idade60_69 + Idade70_79 + Generofeminino + Generomasculino)
+
+# Polinomial de grau 4
+f04 <- formula(Calorias ~ Altura + Peso + Duracao + Batimento.Cardiaco + 
+                 Temperatura.Corporal +
+                 I(Altura^2) + I(Peso^2) + I(Duracao^2) + I(Batimento.Cardiaco^2) +
+                 I(Temperatura.Corporal^2) +
+                 I(Altura^3) + I(Peso^3) + I(Duracao^3) + I(Batimento.Cardiaco^3) +
+                 I(Temperatura.Corporal^3) +
+                 I(Altura^4) + I(Peso^4) + I(Duracao^4) + I(Batimento.Cardiaco^4) +
+                 I(Temperatura.Corporal^4) +
+                 Idade20_29 + Idade30_39 + Idade40_49 + Idade50_59 +
+                 Idade60_69 + Idade70_79 + Generofeminino + Generomasculino)
+
+# Polinomial de grau 5
+f05 <- formula(Calorias ~ Altura + Peso + Duracao + Batimento.Cardiaco + 
+                 Temperatura.Corporal +
+                 I(Altura^2) + I(Peso^2) + I(Duracao^2) + I(Batimento.Cardiaco^2) +
+                 I(Temperatura.Corporal^2) +
+                 I(Altura^3) + I(Peso^3) + I(Duracao^3) + I(Batimento.Cardiaco^3) +
+                 I(Temperatura.Corporal^3) +
+                 I(Altura^4) + I(Peso^4) + I(Duracao^4) + I(Batimento.Cardiaco^4) +
+                 I(Temperatura.Corporal^4) +
+                 I(Altura^5) + I(Peso^5) + I(Duracao^5) + I(Batimento.Cardiaco^5) +
+                 I(Temperatura.Corporal^5) +
+                 Idade20_29 + Idade30_39 + Idade40_49 + Idade50_59 +
+                 Idade60_69 + Idade70_79 + Generofeminino + Generomasculino)
+
+# Polinomial de grau 6
+f06 <- formula(Calorias ~ Altura + Peso + Duracao + Batimento.Cardiaco + 
+                 Temperatura.Corporal +
+                 I(Altura^2) + I(Peso^2) + I(Duracao^2) + I(Batimento.Cardiaco^2) +
+                 I(Temperatura.Corporal^2) +
+                 I(Altura^3) + I(Peso^3) + I(Duracao^3) + I(Batimento.Cardiaco^3) +
+                 I(Temperatura.Corporal^3) +
+                 I(Altura^4) + I(Peso^4) + I(Duracao^4) + I(Batimento.Cardiaco^4) +
+                 I(Temperatura.Corporal^4) +
+                 I(Altura^5) + I(Peso^5) + I(Duracao^5) + I(Batimento.Cardiaco^5) +
+                 I(Temperatura.Corporal^5) +
+                 I(Altura^6) + I(Peso^6) + I(Duracao^6) + I(Batimento.Cardiaco^6) +
+                 I(Temperatura.Corporal^6) +
+                 Idade20_29 + Idade30_39 + Idade40_49 + Idade50_59 +
+                 Idade60_69 + Idade70_79 + Generofeminino + Generomasculino)
+
+# Polinomial de grau 7
+f07 <- formula(Calorias ~ Altura + Peso + Duracao + Batimento.Cardiaco + 
+                 Temperatura.Corporal +
+                 I(Altura^2) + I(Peso^2) + I(Duracao^2) + I(Batimento.Cardiaco^2) +
+                 I(Temperatura.Corporal^2) +
+                 I(Altura^3) + I(Peso^3) + I(Duracao^3) + I(Batimento.Cardiaco^3) +
+                 I(Temperatura.Corporal^3) +
+                 I(Altura^4) + I(Peso^4) + I(Duracao^4) + I(Batimento.Cardiaco^4) +
+                 I(Temperatura.Corporal^4) +
+                 I(Altura^5) + I(Peso^5) + I(Duracao^5) + I(Batimento.Cardiaco^5) +
+                 I(Temperatura.Corporal^5) +
+                  I(Altura^6) + I(Peso^6) + I(Duracao^6) + I(Batimento.Cardiaco^6) +
+                 I(Temperatura.Corporal^6) +
+                 I(Altura^7) + I(Peso^7) + I(Duracao^7) + I(Batimento.Cardiaco^7) +
+                 I(Temperatura.Corporal^7) +
+                 Idade20_29 + Idade30_39 + Idade40_49 + Idade50_59 +
+                 Idade60_69 + Idade70_79 + Generofeminino + Generomasculino)
+
+# Polinomial de grau 8
+f08 <- formula(Calorias ~ Altura + Peso + Duracao + Batimento.Cardiaco + 
+                 Temperatura.Corporal +
+                 I(Altura^2) + I(Peso^2) + I(Duracao^2) + I(Batimento.Cardiaco^2) +
+                 I(Temperatura.Corporal^2) +
+                 I(Altura^3) + I(Peso^3) + I(Duracao^3) + I(Batimento.Cardiaco^3) +
+                 I(Temperatura.Corporal^3) +
+                 I(Altura^4) + I(Peso^4) + I(Duracao^4) + I(Batimento.Cardiaco^4) +
+                 I(Temperatura.Corporal^4) +
+                 I(Altura^5) + I(Peso^5) + I(Duracao^5) + I(Batimento.Cardiaco^5) +
+                 I(Temperatura.Corporal^5) +
+                  I(Altura^6) + I(Peso^6) + I(Duracao^6) + I(Batimento.Cardiaco^6) +
+                 I(Temperatura.Corporal^6) +
+                 I(Altura^7) + I(Peso^7) + I(Duracao^7) + I(Batimento.Cardiaco^7) +
+                 I(Temperatura.Corporal^7) +
+                 I(Altura^8) + I(Peso^8) + I(Duracao^8) + I(Batimento.Cardiaco^8) +
+                 I(Temperatura.Corporal^8) +
+                 Idade20_29 + Idade30_39 + Idade40_49 + Idade50_59 +
+                 Idade60_69 + Idade70_79 + Generofeminino + Generomasculino)
+
+
+# Lista completa de fórmulas
+formulas <- c(f01, f02, f03, f04, f05, f06, f07, f08)
+
+MaePerDegree <- data.frame(Formula  = numeric(length(formulas)), 
+                                TrainMAE = numeric(length(formulas)),
+                                ValMAE   = numeric(length(formulas)))
+
+i <- 1
+for(f in formulas){
+  model <- lm(formula = f, data = treino_normalizado)
+
+  # Previsões
+  train_pred <- predict(model, treino_normalizado)
+  valid_pred <- predict(model, validacao_normalizado)
+
+  # Erros
+  mae_train <- MAE(train_pred, treino_normalizado$Calorias)
+  mae_val   <- MAE(valid_pred, validacao_normalizado$Calorias)
+
+  # Resultados
+  MaePerDegree[i, ] <- c(i, mae_train, mae_val)
+  i <- i + 1
+}
+
+MaePerDegree
+```
+
+```{r}
+MaePerDegree
+
+MaePerDegreeMelt <- melt(MaePerDegree, id="Formula")
+
+p <- ggplot(data=MaePerDegreeMelt, aes(x=Formula, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("MAE") + scale_x_discrete(name ="Formula", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.85), legend.title = element_blank())
+```
+
+
+Regressão polinomial para o modelo com as features combinadas, usando como referencia a feature combinada f03:
+
+```{r}
+# f03 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+#                            Idade20_29 + Idade30_39 + Idade40_49 +
+#                            Idade50_59 + Idade60_69 + Idade70_79 +
+#                            Generofeminino + 
+#                            Generomasculino +
+#                            (Batimento.Cardiaco * Duracao))
+
+
+f03_1 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +
+                           (Batimento.Cardiaco * Duracao))
+
+# Grau 2
+f03_2 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                I(Duracao^2) + I(Batimento.Cardiaco^2) + I(Temperatura.Corporal^2) +
+                Idade20_29 + Idade30_39 + Idade40_49 +
+                Idade50_59 + Idade60_69 + Idade70_79 +
+                Generofeminino + Generomasculino +
+                (Batimento.Cardiaco * Duracao) + 
+                I(Batimento.Cardiaco * Duracao)^2)
+
+# Grau 3
+f03_3 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                I(Duracao^2) + I(Batimento.Cardiaco^2) + I(Temperatura.Corporal^2) +
+                I(Duracao^3) + I(Batimento.Cardiaco^3) + I(Temperatura.Corporal^3) +
+                Idade20_29 + Idade30_39 + Idade40_49 +
+                Idade50_59 + Idade60_69 + Idade70_79 +
+                Generofeminino + Generomasculino +
+                (Batimento.Cardiaco * Duracao)+ 
+                I(Batimento.Cardiaco * Duracao)^2+ 
+                I(Batimento.Cardiaco * Duracao)^3)
+
+# Grau 4
+f03_4 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                I(Duracao^2) + I(Batimento.Cardiaco^2) + I(Temperatura.Corporal^2) +
+                I(Duracao^3) + I(Batimento.Cardiaco^3) + I(Temperatura.Corporal^3) +
+                I(Duracao^4) + I(Batimento.Cardiaco^4) + I(Temperatura.Corporal^4) +
+                Idade20_29 + Idade30_39 + Idade40_49 +
+                Idade50_59 + Idade60_69 + Idade70_79 +
+                Generofeminino + Generomasculino +
+                (Batimento.Cardiaco * Duracao) +
+                I(Batimento.Cardiaco * Duracao)^2+ 
+                I(Batimento.Cardiaco * Duracao)^3+ 
+                I(Batimento.Cardiaco * Duracao)^4)
+
+# Lista completa de fórmulas
+formulas <- c(f03_1, f03_2, f03_3, f03_4)
+
+MaePerDegreeForBetterCombination <- data.frame(Formula  = numeric(length(formulas)), 
+                                TrainMAE = numeric(length(formulas)),
+                                ValMAE   = numeric(length(formulas)))
+
+i <- 1
+for(f in formulas){
+  model <- lm(formula = f, data = treino_normalizado)
+
+  # Previsões
+  train_pred <- predict(model, treino_normalizado)
+  valid_pred <- predict(model, validacao_normalizado)
+
+  # Erros
+  mae_train <- MAE(train_pred, treino_normalizado$Calorias)
+  mae_val   <- MAE(valid_pred, validacao_normalizado$Calorias)
+
+  # Resultados
+  MaePerDegreeForBetterCombination[i, ] <- c(i, mae_train, mae_val)
+  i <- i + 1
+}
+
+MaePerDegreeForBetterCombination
+```
+
+
+
+## Avaliação do melhor modelo:
+
+```{r}
+min(MaePerCombination$ValMAE)
+min(MaePerDegree$ValMAE)
+min(MaePerDegreeForBetterCombination$ValMAE)
+```
+O Modelo com melhor desempenho, usando como referência o Erro Médio Absoluto, foi o polinomial de grau 2 sem combinação entre features.
+
+
+## Avaliando modelo no conjunto de teste:
+
+```{r}
+dados_teste <- read.csv("T01_test_set.csv")
+
+paste("O dataframe de TESTE possui",nrow(dados_teste),"registros",sep=" ")
+paste("###################################################################")
+paste("summary TESTE:")
+summary(dados_teste)
+```
+
+Analisando o conjunto de teste notamos que não possuem registros inválidos, ou seja, com valores NA.
+
+```{r}
+paste("#####################################################")
+paste("One hot encoding para conjunto de TREINO")
+dados_para_encoding_teste <- dados_teste
+idade_one_hot_encoding <- model.matrix(~Idade - 1, data = dados_para_encoding_teste)
+dados_para_encoding_teste <- cbind(dados_para_encoding_teste, idade_one_hot_encoding)
+
+genero_one_hot_encoding <- model.matrix(~Genero - 1, data = dados_para_encoding_teste)
+dados_para_encoding_teste <- cbind(dados_para_encoding_teste, genero_one_hot_encoding)
+
+dados_para_encoding_teste$Idade <- NULL
+dados_para_encoding_teste$Genero <- NULL
+colnames(dados_para_encoding_teste) <- gsub("-", "_", colnames(dados_para_encoding_teste))
+
+head(dados_para_encoding_teste)
+```
+
+
+```{r}
+test_normalized <- dados_para_encoding_teste
+
+test_normalized[,1:6]  <- sweep(test_normalized[,1:6], 2, min_features, "-")
+test_normalized[,1:6]  <- sweep(test_normalized[,1:6], 2, diff, "/")
+
+test_normalized[, 1:6] <- as.data.frame(lapply(test_normalized[, 1:8], function(x) pmax(0, pmin(1, x))))
+
+head(test_normalized)
+```
+
+
+```{r}
+
+best_model <- lm(formula=Calorias ~ Altura + Peso + Duracao + Batimento.Cardiaco + 
+                 Temperatura.Corporal +
+                 I(Altura^2) + I(Peso^2) + I(Duracao^2) + I(Batimento.Cardiaco^2) +
+                 I(Temperatura.Corporal^2) +
+                 Idade20_29 + Idade30_39 + Idade40_49 + Idade50_59 +
+                 Idade60_69 + Idade70_79 + Generofeminino + Generomasculino, data=treino_normalizado)
+
+
+test_pred <- predict(best_model, test_normalized)
+
+mae_test <- MAE(test_pred, test_normalized$Calorias)
+mse_test <- MSE(test_pred, test_normalized$Calorias)
+r2_test  <- R2(test_pred,  test_normalized$Calorias)
+
+results_cat <- data.frame(
+  Metric = c("MAE", "MSE", "R2"),
+  Test = c(mae_test, mse_test, r2_test)
+)
+
+results_cat$Test <- as.numeric(results_cat$Test)
+results_cat$Test <- format(results_cat$Test, scientific = FALSE)
+
+results_cat
+```
