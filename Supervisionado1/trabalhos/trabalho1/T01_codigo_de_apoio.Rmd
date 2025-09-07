@@ -269,12 +269,23 @@ print(correlation)
 corrplot(correlation, method = "color", type = "upper",
          addCoef.col = "black", tl.col = "black", tl.srt = 45, number.cex = 1)
 
+
+# Análise de Feature x Variável, para observar o comportamento da influência de 
+# cada feature na variável alvo.
+ggplot(dados_treino_sem_NAs, aes(x = Peso, y = Calorias)) + geom_point() + geom_smooth()
+ggplot(dados_treino_sem_NAs, aes(x = Altura, y = Calorias)) + geom_point() + geom_smooth()
+ggplot(dados_treino_sem_NAs, aes(x = Duracao, y = Calorias)) + geom_point() + geom_smooth()
+ggplot(dados_treino_sem_NAs, aes(x = Batimento.Cardiaco, y = Calorias)) + geom_point() + geom_smooth()
+ggplot(dados_treino_sem_NAs, aes(x = Temperatura.Corporal, y = Calorias)) + geom_point() + geom_smooth()
+ggplot(dados_treino_sem_NAs, aes(x = Genero, y = Calorias)) + geom_point()
+ggplot(dados_treino_sem_NAs, aes(x = Idade, y = Calorias)) + geom_point()
 ```
+
 
 1.1 -- Quantas amostras existem no conjunto de dados? Como vocês lidarão com features categóricas, caso existam?
 **Resposta:**
 O dataframe de treino possui 10513 registros, já o de validação possui 2260 registros. 
-Identificamos que as features Genero e Idade são catagóricas. Com elas realizamos o processo de one hot encoding, em que 
+Identificamos que as features Genero e Idade são categóricas. Para elas, realizamos o processo de one hot encoding, em que 
 foram criadas uma coluna para cada valor discreto possível para essas features.
 <!-- Fim da resposta -->
 
@@ -285,10 +296,12 @@ Desses dataframes, foram removidos os registros inválidos, após esse processo 
 
 1.3 -- Há alguma característica dos dados que pode impactar o desempenho do modelo?
 **Resposta:**
-Realizamos o plot da matriz de correlação das features contidas no dataset. Observamos que as features Peso e Altura tem uma baixíssima correlação com 
-a feature de Calorias, sendo um valor de 0.03 e 0.02 respectivamente. Com isso, podemos afirmar que a presença dessas features não será ajuda a explicar
-a variação da feature de resposta do modelo, que é Calorias.
-Sobre a distribuição dos dados é possível notar que as features de altura, peso e batimento cardíaco se assemelham muito com uma gaussiana. A de temperatura corporal é uma gaussiana com Assimetria positiva, ou seja, com uma cauda longa à esquerda do valor da mediana dos dados. Para a feature de duração de exercícios temos quase uma distribuição uniforme dos valores, sendo a única exceção os extremos superiores e inferiores dos dados, que possuem um valor de frequência prómixo a metade dos demais. A distribuição da feature de gênero nos indica que os dois valores presenter no dataset possuem uma contagem muito próxima, não demonstrando qualquer desbalanceamento entre essas classes. Já a feature de idade mostra um decaimento na contagem de registros conforme a faixa de idade aumenta, indicando que o total de registros contidos das faixas de 20-29 e 30-39 anos é quase igual a soma das demais faixas.
+Analisando a distribuição dos dados de cada feature, notamos que Altura, Peso e Batimento Cardíaco se assemelham muito com uma gaussiana. A feature de Temperatura Corporal tem uma Assimetria positiva, ou seja, uma cauda longa à esquerda do valor da mediana dos dados. Para a feature de duração de exercícios, temos quase uma distribuição uniforme dos valores, sendo a única exceção os extremos superiores e inferiores dos dados, que possuem um valor de frequência próximo à metade dos demais. A distribuição da feature de gênero nos indica que os dois valores presentes no dataset possuem uma contagem muito próxima, não demonstrando qualquer desbalanceamento entre essas classes. Já a feature de idade mostra um decaimento na contagem de registros conforme a faixa de idade aumenta, indicando que o total de registros contidos das faixas de 20-29 e 30-39 anos é quase igual a soma das demais faixas.
+Realizamos o plot da matriz de correlação das features contidas no dataset, onde observamos que as features Peso e Altura têm uma baixíssima correlação com 
+a feature de Calorias, sendo um valor de 0.03 e 0.02 respectivamente. Com isso, podemos afirmar que a presença dessas features não ajudará a explicar
+a variável objetivo do modelo, que é Calorias.
+Por fim, plotamos scatter plots para cada feature, onde podemos ver que a relação entre Temperatura.Corporal e Batimento.Cardiaco para Calorias parece ser algo que se aproxima de **quadrático**, sugerindo oportunidades de melhoria ao tentarmos fazer uma regressão polinomial. A baixa correlação do Peso e Altura com as Calorias fica mais evidente, portanto, podemos desconsiderar estas features nas melhorias do modelo, pois não tem boa explicabilidade dos dados.
+
 <!-- Fim da resposta -->
 
 # Tarefa 2 -- Modelo Baseline
@@ -306,6 +319,15 @@ MAE <- function(preds, labels) {
 MSE <- function(preds, labels) {
   mse_values <- sum((preds - labels)^2) / length(preds)
   return(mse_values)
+}
+
+# Função para calcular o MSE
+RMSE <- function(preds, labels) {
+  sqrt(MSE(preds, labels))
+}
+
+RAE <- function(preds, labels) {
+  sum(abs(preds-labels))/sum(abs(preds-mean(labels)))
 }
 
 # Função para calcular o R²
@@ -338,28 +360,41 @@ model_metrics <- function(train_set, validation_set, model){
   # Calculando as métricas para o conjunto de treino
   mae_train <- MAE(train_pred, train_set$Calorias)
   mse_train <- MSE(train_pred, train_set$Calorias)
+  rmse_train <- RMSE(train_pred, train_set$Calorias)
+  rae_train <- RAE(train_pred, train_set$Calorias)
   r2_train  <- R2(train_pred, train_set$Calorias)
   
   # Calculando as métricas para o conjunto de validação
   mae_valid <- MAE(valid_pred, validation_set$Calorias)
   mse_valid <- MSE(valid_pred, validation_set$Calorias)
+  rmse_valid <- RMSE(valid_pred, validation_set$Calorias)
+  rae_valid <- RAE(valid_pred, validation_set$Calorias)
   r2_valid  <- R2(valid_pred, validation_set$Calorias)
   
   
   # Organizando os resultados em um dataframe
   results_baseline <- data.frame(
-    Metric = c("MAE", "MSE", "R2"),
-    Train = c(mae_train, mse_train, r2_train),
-    Valid = c(mae_valid, mse_valid, r2_valid)
+    Metric = c("Train", "Valid"),
+    MAE = c(mae_train, mae_valid),
+    MSE = c(mse_train, mse_valid),
+    R2 = c(r2_train, r2_valid),
+    RMSE = c(rmse_train, rmse_valid),
+    RAE = c(rae_train, rae_valid)
   )
   
   # Formatando os resultados para melhor leitura
-  results_baseline$Train <- as.numeric(results_baseline$Train)
-  results_baseline$Valid <- as.numeric(results_baseline$Valid)
+  results_baseline$MAE <- as.numeric(results_baseline$MAE)
+  results_baseline$MSE <- as.numeric(results_baseline$MSE)
+  results_baseline$R2 <- as.numeric(results_baseline$R2)
+  results_baseline$RMSE <- as.numeric(results_baseline$RMSE)
+  results_baseline$RAE <- as.numeric(results_baseline$RAE)
   
   # Evitando notação científica na exibição dos resultados
-  results_baseline$Train <- format(results_baseline$Train, scientific = FALSE)
-  results_baseline$Valid <- format(results_baseline$Valid, scientific = FALSE)
+  results_baseline$MAE <- format(results_baseline$MAE, scientific = FALSE)
+  results_baseline$MSE <- format(results_baseline$MSE, scientific = FALSE)
+  results_baseline$R2 <- format(results_baseline$R2, scientific = FALSE)
+  results_baseline$RMSE <- format(results_baseline$RMSE, scientific = FALSE)
+  results_baseline$RAE <- format(results_baseline$RAE, scientific = FALSE)
   
   # Exibindo os resultados
   results_baseline
@@ -371,8 +406,8 @@ model_metrics(treino_normalizado, validacao_normalizado, baseline)
 2.1 -- O modelo baseline foi suficiente para resolver o problema? Quais métricas de avaliação vocês utilizaram para justificar a resposta?
 
 **Resposta:** 
-O modelo base apresentou um bom desempenho para explicar o comportamento dos dados. A métrica de erro absoluto médio atingiu 0.026856 e o coeficiente de determincação
-atingiu valor de 0.966849, mostrando que a variância da feature Calorias é bem explicada pelas demais features do dataset.
+O modelo base apresentou um bom desempenho para explicar o comportamento dos dados. A métrica de erro absoluto médio atingiu 0.02647 e o coeficiente de determinação R2
+atingiu valor de 0.96622 na validação, mostrando que a variância da variável Calorias é bem explicada pelas demais features do dataset.
 <!-- Fim da resposta -->
 
 # Tarefa 3 -- Combinação de Features
@@ -383,22 +418,152 @@ Implementem soluções alternativas baseadas em regressão linear através da co
 
 ```{r atv3-code}
 # Hipóteses alternativas
+f01 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +
+                           (Batimento.Cardiaco * Temperatura.Corporal))
 
-# Treinamento
+f02 <- formula(Calorias ~ Duracao + 
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           (Batimento.Cardiaco * Temperatura.Corporal))
 
-# Métricas de avaliação
+f03 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +
+                           (Batimento.Cardiaco * Duracao))
 
-# Curva de viés e variância
+f04 <- formula(Calorias ~ Duracao +
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           (Batimento.Cardiaco * Duracao))
+
+f05 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +                 
+                           (Duracao * Temperatura.Corporal))
+
+f06 <- formula(Calorias ~ Batimento.Cardiaco +
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +                 
+                           (Duracao * Temperatura.Corporal))
+
+f07 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                           (Duracao * Temperatura.Corporal * Batimento.Cardiaco))
+
+f08 <- formula(Calorias ~  Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +                 
+                           (Duracao * Temperatura.Corporal * Batimento.Cardiaco))
+
+f09 <- formula(Calorias ~ Duracao + Batimento.Cardiaco +
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                 
+               (Duracao * Batimento.Cardiaco))
+
+f10 <- formula(Calorias ~ Batimento.Cardiaco + Temperatura.Corporal +
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                     
+               (Batimento.Cardiaco * Temperatura.Corporal))
+
+f11 <- formula(Calorias ~ Duracao + Temperatura.Corporal +
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                     
+               (Duracao * Temperatura.Corporal))
+
+f12 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + 
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                     
+               (Duracao * Batimento.Cardiaco * Temperatura.Corporal))
+
+f13 <- formula(Calorias ~ Duracao + Temperatura.Corporal + 
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                     
+               (Duracao * Temperatura.Corporal * Batimento.Cardiaco))
+
+f14 <- formula(Calorias ~ Batimento.Cardiaco + Temperatura.Corporal +
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               Generofeminino + 
+               Generomasculino +                     
+               (Duracao * Batimento.Cardiaco * Temperatura.Corporal))
+
+f15 <- formula(Calorias ~ Batimento.Cardiaco + Temperatura.Corporal + Duracao +
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               (Duracao + Batimento.Cardiaco + Temperatura.Corporal)^2)
+
+f16 <- formula(Calorias ~ Duracao + Batimento.Cardiaco +
+               Idade20_29 + Idade30_39 + Idade40_49 +
+               Idade50_59 + Idade60_69 + Idade70_79 +
+               (Duracao * Batimento.Cardiaco) +  Batimento.Cardiaco^2)
+
+# Lista completa de fórmulas
+formulas <- c(f01, f02, f03, f04, f05, f06, f07, f08,
+              f09, f10, f11, f12, f13, f14, f15, f16, f17)
+
+MaePerCombination <- data.frame(Formula  = numeric(length(formulas)), 
+                                TrainMAE = numeric(length(formulas)),
+                                ValMAE   = numeric(length(formulas)))
+
+models_combination <- list()
+
+i <- 1
+for(f in formulas){
+  model <- lm(formula = f, data = treino_normalizado)
+  models_combination[[i]] <- model
+  
+  # Previsões
+  train_pred <- predict(model, treino_normalizado)
+  valid_pred <- predict(model, validacao_normalizado)
+
+  # Erros
+  mae_train <- MAE(train_pred, treino_normalizado$Calorias)
+  mae_val   <- MAE(valid_pred, validacao_normalizado$Calorias)
+
+  # Resultados
+  MaePerCombination[i, ] <- c(i, mae_train, mae_val)
+  i <- i + 1
+}
+
+MaePerCombination[order(MaePerCombination$ValMAE),]
+
 ```
 
 3.1 -- Quais foram os critérios utilizados para selecionar as combinações de features?
 
+**Resposta:** 
+Para desenvolver as fórmulas, partimos da conclusão que as features Altura e Peso não teriam influência na performance do modelo. Além disso, tentamos explorar combinações das variáveis Duracao, Batimento Cardiaco e Temperatura Corporal, que se mostraram altamente correlacionadas. Em algumas das fórmulas, tentamos também remover algumas das features categóricas, onde foi possível perceber um impacto positivo ao desconsiderar a informação de gênero ao tentar predizer o gasto calórico.
+<!-- Fim da resposta -->
+
+
 3.2 -- Alguma combinação gerou um impacto positivo ou negativo significativo no desempenho do modelo? Por quê?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+O modelo 8 foi o que teve a melhor performance segundo a métrica MAE, seguido de perto pelos modelos 16 e 4. Além disso, os modelos 12, 13, 14, 15, 9 e 3 tiveram performances muito próximas, mostrando que diferentes combinações lineares das features Duracao, Batimento Cardiaco e Temperatura Corporal não melhoram muito o modelo, mas são relevantes para performar acima do baseline. 
+<!-- Fim da resposta -->
 
 3.3 -- Existe alguma relação entre viés e variância no seu modelo ao modificar as combinações de features?
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
+Ao analisar o conjunto de resultados de MAE, os modelos 11 e 10 parecem apresentar um comportamento de alto viés (underfitting), evidenciado pelo MAE de validação e treino bem mais altos que o do modelo baseline. Não foi possível identificar um comportamento de variância nos modelos testados, sugerindo que todas as abordagens foram simples demais para capturar este efeito.
 <!-- Fim da resposta -->
 
 # Tarefa 4 -- Modelos Polinomiais
@@ -407,17 +572,71 @@ Implementem soluções alternativas baseadas em regressão linear aumentando os 
 
 ```{r atv4-code}
 # Hipóteses polinomiais
+# Polinomial de grau 2
 
-# Treinamento
+f_pol02 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 2)
 
-# Métricas de avaliação
+# Polinomial de grau 3
+f_pol03 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 3)
 
-# Curva de viés e variância
+# Polinomial de grau 4
+f_pol04 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 4)
+
+# Polinomial de grau 5
+f_pol05 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 5)
+
+# Polinomial de grau 6
+f_pol06 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 6)
+
+# Polinomial de grau 7
+f_pol07 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 7)
+
+# Polinomial de grau 8
+f_pol08 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 8)
+
+
+# Lista completa de fórmulas
+formulas <- c(f_pol02, f_pol03, f_pol04, f_pol05, f_pol06, f_pol07, f_pol08)
+
+MaePerDegree <- data.frame(Formula  = numeric(length(formulas)), 
+                                TrainMAE = numeric(length(formulas)),
+                                ValMAE   = numeric(length(formulas)))
+
+i <- 1
+for(f in formulas){
+  model <- lm(formula = f, data = treino_normalizado)
+
+  # Previsões
+  train_pred <- predict(model, treino_normalizado)
+  valid_pred <- predict(model, validacao_normalizado)
+
+  # Erros
+  mae_train <- MAE(train_pred, treino_normalizado$Calorias)
+  mae_val   <- MAE(valid_pred, validacao_normalizado$Calorias)
+
+  # Resultados
+  MaePerDegree[i, ] <- c(i, mae_train, mae_val)
+  i <- i + 1
+}
+
+MaePerDegree
+
+MaePerDegreeMelt <- melt(MaePerDegree, id="Formula")
+
+p <- ggplot(data=MaePerDegreeMelt, aes(x=Formula, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("MAE") + scale_x_discrete(name ="Formula", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.85), legend.title = element_blank())
 ```
 
 4.1 -- Como o grau do polinômio afetou o desempenho do modelo?
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
 
 4.2 -- Houve um ponto ótimo onde o erro foi minimizado? Como vocês identificaram esse ponto?
+
 
 4.3 -- Em quais regiões da curva de viés e variância foi possível identificar underfitting e overfitting?
 
@@ -429,11 +648,161 @@ Implementem soluções alternativas baseadas em regressão linear aumentando os 
 
 Após identificar o melhor modelo, utilizem-no para fazer previsões no conjunto de teste e avaliem o seu desempenho.
 
-```{r atv5-code}
-# Predição
+Regressão polinomial para o modelo com as features combinadas, usando como referencia a feature combinada f03:
 
-# Métricas de avaliação
+```{r}
+# f03 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+#                            Idade20_29 + Idade30_39 + Idade40_49 +
+#                            Idade50_59 + Idade60_69 + Idade70_79 +
+#                            Generofeminino + 
+#                            Generomasculino +
+#                            (Batimento.Cardiaco * Duracao))
+
+
+f03_1 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                           Idade20_29 + Idade30_39 + Idade40_49 +
+                           Idade50_59 + Idade60_69 + Idade70_79 +
+                           Generofeminino + 
+                           Generomasculino +
+                           (Batimento.Cardiaco * Duracao))
+
+# Grau 2
+f03_2 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                I(Duracao^2) + I(Batimento.Cardiaco^2) + I(Temperatura.Corporal^2) +
+                Idade20_29 + Idade30_39 + Idade40_49 +
+                Idade50_59 + Idade60_69 + Idade70_79 +
+                Generofeminino + Generomasculino +
+                (Batimento.Cardiaco * Duracao) + 
+                I(Batimento.Cardiaco * Duracao)^2)
+
+# Grau 3
+f03_3 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                I(Duracao^2) + I(Batimento.Cardiaco^2) + I(Temperatura.Corporal^2) +
+                I(Duracao^3) + I(Batimento.Cardiaco^3) + I(Temperatura.Corporal^3) +
+                Idade20_29 + Idade30_39 + Idade40_49 +
+                Idade50_59 + Idade60_69 + Idade70_79 +
+                Generofeminino + Generomasculino +
+                (Batimento.Cardiaco * Duracao)+ 
+                I(Batimento.Cardiaco * Duracao)^2+ 
+                I(Batimento.Cardiaco * Duracao)^3)
+
+# Grau 4
+f03_4 <- formula(Calorias ~ Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+                I(Duracao^2) + I(Batimento.Cardiaco^2) + I(Temperatura.Corporal^2) +
+                I(Duracao^3) + I(Batimento.Cardiaco^3) + I(Temperatura.Corporal^3) +
+                I(Duracao^4) + I(Batimento.Cardiaco^4) + I(Temperatura.Corporal^4) +
+                Idade20_29 + Idade30_39 + Idade40_49 +
+                Idade50_59 + Idade60_69 + Idade70_79 +
+                Generofeminino + Generomasculino +
+                (Batimento.Cardiaco * Duracao) +
+                I(Batimento.Cardiaco * Duracao)^2+ 
+                I(Batimento.Cardiaco * Duracao)^3+ 
+                I(Batimento.Cardiaco * Duracao)^4)
+
+# Lista completa de fórmulas
+formulas <- c(f03_1, f03_2, f03_3, f03_4)
+
+MaePerDegreeForBetterCombination <- data.frame(Formula  = numeric(length(formulas)), 
+                                TrainMAE = numeric(length(formulas)),
+                                ValMAE   = numeric(length(formulas)))
+
+i <- 1
+for(f in formulas){
+  model <- lm(formula = f, data = treino_normalizado)
+
+  # Previsões
+  train_pred <- predict(model, treino_normalizado)
+  valid_pred <- predict(model, validacao_normalizado)
+
+  # Erros
+  mae_train <- MAE(train_pred, treino_normalizado$Calorias)
+  mae_val   <- MAE(valid_pred, validacao_normalizado$Calorias)
+
+  # Resultados
+  MaePerDegreeForBetterCombination[i, ] <- c(i, mae_train, mae_val)
+  i <- i + 1
+}
+
+MaePerDegreeForBetterCombination
 ```
+
+
+
+## Avaliação do melhor modelo:
+
+```{r}
+min(MaePerCombination$ValMAE)
+min(MaePerDegree$ValMAE)
+min(MaePerDegreeForBetterCombination$ValMAE)
+```
+O Modelo com melhor desempenho, usando como referência o Erro Médio Absoluto, foi o polinomial de grau 2 sem combinação entre features.
+
+
+## Avaliando modelo no conjunto de teste:
+
+```{r}
+dados_teste <- read.csv("T01_test_set.csv")
+
+paste("O dataframe de TESTE possui",nrow(dados_teste),"registros",sep=" ")
+paste("###################################################################")
+paste("summary TESTE:")
+summary(dados_teste)
+```
+
+Analisando o conjunto de teste notamos que não possuem registros inválidos, ou seja, com valores NA.
+
+```{r}
+paste("#####################################################")
+paste("One hot encoding para conjunto de TREINO")
+dados_para_encoding_teste <- dados_teste
+idade_one_hot_encoding <- model.matrix(~Idade - 1, data = dados_para_encoding_teste)
+dados_para_encoding_teste <- cbind(dados_para_encoding_teste, idade_one_hot_encoding)
+
+genero_one_hot_encoding <- model.matrix(~Genero - 1, data = dados_para_encoding_teste)
+dados_para_encoding_teste <- cbind(dados_para_encoding_teste, genero_one_hot_encoding)
+
+dados_para_encoding_teste$Idade <- NULL
+dados_para_encoding_teste$Genero <- NULL
+colnames(dados_para_encoding_teste) <- gsub("-", "_", colnames(dados_para_encoding_teste))
+
+test_normalized <- dados_para_encoding_teste
+
+test_normalized[,1:6]  <- sweep(test_normalized[,1:6], 2, min_features, "-")
+test_normalized[,1:6]  <- sweep(test_normalized[,1:6], 2, diff, "/")
+
+test_normalized[, 1:6] <- as.data.frame(lapply(test_normalized[, 1:8], function(x) pmax(0, pmin(1, x))))
+
+head(test_normalized)
+```
+
+
+```{r atv5-code}
+
+best_model <- lm(formula=Calorias ~ Altura + Peso + Duracao + Batimento.Cardiaco + 
+                 Temperatura.Corporal +
+                 I(Altura^2) + I(Peso^2) + I(Duracao^2) + I(Batimento.Cardiaco^2) +
+                 I(Temperatura.Corporal^2) +
+                 Idade20_29 + Idade30_39 + Idade40_49 + Idade50_59 +
+                 Idade60_69 + Idade70_79 + Generofeminino + Generomasculino, data=treino_normalizado)
+
+
+test_pred <- predict(best_model, test_normalized)
+
+mae_test <- MAE(test_pred, test_normalized$Calorias)
+mse_test <- MSE(test_pred, test_normalized$Calorias)
+r2_test  <- R2(test_pred,  test_normalized$Calorias)
+
+results_cat <- data.frame(
+  Metric = c("MAE", "MSE", "R2"),
+  Test = c(mae_test, mse_test, r2_test)
+)
+
+results_cat$Test <- as.numeric(results_cat$Test)
+results_cat$Test <- format(results_cat$Test, scientific = FALSE)
+
+results_cat
+```
+
 
 5.1 -- Qual foi o critério adotado para definir o melhor modelo?
 

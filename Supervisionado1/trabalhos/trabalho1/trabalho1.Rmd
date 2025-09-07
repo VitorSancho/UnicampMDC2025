@@ -125,7 +125,7 @@ ggplot(dados_treino_sem_NAs, aes(x = Idade, fill = Idade)) +
 
 ```
 
-É possível notar que a distribuição das features de altura, peso e batimento cardíaco se assemelham muito com uma gaussiana. A de temperatura corporal é uma gaussiana com Assimetria positiva, ou seja, com uma cauda longa à esquerda do valor da mediana dos dados. Para a feature de duração de exercícios temos quase uma distribuição uniforme dos valores, sendo a única exceção os extremos superiores e inferiores dos dados, que possuem um valor de frequência prómixo a metade dos demais. A distribuição da feature de gênero nos indica que os dois valores presenter no dataset possuem uma contagem muito próxima, não demonstrando qualquer desbalanceamento entre essas classes. Já a feature de idade mostra um decaimento na contagem de registros conforme a faixa de idade aumenta, indicando que o total de registros contidos das faixas de 20-29 e 30-39 anos é quase igual a soma das demais faixas.
+É possível notar que a distribuição das features de altura, peso e batimento cardíaco se assemelham muito com uma gaussiana. A de temperatura corporal é uma gaussiana com Assimetria positiva, ou seja, com uma cauda longa à esquerda do valor da mediana dos dados. Para a feature de duração de exercícios temos quase uma distribuição uniforme dos valores, sendo a única exceção os extremos superiores e inferiores dos dados, que possuem um valor de frequência prómixo a metade dos demais. A distribuição da feature de gênero nos indica que os dois valores presentes no dataset possuem uma contagem muito próxima, não demonstrando qualquer desbalanceamento entre essas classes. Já a feature de idade mostra um decaimento na contagem de registros conforme a faixa de idade aumenta, indicando que o total de registros contidos das faixas de 20-29 e 30-39 anos é quase igual a soma das demais faixas.
 
 Abaixo podemos ver os mesmos gráficos para o conjunto de validação. É possível notar o mesmo comportamento para cada feature já analisada acima.
 
@@ -430,10 +430,10 @@ treino_engineered <- treino_normalizado
 validacao_engineered <- validacao_normalizado
 
 IMC <- function(peso, altura){
-  peso/altura^2
+  peso/(altura/100)^2
 }
 
-treino_engineered$IMC <- IMC(dados_para_encoding_treino$Peso, dados_para_encoding_treino$Altura/100)
+treino_engineered$IMC <- IMC(dados_para_encoding_treino$Peso, dados_para_encoding_treino$Altura)
 min_imc <- min(treino_engineered$IMC)
 max_imc <- max(treino_engineered$IMC)
 diff_imc <- max_imc - min_imc
@@ -442,7 +442,7 @@ treino_engineered$IMC <- (treino_engineered$IMC - min_imc)/diff_imc
 treino_engineered$Peso <- NULL
 treino_engineered$Altura <- NULL
 
-validacao_engineered$IMC <- IMC(dados_para_encoding_validacao$Peso, dados_para_encoding_validacao$Altura/100)
+validacao_engineered$IMC <- IMC(dados_para_encoding_validacao$Peso, dados_para_encoding_validacao$Altura)
 validacao_engineered$IMC <- (validacao_engineered$IMC - min_imc)/diff_imc
 
 validacao_engineered$Peso <- NULL
