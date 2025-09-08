@@ -169,8 +169,12 @@ treino_normalizado[, 1:6] <- sweep(treino_normalizado[, 1:6], 2, diff, "/")
 validacao_normalizado[, 1:6] <- sweep(validacao_normalizado[, 1:6], 2, min_features, "-")
 validacao_normalizado[, 1:6] <- sweep(validacao_normalizado[, 1:6], 2, diff, "/")
 
+```
 
-# Análise da distribuição dos dados de treino
+Análise da distribuição dos dados de treino
+
+```{r}
+# Histograma da altura
 ggplot(dados_treino_sem_NAs, aes(x = Altura)) +
   geom_histogram(binwidth = 5, fill = "orange", color = "black") +
   theme_minimal() +
@@ -213,8 +217,12 @@ ggplot(dados_treino_sem_NAs, aes(x = Idade, fill = Idade)) +
   theme_minimal() +
   labs(title = "Distribuição por Faixa Etária", x = "Idade", y = "Contagem")
 
+```
 
-# Distribuição dos dados de valição
+Distribuição dos dados de validação
+
+```{r}
+
 
 ggplot(dados_validacao_sem_NAs, aes(x = Altura)) +
   geom_histogram(binwidth = 5, fill = "orange", color = "black") +
@@ -258,7 +266,11 @@ ggplot(dados_validacao_sem_NAs, aes(x = Idade, fill = Idade)) +
   theme_minimal() +
   labs(title = "Distribuição por Faixa Etária", x = "Idade", y = "Contagem")
 
+```
 
+Analisando correlações entre as features
+
+```{r}
 # Calculando a matriz de correlação
 correlation <- cor(treino_normalizado)
 
