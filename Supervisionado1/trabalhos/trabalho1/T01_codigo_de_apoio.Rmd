@@ -76,6 +76,7 @@ Carregue as bibliotecas necessárias e defina uma semente aleatória para garant
 ```{r atv0-code}
 # Adicione as bibliotecas necessárias
 library(ggplot2)
+library(reshape2)
 library(corrplot)
 set.seed(42)
 ```
@@ -339,17 +340,17 @@ R2 <- function(pred, true) {
 }
 
 # Treinamento    
-baseline <- lm(formula = Calorias ~ Altura + Peso
-               + Duracao + Batimento.Cardiaco + Temperatura.Corporal +
+baseline <- lm(formula = Calorias ~ Peso + Altura +
+               Duracao + Batimento.Cardiaco + Temperatura.Corporal +
                Idade20_29 +
-                 Idade30_39 +
-                 Idade40_49 +
-                 Idade50_59 +
-                  Idade60_69 +
-                 Idade70_79 +
-                 Generofeminino + 
-                 Generomasculino
-               ,data=treino_normalizado)
+               Idade30_39 +
+               Idade40_49 +
+               Idade50_59 +
+               Idade60_69 +
+               Idade70_79 +
+               Generofeminino +
+               Generomasculino, 
+               data=treino_normalizado)
 
 # Avaliação do Modelo
 model_metrics <- function(train_set, validation_set, model){
@@ -388,13 +389,6 @@ model_metrics <- function(train_set, validation_set, model){
   results_baseline$R2 <- as.numeric(results_baseline$R2)
   results_baseline$RMSE <- as.numeric(results_baseline$RMSE)
   results_baseline$RAE <- as.numeric(results_baseline$RAE)
-  
-  # Evitando notação científica na exibição dos resultados
-  results_baseline$MAE <- format(results_baseline$MAE, scientific = FALSE)
-  results_baseline$MSE <- format(results_baseline$MSE, scientific = FALSE)
-  results_baseline$R2 <- format(results_baseline$R2, scientific = FALSE)
-  results_baseline$RMSE <- format(results_baseline$RMSE, scientific = FALSE)
-  results_baseline$RAE <- format(results_baseline$RAE, scientific = FALSE)
   
   # Exibindo os resultados
   results_baseline
@@ -550,7 +544,7 @@ MaePerCombination[order(MaePerCombination$ValMAE),]
 3.1 -- Quais foram os critérios utilizados para selecionar as combinações de features?
 
 **Resposta:** 
-Para desenvolver as fórmulas, partimos da conclusão que as features Altura e Peso não teriam influência na performance do modelo. Além disso, tentamos explorar combinações das variáveis Duracao, Batimento Cardiaco e Temperatura Corporal, que se mostraram altamente correlacionadas. Em algumas das fórmulas, tentamos também remover algumas das features categóricas, onde foi possível perceber um impacto positivo ao desconsiderar a informação de gênero ao tentar predizer o gasto calórico.
+Para desenvolver as fórmulas, partimos da conclusão que as features **Altura** e **Peso** não teriam influência na performance do modelo. Além disso, tentamos explorar combinações das variáveis Duracao, Batimento Cardiaco e Temperatura Corporal, que se mostraram altamente correlacionadas. Em algumas das fórmulas, tentamos também remover algumas das features categóricas, onde percebemos um impacto **positivo** ao remover a feature *Genero** ao tentar predizer o gasto calórico.
 <!-- Fim da resposta -->
 
 
@@ -571,40 +565,58 @@ Ao analisar o conjunto de resultados de MAE, os modelos 11 e 10 parecem apresent
 Implementem soluções alternativas baseadas em regressão linear aumentando os graus das features (regressão com polinômios) para melhorar o resultado obtido no baseline. Plotem o erro no conjunto de treinamento e validação pelo grau do polinômio.
 
 ```{r atv4-code}
-# Hipóteses polinomiais
-# Polinomial de grau 2
+# Hipóteses polinomiais (desconsiderando features de baixa relevancia, como vimos anteriormente)
 
-f_pol02 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 2)
+# Desconsiderando Altura, Peso, Genero
+
+features_numericas <- colnames(treino_normalizado)[3:5]
+features_categoricas <- colnames(treino_normalizado)[7:12]
+
+# Polinomial de grau 1
+f_pol01 <- getHypothesis(features_numericas, features_categoricas, degree = 1)
+
+# Polinomial de grau 2
+f_pol02 <- getHypothesis(features_numericas, features_categoricas, degree = 2)
 
 # Polinomial de grau 3
-f_pol03 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 3)
+f_pol03 <- getHypothesis(features_numericas, features_categoricas, degree = 3)
 
 # Polinomial de grau 4
-f_pol04 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 4)
+f_pol04 <- getHypothesis(features_numericas, features_categoricas, degree = 4)
 
 # Polinomial de grau 5
-f_pol05 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 5)
+f_pol05 <- getHypothesis(features_numericas, features_categoricas, degree = 5)
 
 # Polinomial de grau 6
-f_pol06 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 6)
+f_pol06 <- getHypothesis(features_numericas, features_categoricas, degree = 6)
 
 # Polinomial de grau 7
-f_pol07 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 7)
+f_pol07 <- getHypothesis(features_numericas, features_categoricas, degree = 7)
 
 # Polinomial de grau 8
-f_pol08 <- getHypothesis(colnames(treino_normalizado)[1:6], colnames(treino_normalizado)[7:14], degree = 8)
+f_pol08 <- getHypothesis(features_numericas, features_categoricas, degree = 8)
 
+# Polinomial de grau 9
+f_pol09 <- getHypothesis(features_numericas, features_categoricas, degree = 9)
+
+# Polinomial de grau 20
+f_pol20 <- getHypothesis(features_numericas, features_categoricas, degree = 20)
+
+# Polinomial de grau 50
+f_pol50 <- getHypothesis(features_numericas, features_categoricas, degree = 50)
 
 # Lista completa de fórmulas
-formulas <- c(f_pol02, f_pol03, f_pol04, f_pol05, f_pol06, f_pol07, f_pol08)
+formulas <- c(f_pol01, f_pol02, f_pol03, f_pol04, f_pol05, f_pol06, f_pol07, f_pol08, f_pol09, f_pol20, f_pol50)
 
 MaePerDegree <- data.frame(Formula  = numeric(length(formulas)), 
                                 TrainMAE = numeric(length(formulas)),
                                 ValMAE   = numeric(length(formulas)))
+models_polynomial <- list()
 
 i <- 1
 for(f in formulas){
   model <- lm(formula = f, data = treino_normalizado)
+  models_polynomial[[i]] <- model
 
   # Previsões
   train_pred <- predict(model, treino_normalizado)
@@ -625,23 +637,36 @@ MaePerDegreeMelt <- melt(MaePerDegree, id="Formula")
 
 p <- ggplot(data=MaePerDegreeMelt, aes(x=Formula, y=value, colour=variable)) + geom_line() + geom_point()
 
-p <- p + ggtitle("Curva vies/variancia") + ylab("MAE") + scale_x_discrete(name ="Formula", limits=as.character(1:length(formulas)))
+p <- p + ggtitle("Curva vies/variancia") + ylab("MAE") + scale_x_discrete(name ="Ordem Polinomial (10 = grau 20 e 11 = grau 50)", limits=as.character(1:length(formulas)))
 
 p + theme(legend.position = c(0.7, 0.85), legend.title = element_blank())
 ```
 
+```{r}
+model_metrics(treino_normalizado, validacao_normalizado, models_polynomial[[1]])
+model_metrics(treino_normalizado, validacao_normalizado, models_polynomial[[2]])
+model_metrics(treino_normalizado, validacao_normalizado, models_polynomial[[3]])
+model_metrics(treino_normalizado, validacao_normalizado, models_polynomial[[7]])
+model_metrics(treino_normalizado, validacao_normalizado, models_polynomial[[9]])
+model_metrics(treino_normalizado, validacao_normalizado, models_polynomial[[10]])
+model_metrics(treino_normalizado, validacao_normalizado, models_polynomial[[11]])
+```
+
 4.1 -- Como o grau do polinômio afetou o desempenho do modelo?
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
+Analisando a curva Vies/Variância do MAE, percebemos que existe uma queda inicial brusca do grau 1 para o grau 2, onde o modelo mostra uma melhora significativa. A partir deste ponto, o MAE de treino permanece estável e o MAE de validação só aumenta gradativamente, em direção ao MAE de treino. Conforme o grau aumenta, o erro de validação tende a crescer lentamentamente, conforme o modelo se aproxima do overfitting. Um comportamento curioso é o fato do erro de validação estar sendo geralmente menor que o erro de treinamento.
 <!-- Fim da resposta -->
 
 4.2 -- Houve um ponto ótimo onde o erro foi minimizado? Como vocês identificaram esse ponto?
 
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+O erro é minimizado com o modelo polinomial de grau 2, como pode ser observado no gráfico, que tem um ponto de mínimo no grau 2 com MAE_validacao = 0.02015. No grau 1, o modelo ainda está muito simples e, ao evoluir para o grau 2, conseguimos observar uma queda no erro que se mantem estável para todos os outros graus acima, chegando a piorar na validação para graus muito mais altos.
+<!-- Fim da resposta -->
 
 4.3 -- Em quais regiões da curva de viés e variância foi possível identificar underfitting e overfitting?
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
+Para o grau 1, o modelo mostra underfitting, pois o erro de treinamento e de validação estão altos. Para todos os outros graus acima, até o grau 8, o comportamento do modelo permanece relativamente estável, com erro de treino ligeiramente abaixo do erro de validação, até que para os graus 20 e 50 (exemplos extrapolados), o erro de validação aumenta bastante acima do erro de treino, indicando overfitting.
 <!-- Fim da resposta -->
 
 # Tarefa 5 -- Conjunto de Teste
