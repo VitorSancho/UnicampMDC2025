@@ -260,11 +260,11 @@ ggplot(dados_validacao_sem_NAs, aes(x = Idade, fill = Idade)) +
 
 
 # Calculando a matriz de correlação
-correlation <- cor(treino_normalizado[,c(1:6, 13:14)])
+correlation <- cor(treino_normalizado)
 
 
 corrplot(correlation, method = "color", type = "upper",
-         addCoef.col = "black", tl.col = "black", tl.srt = 45, number.cex = 1)
+         addCoef.col = "grey50", tl.col = "black", tl.srt = 45, number.cex = 0.6, tl.cex = 0.6)
 
 
 # Análise de Feature x Variável, para observar o comportamento da influência de 
@@ -736,24 +736,30 @@ model_metrics(treino_normalizado, test_normalized, best_model)
 5.1 -- Qual foi o critério adotado para definir o melhor modelo?
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
+Avaliamos, dentre todos os modelos desenvolvidos no trabalho, o que apresentou menor MAE de validação. O modelo f08 ganhou neste comparativo, com MAE_validacao = 0.01977. Também chamou a atenção, a simplicidade do modelo frente a sua performance, dado que testamos modelos muito mais complexos matematicamente e, ainda assim, este foi o que apresentou a melhor performance.
 <!-- Fim da resposta -->
 
 5.2 -- Como os resultados no conjunto de teste se comparam aos obtidos no conjunto de validação? Houve algum indício degradação ou melhora do modelo?
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
+O valor de MAE obtido nos conjuntos de validação e de teste foram de 0.01977 e 0.02005, respectivamente. Os valores são numericamente muito
+próximos, mas o MAE no conjunto de teste indica um maior erro para esse conjunto de dados. É necessária uma análise mais profunda, mas
+seria uma boa abordagem avaliar esse comportamente para um conjunto maior de dados de testes, a fim de determinar
+a capacidade de generalização do modelo. Se o erro no conjunto de teste aumentar para uma nova batelada de dados podemos inferir que o
+modelo possui overfitting.
 <!-- Fim da resposta -->
 
 5.3 -- Expliquem a diferença entre os modelos e o porquê que estas diferenças levaram a resultados piores ou melhores.
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
+Ao longo dos testes, buscamos variar o uso das diferentes features, não só em termos de graus polinomiais, mas também em termos da presença ou não das features no modelo. No caso do modelo f08, ele se destaca pela simplicidade frente a todos os outros modelos polinomiais que testamos. Seus parâmetros dependem apenas da observação categórica da idade e de uma combinação de terceira ordem entre os parâmetros Duracao, Batimentos Cardiacos e Temperatura Corporal. Este comportamento corrobora com a análise preliminar de correlação que fizemos, que sugere que estas três features estão altamente correlacionadas entre si e têm alta correlação com a variável alvo.
 <!-- Fim da resposta -->
 
 5.4 -- Considerando as diferentes abordagens testadas, quais estratégias poderiam ser aplicadas para melhorar ainda mais o desempenho do modelo?
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
+Para melhorar ainda mais o modelo pode-se testar como ele se comportaria ao aplicar a hipótese de ajuste polinomial dos dados,
+observando como o MAE se alteraria conforme o aumente de grau do polinômio. Outra abordagem seria testar a normalização dos dados
+utilizando outra metodologia, como o z-score, por exemplo.
 <!-- Fim da resposta -->
 
