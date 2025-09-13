@@ -1,0 +1,417 @@
+---
+title: INF0615 -- Aprendizado de Máquina Supervisionado I
+output: pdf_document
+subtitle: Trabalho 2 - Risco de Hipertensão
+author: 
+  - Nome completo Integrante 1
+  - Nome completo Integrante 2
+  - Nome completo Integrante 3
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(
+  echo    = TRUE,   # Exibir código nos chunks
+  error   = FALSE,  # Ocultar mensagens de erro
+  message = FALSE,  # Ocultar mensagens informativas
+  warning = FALSE,  # Ocultar avisos
+  tidy    = FALSE   # Não reformatar automaticamente o código
+)
+
+options(digits = 4) # Definição do número de casas decimais padrão
+```
+
+Neste segundo trabalho, exploraremos a predição de risco de hipertensão utilizando regressão logística, árvore de decisão e floresta aleatória.
+
+O conjunto de dados está disponível na página da disciplina no Moodle (arquivo `T02_SPLIT_set.csv`).
+
+# Função de apoio
+
+## getHypothesis
+
+Essa função auxilia na escrita dos modelos polinomiais.
+
+Parâmetros:
+
+\- `X_features_names`: conjunto de *features* a serem consideradas na criação do modelo polinomial;
+
+\- `target`: nome da coluna variável alvo do conjunto de dados;
+
+\- `degree`: indica até qual grau polinomial as *features* serão elevadas.
+
+```{r}
+# A funcao abaixo auxilia na escrita dos modelos polinomiais. 
+# Parametros:
+# "real_feature_names": conjunto de features continuas que sera considerado na
+#                        criacao do modelo polinomial.
+#
+# "categorical_feature_names": conjunto de features categoricas que sera 
+#                               considerado na  criacao do modelo polinomial. Se
+#                                voces desejarem um modelo sem variaveis categoricas
+#                               basta nao passar nenhum valor para este parametro
+#                               na chamada da funcao
+# "target": nome da variável target de interesse
+# "degree": numero inteiro que indica ate qual grau polinomial as features continuas
+#           em "real_feature_names" serao elevadas. 
+#
+# A funcao retorna a hipotese ja definida para realizar o treinamento do modelo. 
+# Uma ilustracao de uma funcao similar aparece no Ex02.R na linha 490
+
+getHypothesis <- function(real_feature_names, categorical_feature_names=F, target="Has_Hypertension", degree=3){
+    
+    hypothesis_string <- paste("hypothesis <- formula(", target, " ~ ")
+    for(d in 1:degree){
+        for(i in 1:length(real_feature_names)){
+            hypothesis_string <- paste(hypothesis_string, 
+                                       "I(", real_feature_names[i], "^", d, ") + ",
+                                       sep = "")
+        }
+    }
+    
+    if(typeof(categorical_feature_names) != "logical"){
+        for(i in 1:length(categorical_feature_names)){
+            hypothesis_string <- paste(hypothesis_string, 
+                                       categorical_feature_names[i], " + ",
+                                       sep = "")
+        } 
+    }
+    
+    
+    hypothesis_string <- substr(hypothesis_string, 1, nchar(hypothesis_string)-3)
+    hypothesis_string <- paste(hypothesis_string, ")")
+    hypothesis <- eval(parse(text=hypothesis_string))
+    return(hypothesis)
+}
+```
+
+## getLoss
+
+Função que calcula a *Cross Entropy Loss*. Ela é útil para mostrar em gráficos de curva de viés e variância o erro de classificadores.
+
+Parâmetros:
+
+\- `y_true`: vetor das classes verdadeiras (*ground truth*);
+
+\- `y_pred`: vetor das classes preditas pelo classificador.
+
+```{r}
+getLoss <- function(y_true, y_pred){
+  y_pred_n <- y_pred[y_true == 0]
+  y_pred_p <- y_pred[y_true == 1]
+  
+  countN <- length(y_pred_n)
+  countP <- length(y_pred_p)
+  
+  eps <- 1e-9  # Constante pequena para estabilidade numérica
+
+  totalLossN <- sum(-log2(1 - y_pred_n + eps))
+  
+  totalLossP <- sum(-log2(y_pred_p + eps))
+  
+  avgLossN <- totalLossN / countN
+  avgLossP <- totalLossP / countP
+
+  avgLossTotal <- (avgLossN + avgLossP) / 2
+
+  return(c(LossN = avgLossN, LossP = avgLossP, AverageLoss = avgLossTotal))
+}
+```
+
+## getRelativeConfusionMatrix
+
+Função que calcula a matriz de confusão relativa.
+
+Paramêtro:
+
+\- `cm`: matriz de confusão absoluta.
+
+```{r}
+getRelativeConfusionMatrix <- function(cm){
+    cm_absolute = t(cm$table)
+    
+    cm_relative = cm_absolute
+    
+    cm_relative[1,1] = cm_absolute[1,1]/sum(cm_absolute[1,])
+    cm_relative[1,2] = cm_absolute[1,2]/sum(cm_absolute[1,])
+    cm_relative[2,1] = cm_absolute[2,1]/sum(cm_absolute[2,])
+    cm_relative[2,2] = cm_absolute[2,2]/sum(cm_absolute[2,])
+    
+    return(cm_relative)  
+}
+```
+
+## getMetrics
+
+Função que calcula diversas métricas de avaliação a partir de uma matriz de confusão.
+
+Parâmtro:
+
+\- `cm`: matriz de confusão (cm\$table).
+
+```{r}
+calculateMetrics <- function(cm) {
+  # Extrai TN, FP, FN, TP da matriz de confusão
+  cm <- t(cm)
+  
+  # Assumindo a estrutura:
+  #           Prediction
+  # Reference   0     1
+  #         0   TN    FP
+  #         1   FN    TP
+  
+  TN <- cm[1, 1]
+  FP <- cm[1, 2]
+  FN <- cm[2, 1]  
+  TP <- cm[2, 2]  
+  
+  precision <- if (TP + FP == 0) 0 else TP / (TP + FP)
+  recall    <- if (TP + FN == 0) 0 else TP / (TP + FN)
+  f1        <- if (precision + recall == 0) 0 else (2 * precision * recall) / (precision + recall)
+  bal_acc   <- ( (TN / (TN + FP)) + (TP / (TP + FN)) ) / 2
+  
+  return(c(Precision = precision, Recall = recall, F1 = f1, BalAcc = bal_acc))
+}
+
+## Exemplo de uso
+# cm <- confusionMatrix(data = as.factor(valPred), reference = as.factor(ValSet$target), positive='1')
+# metrics <- calculateMetrics(cm$table)
+```
+
+# Tarefa 0 -- Configurando o ambiente
+
+Carregue as bibliotecas necessárias e defina uma semente aleatória para garantir a reprodutibilidade dos experimentos.
+
+```{r atv0-code}
+# Adicione as bibliotecas necessárias
+#library(...)
+
+#set.seed(...)
+```
+
+# Tarefa 1 -- Inspeção de Dados
+
+Carreguem e inspecionem o conjunto de dados. Além disso, preparem os dados corretamente para serem utilizados nos classificadores, preocupando-se com o balanceamento de classes (se necessário) e normalização (se necessário).
+
+```{r atv1-code}
+# Carregue o conjunto de dados
+
+# Sumário da base
+
+# Normalização
+```
+
+1.1 – Quantas amostras existem no conjunto de dados?
+
+1.2 – Existem amostras com valores ausentes? Como vocês pretendem tratar esses casos?
+
+1.3 – Esse conjunto de dados é balanceado? Caso não seja, como pretendem tratá-lo e por que usar essa técnica específica?
+
+1.4 – Há alguma característica dos dados que pode impactar o desempenho do modelo?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Tarefa 2 -- Regressão Logística
+
+Treinem um modelo *baseline* de regressão logística utilizando **todas as features disponíveis**.
+
+```{r atv2-code}
+# Treinamento    
+
+# Avaliação do Modelo
+```
+
+2.1 – O modelo baseline foi suficiente para resolver o problema? Quais métricas de avaliação vocês utilizaram para justificar a resposta?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Tarefa 3 -- Soluções alternativas da Regressão Logística
+
+Implementem soluções alternativas baseadas em regressão logística, seja através da combinação das *features* **ou** de modelos polinomiais para melhorar o resultado do *baseline*. Comparem suas soluções reportando métricas de interesse no **conjunto de validação**.
+
+```{r atv3-code}
+# Hipóteses alternativas
+
+# Treinamento
+
+# Curva de viés e variância
+
+# Métricas de avaliação
+
+```
+
+3.1 – Quais foram os critérios utilizados para selecionar a técnica alternativa?
+
+3.2 – Alguma combinação gerou um impacto positivo ou negativo significativo no desempenho do modelo? Por quê?
+
+3.3 – Existe alguma relação entre viés e variância no seu modelo ao modificar o modelo (seja por combinações de *features* ou polinomiais)?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Tarefa 4 -- Regularização
+
+Escolham um dos modelos do item anterior e variem o fator de regularização ($\lambda$). Avaliem a curva de viés e variância e reportem a matriz de confusão relativa para o melhor modelo no conjunto de validação.
+
+```{r atv4-code}
+# Busca de hiperparâmetros
+
+# Treinamento
+
+# Curva de viés e variância
+
+# Métricas de avaliação
+```
+
+4.1 – Como a regularização afetou o desempenho do modelo?
+
+4.2 – Foi utilizada regularização Lasso ou Ridge? Por quê?
+
+4.3 – Houve um ponto ótimo onde o erro foi minimizado? Como vocês identificaram esse ponto?
+
+4.4 – Em quais regiões da curva de viés e variância foi possível identificar *underfitting* e *overfitting*?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Tarefa 5 -- Árvore de Decisão
+
+Treinem um modelo *baseline 2* de árvore de decisão **todas as features disponíveis**.
+
+```{r atv5-code}
+# Treinamento    
+
+# Avaliação do Modelo 
+
+```
+
+5.1 – O modelo *baseline 2* foi suficiente para resolver o problema? Quais métricas de avaliação vocês utilizaram para justificar a resposta?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Tarefa 6 -- Profundidade da Árvore de Decisão
+
+Treinem árvores de decisão variando a profundidade máxima. Mostrem a curva de viés e variância, no qual o eixo X é a profundidade e o eixo Y é o erro ou uma métrica de interesse.
+
+```{r atv6-code}
+# Busca de hiperparâmetros
+
+# Treinamento
+
+# Curva de viés e variância
+
+# Métricas de avaliação
+
+```
+
+6.1 – Como a profundidade afetou o desempenho do modelo?
+
+6.2 – Houve um ponto ótimo onde o erro foi minimizado? Como vocês identificaram esse ponto?
+
+6.3 – Em quais regiões da curva de viés e variância foi possível identificar *underfitting* e *overfitting*?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Tarefa 7 -- Soluções alternativas da Árvore de Decisão
+
+Explorem pelo menos dois subconjuntos de *features* para treinar diferentes árvores de decisão.
+
+**Dica: observem a importância de cada *feature* por meio do atributo *variable.importance*.**
+
+```{r atv7-code}
+# Hipóteses alternativas
+
+# Treinamento
+
+# Métricas de avaliação
+```
+
+7.1 – Quais foram os critérios utilizados para selecionar a técnica alternativa?
+
+7.2 – Alguma combinação gerou um impacto positivo ou negativo significativo no desempenho do modelo? Por quê?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Tarefa 8 -- Floresta Aleatórias
+
+Treinem *N* florestas aleatórias, variando o número de árvores. Mostrem a curva de viés e variância, na qual o eixo X é a profundidade e o eixo Y é o erro ou uma métrica de interesse.
+
+```{r atv8-code}
+# Busca de hiperparâmetros
+
+# Treinamento
+
+# Curva de viés e variância
+
+# Métricas de avaliação
+
+```
+
+8.1 – Como a quantidade de árvores afetou o desempenho do modelo?
+
+8.2 – Houve um ponto ótimo onde o erro foi minimizado? Como vocês identificaram esse ponto?
+
+8.3 – Em quais regiões da curva de viés e variância foi possível identificar *underfitting* e *overfitting*?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Tarefa 9 -- (Opcional) Ensembles
+
+Implementem manualmente um protocolo de *ensemble* (e.g., *Bagging*, *Pasting* ou *Random Forest*), ajustando os parâmetros dessas técnicas.
+
+```{r atv9-code}
+# Treinamento
+
+# Métricas de avaliaçao
+```
+
+9.1 – Qual foi o critério para a decisão da técnica utilizada?
+
+9.2 – O resultado foi melhor comparado com outros cenários já testados?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Tarefa 10 -- Conjunto de Teste
+
+Após identificar o melhor modelo, utilizem-no para fazer previsões no conjunto de teste e avaliem o seu desempenho.
+
+```{r atv10-code}
+# Predição no conjunto de teste
+
+# Métricas de avaliação
+
+# Métricas de avaliação
+```
+
+10.1 – Qual foi o critério adotado para definir o melhor modelo?
+
+10.2 – Como os resultados no conjunto de teste se comparam aos obtidos no conjunto de validação? Houve algum indício degradação ou melhora do modelo?
+
+10.4 – Expliquem a diferença entre os modelos e o porquê que estas diferenças levaram a resultados piores ou melhores.
+
+10.5 – Considerando as diferentes abordagens testadas, quais estratégias poderiam ser aplicadas para melhorar ainda mais o desempenho do modelo?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
+# Observações Finais
+
+Justifiquem suas escolhas com base em evidências (métricas, gráficos, hipóteses teóricas).
+
+A clareza na comunicação dos resultados é mais importante do que a qualidade do modelo!
