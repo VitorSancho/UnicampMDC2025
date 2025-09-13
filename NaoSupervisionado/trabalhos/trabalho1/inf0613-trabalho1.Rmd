@@ -47,6 +47,16 @@ summary(dados_bakery)
 # Analisando a frequência dos itens 
 itemFrequencyPlot(dados_bakery, topN = 30)
 
+itemFrequencyPlot(dados_bakery, topN = 30, type = "absolute")
+
+itemFrequencyPlot(dados_bakery, support=0.1, topN=30)
+
+itemFrequencyPlot(dados_bakery, support=0.07, topN=30)
+
+itemFrequencyPlot(dados_bakery, support=0.05, topN=30)
+
+itemFrequencyPlot(dados_bakery, support=0.025, topN=30)
+
 ```
 
 
@@ -55,7 +65,7 @@ itemFrequencyPlot(dados_bakery, topN = 30)
 a) Descreva a base de dados discutindo os resultados das funções acima. 
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-A base de dados é composta por registros/transações de compras em uma padaria. Cada registro é uma lista de itens de uma determinada compra. O nosso dataset possui 2579 registros de compras e um total de 91 colunas (que se refletem em itens disponíveis para compra na padaria). Podemos notar que essa padaria tem um grande volume de compras com poucos itens, a maior quantidade de compras possui entre 1 e 4 itens. Isso nos dá margem para criar a hipótese dessa ser uma padaria pequena, para compras rápidas, onde os clientes buscam comprar itens para o café da manhã ou um lanche que seja servido pela própria padaria ou que possam levar esses itens para casa. O items mais frequentes nas listas de compra são o café (presente), pão, chá e bolo, o que reforça a nossa hipótese sobre o perfil da padaria. O que não nos permite confirmar isso é a falta de uma maior qualificação dos dados.
+A base de dados é composta por registros/transações de compras em uma padaria. Cada registro é uma lista de itens de uma determinada compra. O nosso dataset possui 2579 registros de compras e um total de 91 colunas (que se refletem em itens disponíveis para compra na padaria). Podemos notar que essa padaria tem um grande volume de compras com poucos itens, a maior quantidade de compras possui entre 1 e 4 itens. Das 2579  compras, em somente 7 compras clientes adquiriram mais do que 7 itens. Isso nos dá margem para criar a hipótese dessa ser uma padaria pequena, para compras rápidas, onde os clientes buscam comprar itens para o café da manhã ou um lanche que seja servido pela própria padaria ou que possam levar esses itens para casa. O items mais frequentes nas listas de compra são o café (presente), pão, chá e bolo, o que reforça a nossa hipótese sobre o perfil da padaria. O que não nos permite confirmar isso é a falta de uma maior qualificação dos dados.
 <!-- Fim da resposta -->
 
 b) Ao gerarmos o gráfico de frequências, temos uma representação visual de uma informação já presente no resultado da função `summary`. Contudo, esse gráfico nos dá uma visão mais ampla da base. Assim, podemos ver a frequência de outros itens em relação aos 10 mais frequentes. Quais informações podemos obter a partir desse gráfico (e da análise anterior) para nos ajudar na extração de regras de associação com o algoritmo `apriori`? Isto é, como a frequência dos itens pode afetar os parâmetros de configuração do algoritmo `apriori`? 
