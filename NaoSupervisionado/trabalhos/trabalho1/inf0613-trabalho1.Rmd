@@ -37,7 +37,7 @@ Dado um caminho para uma base de dados, leia as transações e faça uma anális
 # Ler transações
 con <- file("bakery.csv", open = "r")
 dados_bakery <- read.transactions(con, format="basket", sep=",")
-
+ 
 # Visualizando transações
 inspect(head(dados_bakery, 10))
 
@@ -82,26 +82,38 @@ Sobre o tamanho mínimo e máximo das relações, como estamos interessados em o
 Use o algoritmo `apriori` para minerar regras na base de dados fornecida. Experimente com pelo menos *3 conjuntos* de valores diferentes de suporte e confiança para encontrar regras de associação. Imprima as cinco regras com o maior confiança de cada conjunto escolhido.  Lembre-se de usar seu conhecimento sobre a base, obtido na questão anterior, para a escolha dos valores de suporte e confiança.
 
 ```{r atv2-code}
-# Conjunto 1: suporte =  0.01 e confiança = 0.6   
+# Conjunto 1: suporte = 0.02 e confiança = 0.4
 conjunto1 <- apriori(dados_bakery,
-                   parameter = list(support = 0.01, confidence = 0.6))
+                     parameter = list(support = 0.02, confidence = 0.4))
+
 inspect(head(sort(conjunto1, by = "confidence"), 5))
+inspect(head(sort(conjunto1, by = "support"), 5))
 
-# Conjunto 2: suporte =  0.02  e confiança = 0.3   
+# Conjunto 2: suporte = 0.015 e confiança = 0.25
 conjunto2 <- apriori(dados_bakery,
-                   parameter = list(support = 0.02, confidence = 0.3))
-inspect(head(sort(conjunto2, by = "confidence"), 5))
+                     parameter = list(support = 0.015, confidence = 0.25))
 
-# Conjunto 3: suporte = 0.01 e confiança =  0.6
+inspect(head(sort(conjunto2, by = "confidence"), 5))
+inspect(head(sort(conjunto2, by = "support"), 5))
+inspect(head(sort(conjunto2, by = "lift"), 5))
+
+# Conjunto 3: suporte = 0.01 e confiança = 0.2
 conjunto3 <- apriori(dados_bakery,
-                   parameter = list(support = 0.01, confidence = 0.6))
+                     parameter = list(support = 0.01, confidence = 0.2))
+
 inspect(head(sort(conjunto3, by = "confidence"), 5))
+inspect(head(sort(conjunto3, by = "support"), 5))
+inspect(head(sort(conjunto3, by = "lift"), 5))
+
 
 ```
 
 ## Análises 
 a) Quais as regras mais interessantes geradas a partir dessa base? Justifique.
-
+Para o primeiro conjunto não foi retonada nenhuma regra, o que indica que foi muito restritiva dado que o conjunto de dados é dominado por itens com grande distorção na frequencia dos itens comprados.
+Para o segundo conjunto tivemos como resultado regras que estão muito associadas com a compra do item mais frequente nas transações, o café. Além disso, maior parte das top 5 regras, tanto do ponto de vista de suporte quanto de confiança, possuem somente dois itens. O que indica que os valores de confiança de suporte utilizados ainda foram muito restritivos para essa base dados, dominada por um desbalanceamente em termos de frequencia relativa de itens. Observando as top 5 de maior lift podemos notar que quando clientes compras duas bebidas, como café e chá, ou café e chocolate quente, existe uma chance grande de comprar um bolo, o que pode indicar que duas pessoas são capazes de dividir esse bolo para comerem juntas. Nota-se também uma forte relação com a compra de torradas com café.
+Já para o terceiro conjunto tivemos resultados mais genéricos e amplos, dados os limites menos restritivos aplicados pelos limites de suporte e confiança. Nessas condições, nos top 5 com maior confiança já podemos observar a presença de transações com 3 itens. Porém nos top 5 com maior suporte tivemos como resultado transações com apenas 1 item, o que não nos traz informações sobre dependência entre itens, indicando que café, pão e chá são, com grande frequencia, comprados de forma isolada, sendo itens únicos de uma compra. 
+Com a ordenação por lift é possível notar relações interessante. Existe uma grande chance de que um cliente compre sanduíche para acompanhar uma coca, o que pode indicar um hábito para horários de lanche ou até almoços e jantas. O que é curioso é a relação entre a compra de sanduíchea e sopa, que aparece em 3 das 5 top transções com maior lift.
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
 
