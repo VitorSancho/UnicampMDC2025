@@ -132,14 +132,18 @@ quality(regras) <- cbind(quality(regras), interestMeasure(regras, measure=c("con
 
 ```{r atv3-code}
 # Compute as medidas de interesse 
-
+quality(conjunto3) <- cbind(quality(conjunto3), interestMeasure(conjunto3, measure=c("conviction", "oddsRatio"), 
+                                          transactions = transacoes))
 
 # Apresente as regras ordenadas por lift
+inspect(head(sort(conjunto3, by = "lift"), 5))
+inspect(tail(sort(conjunto3, by = "lift"), 5))
 
 # Apresente as regras ordenadas por convicção
+inspect(head(sort(conjunto3, by = "conviction"), 5))
 
 # Apresente as regras ordenadas por razão de chances
-
+inspect(head(sort(conjunto3, by = "oddsRatio"), 5))
 
 ```
 
@@ -148,7 +152,12 @@ quality(regras) <- cbind(quality(regras), interestMeasure(regras, measure=c("con
 a) Quais as regras mais interessantes do conjunto? Justifique.
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+Usamos como base o conjunto 3, pois foi o que aplicamos menores restrições. Por isso, a ele, existem maiores chances de ocorrência de redundâncias e dependências negativas entre os itens das transações.
+Ao analisar as regras pelo lift, podemos observar que as regras mais interessantes envolvem combinações de itens que aparecem juntos com frequência maior do que seria esperado por acaso. Por exemplo, {Coke} → {Sandwich} apresenta lift 2.25, indicando que a compra de uma Coca aumenta mais que duas vezes a probabilidade de compra de um sanduíche. Outra regra relevante é {Coffee, Soup} → {Sandwich} com lift 2.10, mostrando que clientes que compram café e sopa têm maior chance de comprar um sanduíche. Essas regras se destacam por revelarem associações fortes e não triviais, ao contrário de regras com lift próximo de 1, que refletem dependência quase nula entre os itens. Ao analisar os itens como menor lift vemos uma baixa chance de uma cliente comprar pão dados que comprou sopa, outra relação que faz sentido ter pouca relação é a compra de café dado que comprou pão e chá, pois seria mais uma bebida na compra. O que é curiosa é a baixa chance de comprar pão dado que comprou suco, o que é completamente comum o consumo desses itens em conjunto.
 
+Ao analisar o conjunto 3 pelo critério de convicção, podemos observar que as regras mais interessantes envolvem itens que aparecem juntos com dependência positiva significativa. Por exemplo, {Toast} → {Coffee} apresenta convicção 1.63, indicando que a compra de torradas aumenta de forma consistente a probabilidade de compra de café, reforçando a relação já evidenciada pelo lift e confiança. Outras regras como {Cake, Sandwich} → {Coffee} e {Salad} → {Coffee} também apresentam convicção maior que 1, mostrando que combinações de itens menos frequentes ainda têm associação positiva confiável com café, embora a relação {Salad} → {Coffee} seja bem inusitada. Mesmo regras com confiança relativamente menor, como {Jam} → {Bread} (convicção 1.26), indicam que a compra de geleia aumenta a chance de comprar pão mais do que seria esperado ao acaso.
+
+Para o critério de odds ratio, podemos observar que as regras mais interessantes envolvem itens cuja presença aumenta significativamente a chance de ocorrência de outros itens. Por exemplo, {Coke} → {Sandwich} apresenta odds ratio maior que 1, indicando que a compra de uma Coca aumenta muito a probabilidade de um cliente comprar um sanduíche, em comparação com transações sem Coca. De forma similar, {Coffee, Soup} → {Sandwich} e {Coffee, Juice} → {Cookies} mostram que combinações de itens menos frequentes também elevam a chance de compra dos consequentes. Sobre a primeira compra, pode indicar que o cliente numa janta ou almoço come um uma sopa e toma um café ainda continua insatisfeito, e pede também um sanduíche para terminar de satisfazer a fome. Outra observação que pode ser feita é que uma compra feita para dois cliente, em que um bebe café e o outro bebe suco, eles podem dividir cookies entre si.
 
 <!-- Fim da resposta -->
 
