@@ -36,7 +36,7 @@ Dado um caminho para uma base de dados, leia as transações e faça uma anális
 ```{r atv1-code}
 # Ler transações
 con <- file("bakery.csv", open = "r")
-dados_bakery <- read.transactions(con, sep=",")
+dados_bakery <- read.transactions(con, format="basket", sep=",")
 
 # Visualizando transações
 inspect(head(dados_bakery, 10))
@@ -61,9 +61,10 @@ A base de dados é composta por registros/transações de compras em uma padaria
 b) Ao gerarmos o gráfico de frequências, temos uma representação visual de uma informação já presente no resultado da função `summary`. Contudo, esse gráfico nos dá uma visão mais ampla da base. Assim, podemos ver a frequência de outros itens em relação aos 10 mais frequentes. Quais informações podemos obter a partir desse gráfico (e da análise anterior) para nos ajudar na extração de regras de associação com o algoritmo `apriori`? Isto é, como a frequência dos itens pode afetar os parâmetros de configuração do algoritmo `apriori`? 
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-O gráfico nos permite ter uma noção mais fácil da relação quantitiva entre os itens presentes em todas as transações. Ele pode nos ajudar a configurar alguns parametros do algoritmo apriori, como o suporte e a confiança. Olhando para o histograma podemos dizer que não podemos usar um valor de suporte em torno de 10%, pois muitos itens no conjunto dos 30 mais comprados seriam ignorados pelo algoritmo. Como temos itens com grande frequência relativa, existe uma chance forte de existirem grandes relações entre os itens, por isso provavelmente não vamos precisar utilizar valores pequeno de confiança. 
+O gráfico nos permite ter uma noção mais fácil da relação quantitiva e relativa entre os itens presentes em nas transações. Ele pode nos ajudar a configurar alguns parametros do algoritmo apriori, como o suporte e a confiança. Olhando para o histograma podemos dizer que não podemos usar um valor alto de suporte, pois muitos itens disponíveis na padaria são comprados com pouca frequência, por isso seriam ignorados pela analise. 
+Além disso, não podemos usar uma confiança muito alta de forma que somente regras muito fortes sejam analisadas. Isso provavelmente resultaria em regras que apresentam somente os itens mais frequentes das transações.
 (não sei se temos que falar sobre min e max lenght, mas se acharmos uma boa já tá aí>)
-Sobre o tamanho mínimo e máximo das relações, como a maior parte das transações possuem entre 2 a 4 itens, não precisamos nos ater a intervalor mais amplos que esse.
+Sobre o tamanho mínimo e máximo das relações, como estamos interessados em observar a relação entre os itens, podemos usar 2 como valor mínimo. Para o valor máximo podemos usar 5, pois a partir de 6 itens temos uma quantidade muito pequena de compras.
 <!-- Fim da resposta -->
 
 # Atividade 2 -- Minerando Regras (*3,5 pts*)
