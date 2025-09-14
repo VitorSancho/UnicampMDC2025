@@ -186,6 +186,7 @@ Carregue as bibliotecas necessárias e defina uma semente aleatória para garant
 library(ggplot2)
 # install.packages("glmnet")
 library(glmnet)
+library(caret)
 #set.seed(...)
 ```
 
@@ -319,7 +320,7 @@ ggplot(treino_normalizado, aes(x = Fumante, fill = Fumante)) +
   labs(title = "Distribuição por Fumante", x = "Fumante", y = "Contagem")
 ```
 
-Análise da distribuição dos dados de treino
+Análise da distribuição dos dados de validação
 
 ```{r}
 # Histograma do Consumo de Sal normalizado
@@ -385,6 +386,18 @@ dados_para_encoding_treino <- cbind(dados_para_encoding_treino, one_hot)
 dados_para_encoding_treino$Nivel.de.Estresse <- NULL
 colnames(dados_para_encoding_treino) <- gsub("-", "_", colnames(dados_para_encoding_treino))
 
+dados_para_encoding_treino$Historico.Pressao.Arterial <- as.factor(dados_para_encoding_treino$Historico.Pressao.Arterial)
+one_hot <- model.matrix(~ Historico.Pressao.Arterial - 1, data = dados_para_encoding_treino)
+dados_para_encoding_treino <- cbind(dados_para_encoding_treino, one_hot)
+dados_para_encoding_treino$Historico.Pressao.Arterial <- NULL
+colnames(dados_para_encoding_treino) <- gsub("-", "_", colnames(dados_para_encoding_treino))
+
+dados_para_encoding_treino$Nivel.Exercicio <- as.factor(dados_para_encoding_treino$Nivel.Exercicio)
+one_hot <- model.matrix(~ Nivel.Exercicio - 1, data = dados_para_encoding_treino)
+dados_para_encoding_treino <- cbind(dados_para_encoding_treino, one_hot)
+dados_para_encoding_treino$Nivel.Exercicio <- NULL
+colnames(dados_para_encoding_treino) <- gsub("-", "_", colnames(dados_para_encoding_treino))
+
 paste("One hot encoding para conjunto de VALIDAÇÃO")
 
 dados_para_encoding_validacao <- validacao_normalizado
@@ -393,16 +406,35 @@ one_hot <- model.matrix(~ Nivel.de.Estresse - 1, data = dados_para_encoding_vali
 dados_para_encoding_validacao <- cbind(dados_para_encoding_validacao, one_hot)
 dados_para_encoding_validacao$Nivel.de.Estresse <- NULL
 colnames(dados_para_encoding_validacao) <- gsub("-", "_", colnames(dados_para_encoding_validacao))
+
+dados_para_encoding_validacao$Historico.Pressao.Arterial <- as.factor(dados_para_encoding_validacao$Historico.Pressao.Arterial)
+one_hot <- model.matrix(~ Historico.Pressao.Arterial - 1, data = dados_para_encoding_validacao)
+dados_para_encoding_validacao <- cbind(dados_para_encoding_validacao, one_hot)
+dados_para_encoding_validacao$Historico.Pressao.Arterial <- NULL
+colnames(dados_para_encoding_validacao) <- gsub("-", "_", colnames(dados_para_encoding_validacao))
+
+dados_para_encoding_validacao$Nivel.Exercicio <- as.factor(dados_para_encoding_validacao$Nivel.Exercicio)
+one_hot <- model.matrix(~ Nivel.Exercicio - 1, data = dados_para_encoding_validacao)
+dados_para_encoding_validacao <- cbind(dados_para_encoding_validacao, one_hot)
+dados_para_encoding_validacao$Nivel.Exercicio <- NULL
+colnames(dados_para_encoding_validacao) <- gsub("-", "_", colnames(dados_para_encoding_validacao))
 ```
 
 1.1 – Quantas amostras existem no conjunto de dados?
+No counto de treino temos 1349 amostras, já no validação temos 338.
 
 1.2 – Existem amostras com valores ausentes? Como vocês pretendem tratar esses casos?
+Não observamos amostras com valores ausentes ou inválidos, tanto no conjunto de dados de treino quando no de validação.
 
 1.3 – Esse conjunto de dados é balanceado? Caso não seja, como pretendem tratá-lo e por que usar essa técnica específica?
+Acima fizemos o plot da distribuição de dados, já normalizasa, para cada uma das 8 faetures presentes no conjunto de dados que caracterizam as amostras: Consumo de sal, duração do sono, IMC, nível de estresse, histórico de pressão arterial, histórico familiar, nível de exercício e quantidade de fumantes. Sobre a normalização, aplicamos a técnica de min-max.
+As festures consumo de sal, duração do sono e IMC apresetam uma distribuição normal dos dados, já a feature de nível de estresse tem uma distribuição uniforme. Essas features possuem dados contínuos e a distribuição de seus valores é bem comportada, seguindo distribuição normal ou contínua, o que não afeta a qualidade do treinamento do modelo. 
+O dataset também possui features categóricas, que apresentam valores discretos. Para elas montamos gráficos com a quantidade de itens por cada valor possíveis para a feature. A análise da feature de histórico familiar indica que a quantidade de pessoas com valor positivo e negativo é quase igual. A de pressão arterial possui três possíveis valores: Hipertensão, Normal e Pre-hipertensão. Para esses três possíveis valores temos quantidades distintas de amostras, mas essa diferença observada não chega preocupar em termos do impacto na qualidade do treinamento do modelo. Porém isso não pode ser afirmar para as outras duas features categóricas do data set, o nível de exercício e fumante. A primeira apresenta um moderado grau de desbalanceamento, temos mais de 600 indivíduo com baixo nível de exercício, por volta de 270 com alto (menos da metado da quantidade de alto) e algo am torno de 430 com moderado. Provavelmente para essas ultimas duas feaures teremos que aplicar técnicas para balancear a quantidade de amostras entre os possíveis valores discretos. 
+(FALAR QUAL TÉCNICA DE BALANCEAMENTO APLICAMOS)
+Essa análise também foi realizada para o conjunto de dados de validação, que apresentou um perfil de distribuição, para cada uma das features, muito similiar ao de treino.
 
 1.4 – Há alguma característica dos dados que pode impactar o desempenho do modelo?
-
+O desbalanceamento das features nível de exercício e fumante, como pontuado anteriormente, pode afetar a qualidade do modelo.
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
 <!-- Fim da resposta -->
@@ -417,7 +449,7 @@ valid_data <- dados_para_encoding_validacao
 # nome da coluna que você quer mandar para o fim
 coluna <- "Risco.Hipertensao"
 
-# reordenar: todas as colunas menos a escolhida, depois a escolhida
+# reordenando colunas, de forma que feature de interesse seja a ultima
 train_data <- train_data[, c(setdiff(names(train_data), coluna), coluna)]
 feature_names <- colnames(train_data)[1:(ncol(train_data) - 1)]
 
@@ -427,7 +459,7 @@ hypothesis <- getHypothesis(feature_names, 1, target = "Risco.Hipertensao")
 hypothesis
 
 # Treinamento    
-model <- glmnet(train_data[,1:18], train_data$Risco.Hipertensao, family = "binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
+model <- glmnet(train_data[,1:22], train_data$Risco.Hipertensao, family = "binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
 print(model$beta)
 print(model$a0)
 
@@ -438,10 +470,10 @@ y_train <- train_data$class
 x_valid <- model.matrix(hypothesis, data=valid_data)
 y_valid <- valid_data$class
 
-train_pred <- predict(model, newx=x_train, type="response")
-valid_pred <- predict(model, newx=x_valid, type="response")
+train_pred <- predict(model, newx=x_train[,1:22], type="response")
+valid_pred <- predict(model, newx=x_valid[,1:22], type="response")
 
-# Threshold = 0.5 
+# De acordo com Threshold = 0.5, atribui valor previsto como verdadeiro ou falso 
 train_class_pred <- train_pred
 train_class_pred[train_pred >= 0.5] <- 1
 train_class_pred[train_pred < 0.5]  <- 0
@@ -449,6 +481,43 @@ train_class_pred[train_pred < 0.5]  <- 0
 valid_class_pred <- valid_pred
 valid_class_pred[valid_pred >= 0.5] <- 1
 valid_class_pred[valid_pred < 0.5]  <- 0
+
+# gera o Loss para as bases de treino e validação
+train_losses <- getLoss(train_data$Risco.Hipertensao, train_class_pred)
+valid_losses <- getLoss(valid_data$Risco.Hipertensao, valid_class_pred)
+
+cat("Train\n")
+print(train_losses)
+
+cat("Valid\n")
+print(valid_losses)
+
+# gera matriz de confusão para dados de treino e validação
+train_cm <- confusionMatrix(data = as.factor(train_class_pred), reference = as.factor(train_data$Risco.Hipertensao), positive='1')
+valid_cm <- confusionMatrix(data = as.factor(valid_class_pred), reference = as.factor(valid_data$Risco.Hipertensao), positive='1')
+
+# Calculando as métricas para o conjunto de treino
+train_metrics = calculateMetrics(train_cm$table)
+
+# Calculando as métricas para o conjunto de validação
+valid_metrics = calculateMetrics(valid_cm$table)
+
+# Organizando os resultados em um dataframe
+results_baseline <- data.frame(
+  Train  = train_metrics,
+  Valid  = valid_metrics
+)
+
+# Formatando os resultados para melhor leitura
+results_baseline$Train <- as.numeric(results_baseline$Train)
+results_baseline$Valid <- as.numeric(results_baseline$Valid)
+
+# Evitando notação científica na exibição dos resultados
+results_baseline$Train <- format(results_baseline$Train, scientific = FALSE)
+results_baseline$Valid <- format(results_baseline$Valid, scientific = FALSE)
+
+# Exibindo os resultados
+results_baseline
 ```
 
 2.1 – O modelo baseline foi suficiente para resolver o problema? Quais métricas de avaliação vocês utilizaram para justificar a resposta?
