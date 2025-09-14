@@ -47,15 +47,13 @@ summary(dados_bakery)
 # Analisando a frequência dos itens 
 itemFrequencyPlot(dados_bakery, topN = 30)
 
-itemFrequencyPlot(dados_bakery, topN = 30, type = "absolute")
-
-itemFrequencyPlot(dados_bakery, support=0.1, topN=30)
-
-itemFrequencyPlot(dados_bakery, support=0.07, topN=30)
-
-itemFrequencyPlot(dados_bakery, support=0.05, topN=30)
-
-itemFrequencyPlot(dados_bakery, support=0.025, topN=30)
+# itemFrequencyPlot(dados_bakery, support=0.1, topN=30)
+# 
+# itemFrequencyPlot(dados_bakery, support=0.07, topN=30)
+# 
+# itemFrequencyPlot(dados_bakery, support=0.05, topN=30)
+# 
+# itemFrequencyPlot(dados_bakery, support=0.025, topN=30)
 
 ```
 
@@ -65,16 +63,16 @@ itemFrequencyPlot(dados_bakery, support=0.025, topN=30)
 a) Descreva a base de dados discutindo os resultados das funções acima. 
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-A base de dados é composta por registros/transações de compras em uma padaria. Cada registro é uma lista de itens de uma determinada compra. O nosso dataset possui 2579 registros de compras e um total de 91 colunas (que se refletem em itens disponíveis para compra na padaria). Podemos notar que essa padaria tem um grande volume de compras com poucos itens, a maior quantidade de compras possui entre 1 e 4 itens. Das 2579  compras, em somente 7 compras clientes adquiriram mais do que 7 itens. Isso nos dá margem para criar a hipótese dessa ser uma padaria pequena, para compras rápidas, onde os clientes buscam comprar itens para o café da manhã ou um lanche que seja servido pela própria padaria ou que possam levar esses itens para casa. O items mais frequentes nas listas de compra são o café (presente), pão, chá e bolo, o que reforça a nossa hipótese sobre o perfil da padaria. O que não nos permite confirmar isso é a falta de uma maior qualificação dos dados.
+
+A base de dados é composta por registros/transações de compras em uma padaria. Cada registro é uma lista de itens de uma determinada compra. O nosso dataset possui 2579 registros de compras e um total de 91 colunas (que se refletem em itens disponíveis para compra na padaria). Podemos notar que essa padaria tem um grande volume de compras com poucos itens, a maior quantidade de compras possui entre 1 e 4 itens. Das 2579 compras, houve apenas 7 compras em que clientes adquiriram mais do que 7 itens. Isso nos dá margem para criar a hipótese dessa ser uma padaria pequena, para compras rápidas, onde os clientes buscam comprar itens para o café da manhã ou um lanche que seja servido pela própria padaria ou que possam levar esses itens para casa. O itens mais frequentes nas listas de compra são o café, pão, chá e bolo, o que reforça a nossa hipótese sobre o perfil da padaria. O que não nos permite confirmar isso é a falta de uma maior qualificação dos dados.
 <!-- Fim da resposta -->
 
 b) Ao gerarmos o gráfico de frequências, temos uma representação visual de uma informação já presente no resultado da função `summary`. Contudo, esse gráfico nos dá uma visão mais ampla da base. Assim, podemos ver a frequência de outros itens em relação aos 10 mais frequentes. Quais informações podemos obter a partir desse gráfico (e da análise anterior) para nos ajudar na extração de regras de associação com o algoritmo `apriori`? Isto é, como a frequência dos itens pode afetar os parâmetros de configuração do algoritmo `apriori`? 
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-O gráfico nos permite ter uma noção mais fácil da relação quantitiva e relativa entre os itens presentes em nas transações. Ele pode nos ajudar a configurar alguns parametros do algoritmo apriori, como o suporte e a confiança. Olhando para o histograma podemos dizer que não podemos usar um valor alto de suporte, pois muitos itens disponíveis na padaria são comprados com pouca frequência, por isso seriam ignorados pela analise. 
-Além disso, não podemos usar uma confiança muito alta de forma que somente regras muito fortes sejam analisadas. Isso provavelmente resultaria em regras que apresentam somente os itens mais frequentes das transações.
-(não sei se temos que falar sobre min e max lenght, mas se acharmos uma boa já tá aí>)
-Sobre o tamanho mínimo e máximo das relações, como estamos interessados em observar a relação entre os itens, podemos usar 2 como valor mínimo. Para o valor máximo podemos usar 5, pois a partir de 6 itens temos uma quantidade muito pequena de compras.
+
+O gráfico nos permite ter uma noção mais fácil da relação quantitativa e relativa entre os itens presentes nas transações. Ele pode nos ajudar a configurar alguns parâmetros do algoritmo apriori, como o suporte e a confiança. Olhando para o histograma, podemos dizer que não podemos usar um valor alto de suporte, pois muitos itens disponíveis na padaria são comprados com pouca frequência, por isso seriam ignorados pela análise. 
+Além disso, não podemos usar uma confiança muito alta, de forma que somente regras muito fortes sejam analisadas. Isso provavelmente resultaria em regras que apresentam somente os itens mais frequentes das transações. Por fim, podemos considerar também o tamanho mínimo e máximo das relações, como estamos interessados em observar a relação entre os itens, podemos usar 2 como valor mínimo. Para o valor máximo podemos usar 5, pois a partir de 6 itens temos uma quantidade muito pequena de compras.
 <!-- Fim da resposta -->
 
 # Atividade 2 -- Minerando Regras (*3,5 pts*)
@@ -82,39 +80,45 @@ Sobre o tamanho mínimo e máximo das relações, como estamos interessados em o
 Use o algoritmo `apriori` para minerar regras na base de dados fornecida. Experimente com pelo menos *3 conjuntos* de valores diferentes de suporte e confiança para encontrar regras de associação. Imprima as cinco regras com o maior confiança de cada conjunto escolhido.  Lembre-se de usar seu conhecimento sobre a base, obtido na questão anterior, para a escolha dos valores de suporte e confiança.
 
 ```{r atv2-code}
-# Conjunto 1: suporte = 0.02 e confiança = 0.4
+# Conjunto 1: suporte = 0.2 e confiança = 0.4
 conjunto1 <- apriori(dados_bakery,
-                     parameter = list(support = 0.02, confidence = 0.4))
+                     parameter = list(support = 0.2, confidence = 0.4),
+                     control = list(verbose = F))
 
 inspect(head(sort(conjunto1, by = "confidence"), 5))
-inspect(head(sort(conjunto1, by = "support"), 5))
+# inspect(head(sort(conjunto1, by = "support"), 5))
 
-# Conjunto 2: suporte = 0.015 e confiança = 0.25
+# Conjunto 2: suporte = 0.02 e confiança = 0.3
 conjunto2 <- apriori(dados_bakery,
-                     parameter = list(support = 0.015, confidence = 0.25))
+                     parameter = list(support = 0.02, confidence = 0.3, minlen = 2),
+                     control = list(verbose = F))
 
 inspect(head(sort(conjunto2, by = "confidence"), 5))
-inspect(head(sort(conjunto2, by = "support"), 5))
-inspect(head(sort(conjunto2, by = "lift"), 5))
+# inspect(head(sort(conjunto2, by = "support"), 5))
+# inspect(head(sort(conjunto2, by = "lift"), 5))
 
 # Conjunto 3: suporte = 0.01 e confiança = 0.2
 conjunto3 <- apriori(dados_bakery,
-                     parameter = list(support = 0.01, confidence = 0.2))
+                     parameter = list(support = 0.01, confidence = 0.2, minlen = 2),
+                     control = list(verbose = F))
 
 inspect(head(sort(conjunto3, by = "confidence"), 5))
-inspect(head(sort(conjunto3, by = "support"), 5))
-inspect(head(sort(conjunto3, by = "lift"), 5))
+# inspect(head(sort(conjunto3, by = "support"), 5))
+# inspect(head(sort(conjunto3, by = "lift"), 5))
 
 
 ```
 
 ## Análises 
+
 a) Quais as regras mais interessantes geradas a partir dessa base? Justifique.
-Para o primeiro conjunto não foi retonada nenhuma regra, o que indica que foi muito restritiva dado que o conjunto de dados é dominado por itens com grande distorção na frequencia dos itens comprados.
-Para o segundo conjunto tivemos como resultado regras que estão muito associadas com a compra do item mais frequente nas transações, o café. Além disso, maior parte das top 5 regras, tanto do ponto de vista de suporte quanto de confiança, possuem somente dois itens. O que indica que os valores de confiança de suporte utilizados ainda foram muito restritivos para essa base dados, dominada por um desbalanceamente em termos de frequencia relativa de itens. Para complementar a resposta, já fizemos uma analise inicial do lift nessa questão também. Observando as top 5 de maior lift podemos notar que quando clientes compras duas bebidas, como café e chá, ou café e chocolate quente, existe uma chance grande de comprar um bolo, o que pode indicar que duas pessoas são capazes de dividir esse bolo para comerem juntas. Nota-se também uma forte relação com a compra de torradas com café.
-Já para o terceiro conjunto tivemos resultados mais genéricos e amplos, dados os limites menos restritivos aplicados pelos limites de suporte e confiança. Nessas condições, nos top 5 com maior confiança já podemos observar a presença de transações com 3 itens. Porém nos top 5 com maior suporte tivemos como resultado transações com apenas 1 item, o que não nos traz informações sobre dependência entre itens, indicando que café, pão e chá são, com grande frequencia, comprados de forma isolada, sendo itens únicos de uma compra. 
-Com a ordenação por lift é possível notar relações interessante. Existe uma grande chance de que um cliente compre sanduíche para acompanhar uma coca, o que pode indicar um hábito para horários de lanche ou até almoços e jantas. O que é curioso é a relação entre a compra de sanduíchea e sopa, que aparece em 3 das 5 top transções com maior lift.
+
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+
+Para o primeiro conjunto, foi retornada apenas a regra que implica que café está presente em 54% das compras. Isto mostra que nossa escolha de parâmetros foi muito restritiva, e confirma o histograma que montamos acima, com o suporte de café sendo muito superior que dos demais produtos. Além disso, para os outros conjuntos decidimos reforçar a restrição comentada na Atividade 1, trazendo apenas regras com no mínimo 2 itens. 
+Ao baixar significativamente os limites mínimos de confiança e suporte, tivemos no segundo conjunto, regras que estão muito associadas com a compra do item mais frequente nas transações, o café. Além disso, a maior parte das top 5 regras, tanto do ponto de vista de suporte quanto de confiança, possuem somente dois itens. Isto indica que os valores de confiança e suporte utilizados ainda foram muito restritivos para essa base dados, dominada por um desbalanceamento em termos de frequência relativa de itens. Para complementar a resposta, já fizemos uma analise inicial do lift nessa questão também (comentada, para manter clareza no report final). Observando as top 5 de maior lift, podemos notar que quando clientes compram duas bebidas, como café e chá, ou café e chocolate quente, existe uma chance grande de comprar um bolo, o que pode indicar que duas pessoas são capazes de dividir esse bolo para comerem juntas. Nota-se também uma forte relação entre a compra de torradas com café.
+Já para o terceiro conjunto, tivemos resultados mais genéricos e amplos, dados os limites menos restritivos aplicados pelos limites de suporte e confiança. Nessas condições, nos top 5 com maior confiança já podemos observar a presença de transações com 3 itens. 
+Com a ordenação por lift é possível notar relações interessantes. Existe uma grande chance de que um cliente compre sanduíche para acompanhar uma coca, o que pode indicar um hábito para horários de lanche ou até almoços e jantas. Também é curiosa, a correlação entre a compra de sanduíche e sopa, que figuram entre as transações com top 5 lift e top 5 confiança.
 
 
 <!-- Fim da resposta -->
@@ -125,19 +129,22 @@ Vimos na aula que, mesmo após as podas do algoritmo `apriori`, ainda temos algu
 
 Dica: para adicionar as medidas em um conjunto de regras qualquer, você pode utilizar o comando `cbind` e a função `quality`:
 ```
-quality(regras) <- cbind(quality(regras), interestMeasure(regras, measure=c("conviction", "oddsRatio"), 
+quality(regras) <- cbind(quality(regras), interestMeasure(regras, 
+                                          measure=c("conviction", "oddsRatio"), 
                                           transactions = transacoes))
 ```
 
 
 ```{r atv3-code}
 # Compute as medidas de interesse 
-quality(conjunto3) <- cbind(quality(conjunto3), interestMeasure(conjunto3, measure=c("conviction", "oddsRatio"), 
-                                          transactions = transacoes))
+quality(conjunto3) <- cbind(quality(conjunto3), 
+                            interestMeasure(conjunto3, 
+                                measure=c("conviction", "oddsRatio"), 
+                                transactions = transacoes))
 
 # Apresente as regras ordenadas por lift
 inspect(head(sort(conjunto3, by = "lift"), 5))
-inspect(tail(sort(conjunto3, by = "lift"), 5))
+# inspect(tail(sort(conjunto3, by = "lift"), 5))
 
 # Apresente as regras ordenadas por convicção
 inspect(head(sort(conjunto3, by = "conviction"), 5))
@@ -152,12 +159,13 @@ inspect(head(sort(conjunto3, by = "oddsRatio"), 5))
 a) Quais as regras mais interessantes do conjunto? Justifique.
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+
 Usamos como base o conjunto 3, pois foi o que aplicamos menores restrições. Por isso, a ele, existem maiores chances de ocorrência de redundâncias e dependências negativas entre os itens das transações.
-Ao analisar as regras pelo lift, podemos observar que as regras mais interessantes envolvem combinações de itens que aparecem juntos com frequência maior do que seria esperado por acaso. Por exemplo, {Coke} → {Sandwich} apresenta lift 2.25, indicando que a compra de uma Coca aumenta mais que duas vezes a probabilidade de compra de um sanduíche. Outra regra relevante é {Coffee, Soup} → {Sandwich} com lift 2.10, mostrando que clientes que compram café e sopa têm maior chance de comprar um sanduíche. Essas regras se destacam por revelarem associações fortes e não triviais, ao contrário de regras com lift próximo de 1, que refletem dependência quase nula entre os itens. Ao analisar os itens como menor lift vemos uma baixa chance de uma cliente comprar pão dados que comprou sopa, outra relação que faz sentido ter pouca relação é a compra de café dado que comprou pão e chá, pois seria mais uma bebida na compra. O que é curiosa é a baixa chance de comprar pão dado que comprou suco, o que é completamente comum o consumo desses itens em conjunto.
+Ao analisar as regras pelo lift, podemos observar que as regras mais interessantes envolvem combinações de itens que aparecem juntos com frequência maior do que seria esperado por acaso. Por exemplo, {Coke} → {Sandwich} apresenta lift 2.25, indicando que a compra de uma Coca aumenta mais que duas vezes a probabilidade de compra de um sanduíche. Outra regra relevante é {Coffee, Soup} → {Sandwich} com lift 2.10, mostrando que clientes que compram café e sopa têm maior chance de comprar um sanduíche. Essas regras se destacam por revelarem associações fortes e não triviais, ao contrário de regras com lift próximo de 1, que refletem dependência quase nula entre os itens. Ao analisar os itens como menor lift vemos uma baixa chance de uma cliente comprar pão dado que comprou sopa. Outra relação que faz sentido ter pouca relação é a compra de café dado que comprou pão e chá, pois seria mais uma bebida na compra. O que é curiosa é a baixa chance de comprar pão dado que comprou suco, pois seria comum o consumo desses itens em conjunto.
 
 Ao analisar o conjunto 3 pelo critério de convicção, podemos observar que as regras mais interessantes envolvem itens que aparecem juntos com dependência positiva significativa. Por exemplo, {Toast} → {Coffee} apresenta convicção 1.63, indicando que a compra de torradas aumenta de forma consistente a probabilidade de compra de café, reforçando a relação já evidenciada pelo lift e confiança. Outras regras como {Cake, Sandwich} → {Coffee} e {Salad} → {Coffee} também apresentam convicção maior que 1, mostrando que combinações de itens menos frequentes ainda têm associação positiva confiável com café, embora a relação {Salad} → {Coffee} seja bem inusitada. Mesmo regras com confiança relativamente menor, como {Jam} → {Bread} (convicção 1.26), indicam que a compra de geleia aumenta a chance de comprar pão mais do que seria esperado ao acaso.
 
-Para o critério de odds ratio, podemos observar que as regras mais interessantes envolvem itens cuja presença aumenta significativamente a chance de ocorrência de outros itens. Por exemplo, {Coke} → {Sandwich} apresenta odds ratio maior que 1, indicando que a compra de uma Coca aumenta muito a probabilidade de um cliente comprar um sanduíche, em comparação com transações sem Coca. De forma similar, {Coffee, Soup} → {Sandwich} e {Coffee, Juice} → {Cookies} mostram que combinações de itens menos frequentes também elevam a chance de compra dos consequentes. Sobre a primeira compra, pode indicar que o cliente numa janta ou almoço come um uma sopa e toma um café ainda continua insatisfeito, e pede também um sanduíche para terminar de satisfazer a fome. Outra observação que pode ser feita é que uma compra feita para dois cliente, em que um bebe café e o outro bebe suco, eles podem dividir cookies entre si.
+Para o critério de odds ratio, podemos observar que as regras mais interessantes envolvem itens cuja presença aumenta significativamente a chance de ocorrência de outros itens. Por exemplo, {Coke} → {Sandwich} apresenta odds ratio de quase 3, indicando que a compra de uma Coca aumenta muito a probabilidade de um cliente comprar um sanduíche, em comparação com transações sem Coca. De forma similar, {Coffee, Soup} → {Sandwich} e {Coffee, Juice} → {Cookies} mostram que combinações de itens menos frequentes também elevam a chance de compra dos consequentes. Sobre a primeira compra, pode indicar que o cliente numa janta ou almoço come um uma sopa e toma um café ainda continua insatisfeito, e pede também um sanduíche para terminar de satisfazer a fome. Outra observação que pode ser feita é que numa compra feita para dois clientes, em que um bebe café e o outro bebe suco, eles podem dividir cookies entre si.
 
 <!-- Fim da resposta -->
 
