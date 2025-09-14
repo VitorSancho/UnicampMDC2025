@@ -320,7 +320,7 @@ ggplot(treino_normalizado, aes(x = Fumante, fill = Fumante)) +
   labs(title = "Distribuição por Fumante", x = "Fumante", y = "Contagem")
 ```
 
-Análise da distribuição dos dados de treino
+Análise da distribuição dos dados de validação
 
 ```{r}
 # Histograma do Consumo de Sal normalizado
@@ -421,13 +421,20 @@ colnames(dados_para_encoding_validacao) <- gsub("-", "_", colnames(dados_para_en
 ```
 
 1.1 – Quantas amostras existem no conjunto de dados?
+No counto de treino temos 1349 amostras, já no validação temos 338.
 
 1.2 – Existem amostras com valores ausentes? Como vocês pretendem tratar esses casos?
+Não observamos amostras com valores ausentes ou inválidos, tanto no conjunto de dados de treino quando no de validação.
 
 1.3 – Esse conjunto de dados é balanceado? Caso não seja, como pretendem tratá-lo e por que usar essa técnica específica?
+Acima fizemos o plot da distribuição de dados, já normalizasa, para cada uma das 8 faetures presentes no conjunto de dados que caracterizam as amostras: Consumo de sal, duração do sono, IMC, nível de estresse, histórico de pressão arterial, histórico familiar, nível de exercício e quantidade de fumantes. Sobre a normalização, aplicamos a técnica de min-max.
+As festures consumo de sal, duração do sono e IMC apresetam uma distribuição normal dos dados, já a feature de nível de estresse tem uma distribuição uniforme. Essas features possuem dados contínuos e a distribuição de seus valores é bem comportada, seguindo distribuição normal ou contínua, o que não afeta a qualidade do treinamento do modelo. 
+O dataset também possui features categóricas, que apresentam valores discretos. Para elas montamos gráficos com a quantidade de itens por cada valor possíveis para a feature. A análise da feature de histórico familiar indica que a quantidade de pessoas com valor positivo e negativo é quase igual. A de pressão arterial possui três possíveis valores: Hipertensão, Normal e Pre-hipertensão. Para esses três possíveis valores temos quantidades distintas de amostras, mas essa diferença observada não chega preocupar em termos do impacto na qualidade do treinamento do modelo. Porém isso não pode ser afirmar para as outras duas features categóricas do data set, o nível de exercício e fumante. A primeira apresenta um moderado grau de desbalanceamento, temos mais de 600 indivíduo com baixo nível de exercício, por volta de 270 com alto (menos da metado da quantidade de alto) e algo am torno de 430 com moderado. Provavelmente para essas ultimas duas feaures teremos que aplicar técnicas para balancear a quantidade de amostras entre os possíveis valores discretos. 
+(FALAR QUAL TÉCNICA DE BALANCEAMENTO APLICAMOS)
+Essa análise também foi realizada para o conjunto de dados de validação, que apresentou um perfil de distribuição, para cada uma das features, muito similiar ao de treino.
 
 1.4 – Há alguma característica dos dados que pode impactar o desempenho do modelo?
-
+O desbalanceamento das features nível de exercício e fumante, como pontuado anteriormente, pode afetar a qualidade do modelo.
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
 <!-- Fim da resposta -->
