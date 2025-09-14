@@ -3,9 +3,8 @@ title: INF0615 -- Aprendizado de Máquina Supervisionado I
 output: pdf_document
 subtitle: Trabalho 2 - Risco de Hipertensão
 author: 
-  - Nome completo Integrante 1
-  - Nome completo Integrante 2
-  - Nome completo Integrante 3
+  - Vitor de Oliveira Fernandez Araujo
+  - Vitor Sancho Cardoso
 ---
 
 ```{r setup, include = FALSE}
@@ -184,7 +183,9 @@ Carregue as bibliotecas necessárias e defina uma semente aleatória para garant
 ```{r atv0-code}
 # Adicione as bibliotecas necessárias
 #library(...)
-
+library(ggplot2)
+# install.packages("glmnet")
+library(glmnet)
 #set.seed(...)
 ```
 
@@ -194,10 +195,204 @@ Carreguem e inspecionem o conjunto de dados. Além disso, preparem os dados corr
 
 ```{r atv1-code}
 # Carregue o conjunto de dados
+dados_treino <- read.csv("T02_train_set.csv")
+dados_validacao <- read.csv("T02_valid_set.csv")
 
 # Sumário da base
+paste("O dataframe de TREINO possui",nrow(dados_treino),"registros",sep=" ")
+paste("summary TREINO:")
+summary(dados_treino)
+
+if (any(is.na(dados_treino))) {
+  cat("Aviso: Existem valores ausentes no conjunto de validação.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de validação.\n")
+}
+
+paste("O dataframe de VALIDAÇÃO possui",nrow(dados_validacao),"registros",sep=" ")
+paste("summary VALIDAÇÃO:")
+summary(dados_validacao)
+
+if (any(is.na(dados_validacao))) {
+  cat("Aviso: Existem valores ausentes no conjunto de validação.\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de validação.\n")
+}
+
+# Avaliando dados presentes no data set
+# class(dados_treino$Consumo.Sal)
+# class(dados_treino$Nivel.de.Estresse)
+# class(dados_treino$Historico.Pressao.Arterial)
+# class(dados_treino$IMC)
+# class(dados_treino$Historico.Familiar)
+# class(dados_treino$Nivel.Exercicio)
+# class(dados_treino$Fumante)
+# class(dados_treino$Risco.Hipertensao)
+# 
+# head(dados_treino)
+# 
+# head(dados_validacao)
+# 
+# class(dados_validacao$Consumo.Sal)
+# class(dados_validacao$Nivel.de.Estresse)
+# class(dados_validacao$Historico.Pressao.Arterial)
+# class(dados_validacao$IMC)
+# class(dados_validacao$Historico.Familiar)
+# class(dados_validacao$Nivel.Exercicio)
+# class(dados_validacao$Fumante)
+# class(dados_validacao$Risco.Hipertensao)
+# 
+# head(dados_validacao)
+
 
 # Normalização
+# Aplicando normalização min-max
+treino_normalizado <- dados_treino
+validacao_normalizado <- dados_validacao
+cols <- c(1, 4, 5)  # índices das colunas numericas que vamos normalizar
+
+min_features <- apply(treino_normalizado[, cols], 2, min)
+max_features <- apply(treino_normalizado[, cols], 2, max)
+diff         <- max_features - min_features
+
+treino_normalizado[, cols] <- sweep(treino_normalizado[, cols], 2, min_features, "-")
+treino_normalizado[, cols] <- sweep(treino_normalizado[, cols], 2, diff, "/")
+
+validacao_normalizado[, cols] <- sweep(validacao_normalizado[, cols], 2, min_features, "-")
+validacao_normalizado[, cols] <- sweep(validacao_normalizado[, cols], 2, diff, "/")
+
+summary(validacao_normalizado)
+
+```
+
+Análise da distribuição dos dados de treino
+
+```{r}
+# Histograma do Consumo de Sal normalizado
+ggplot(treino_normalizado, aes(x = Consumo.Sal)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição do Consumo de Sal",
+       x = "Consumo de Sal normalizado", y = "Densidade")
+
+# Histograma da Duracao de Sono normalizad
+ggplot(treino_normalizado, aes(x = Duracao.Sono)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição do Duracao Sono", x = "Duracao de Sono normalizada", y = "Densidade")
+
+# Histograma do duração do IMC normalizado
+ggplot(treino_normalizado, aes(x = IMC)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição do IMC",
+       x = "IMC normalizado", y = "Densidade")
+
+# Contagem de ocorrencias por Nivel de Estresse
+ggplot(treino_normalizado, aes(x = Nivel.de.Estresse, fill = Nivel.de.Estresse)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Nivel de Estresse", x = "Nivel de Estresse", y = "Contagem")
+
+# Contagem de ocorrencias por Historico de Pressao Arterial
+ggplot(treino_normalizado, aes(x = Historico.Pressao.Arterial, fill = Historico.Pressao.Arterial)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Historico de Pressao Arterial", x = "Historico de Pressao Arterial", y = "Contagem")
+
+# Contagem de ocorrencias por Historico Familiar
+ggplot(treino_normalizado, aes(x = Historico.Familiar, fill = Historico.Familiar)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Historico Familiar", x = "Historico Familiar", y = "Contagem")
+
+# Contagem de ocorrencias por Nivel de Exercicio
+ggplot(treino_normalizado, aes(x = Nivel.Exercicio, fill = Nivel.Exercicio)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Nivel de Exercicio", x = "Nivel de Exercicio", y = "Contagem")
+
+# Contagem de ocorrencias por Fumante
+ggplot(treino_normalizado, aes(x = Fumante, fill = Fumante)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Fumante", x = "Fumante", y = "Contagem")
+```
+
+Análise da distribuição dos dados de treino
+
+```{r}
+# Histograma do Consumo de Sal normalizado
+ggplot(validacao_normalizado, aes(x = Consumo.Sal)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição do Consumo de Sal",
+       x = "Consumo de Sal normalizado", y = "Densidade")
+
+# Histograma da Duracao de Sono normalizad
+ggplot(validacao_normalizado, aes(x = Duracao.Sono)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição do Duracao Sono", x = "Duracao de Sono normalizada", y = "Densidade")
+
+# Histograma do duração do IMC normalizado
+ggplot(validacao_normalizado, aes(x = IMC)) +
+  geom_histogram(fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribuição do IMC",
+       x = "IMC normalizado", y = "Densidade")
+
+# Contagem de ocorrencias por Nivel de Estresse
+ggplot(validacao_normalizado, aes(x = Nivel.de.Estresse, fill = Nivel.de.Estresse)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Nivel de Estresse", x = "Nivel de Estresse", y = "Contagem")
+
+# Contagem de ocorrencias por Historico de Pressao Arterial
+ggplot(validacao_normalizado, aes(x = Historico.Pressao.Arterial, fill = Historico.Pressao.Arterial)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Historico de Pressao Arterial", x = "Historico de Pressao Arterial", y = "Contagem")
+
+# Contagem de ocorrencias por Historico Familiar
+ggplot(validacao_normalizado, aes(x = Historico.Familiar, fill = Historico.Familiar)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Historico Familiar", x = "Historico Familiar", y = "Contagem")
+
+# Contagem de ocorrencias por Nivel de Exercicio
+ggplot(validacao_normalizado, aes(x = Nivel.Exercicio, fill = Nivel.Exercicio)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Nivel de Exercicio", x = "Nivel de Exercicio", y = "Contagem")
+
+# Contagem de ocorrencias por Fumante
+ggplot(validacao_normalizado, aes(x = Fumante, fill = Fumante)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Fumante", x = "Fumante", y = "Contagem")
+```
+
+One hot encoding de features categóricas:
+
+```{r}
+# One Hot Encoding
+paste("One hot encoding para conjunto de TREINO")
+dados_para_encoding_treino <- treino_normalizado
+dados_para_encoding_treino$Nivel.de.Estresse <- as.factor(dados_para_encoding_treino$Nivel.de.Estresse)
+one_hot <- model.matrix(~ Nivel.de.Estresse - 1, data = dados_para_encoding_treino)
+dados_para_encoding_treino <- cbind(dados_para_encoding_treino, one_hot)
+dados_para_encoding_treino$Nivel.de.Estresse <- NULL
+colnames(dados_para_encoding_treino) <- gsub("-", "_", colnames(dados_para_encoding_treino))
+
+paste("One hot encoding para conjunto de VALIDAÇÃO")
+
+dados_para_encoding_validacao <- validacao_normalizado
+dados_para_encoding_validacao$Nivel.de.Estresse <- as.factor(dados_para_encoding_validacao$Nivel.de.Estresse)
+one_hot <- model.matrix(~ Nivel.de.Estresse - 1, data = dados_para_encoding_validacao)
+dados_para_encoding_validacao <- cbind(dados_para_encoding_validacao, one_hot)
+dados_para_encoding_validacao$Nivel.de.Estresse <- NULL
+colnames(dados_para_encoding_validacao) <- gsub("-", "_", colnames(dados_para_encoding_validacao))
 ```
 
 1.1 – Quantas amostras existem no conjunto de dados?
@@ -217,9 +412,43 @@ Carreguem e inspecionem o conjunto de dados. Além disso, preparem os dados corr
 Treinem um modelo *baseline* de regressão logística utilizando **todas as features disponíveis**.
 
 ```{r atv2-code}
+train_data <- dados_para_encoding_treino
+valid_data <- dados_para_encoding_validacao
+# nome da coluna que você quer mandar para o fim
+coluna <- "Risco.Hipertensao"
+
+# reordenar: todas as colunas menos a escolhida, depois a escolhida
+train_data <- train_data[, c(setdiff(names(train_data), coluna), coluna)]
+feature_names <- colnames(train_data)[1:(ncol(train_data) - 1)]
+
+valid_data <- valid_data[, c(setdiff(names(valid_data), coluna), coluna)]
+
+hypothesis <- getHypothesis(feature_names, 1, target = "Risco.Hipertensao")
+hypothesis
+
 # Treinamento    
+model <- glmnet(train_data[,1:18], train_data$Risco.Hipertensao, family = "binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
+print(model$beta)
+print(model$a0)
 
 # Avaliação do Modelo
+x_train <- model.matrix(hypothesis, data=train_data)
+y_train <- train_data$class
+
+x_valid <- model.matrix(hypothesis, data=valid_data)
+y_valid <- valid_data$class
+
+train_pred <- predict(model, newx=x_train, type="response")
+valid_pred <- predict(model, newx=x_valid, type="response")
+
+# Threshold = 0.5 
+train_class_pred <- train_pred
+train_class_pred[train_pred >= 0.5] <- 1
+train_class_pred[train_pred < 0.5]  <- 0
+
+valid_class_pred <- valid_pred
+valid_class_pred[valid_pred >= 0.5] <- 1
+valid_class_pred[valid_pred < 0.5]  <- 0
 ```
 
 2.1 – O modelo baseline foi suficiente para resolver o problema? Quais métricas de avaliação vocês utilizaram para justificar a resposta?
