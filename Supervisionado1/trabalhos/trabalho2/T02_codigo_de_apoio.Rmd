@@ -620,6 +620,9 @@ matriz_cramer
 
 ```{r atv3-code}
 # Hipóteses alternativas
+hypothesis_grau1 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",1)
+hypothesis_grau1
+
 hypothesis_grau2 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",2)
 hypothesis_grau2
 
@@ -636,8 +639,97 @@ hypothesis_grau6 <- getHypothesis(features_continuas, features_categoricas, targ
 hypothesis_grau6
 
 # Treinamento
+formulas <- c(hypothesis_grau1, hypothesis_grau2, hypothesis_grau3, hypothesis_grau4, hypothesis_grau5, hypothesis_grau6)
 
+PrecisionPerCombination <- data.frame(combination=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
+RecallPerCombination <- data.frame(combination=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
+LossPerCombination <- data.frame(combination=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
+F1PerCombination  <- data.frame(combination=numeric(6), TrainF1=numeric(6), ValidF1=numeric(6))
+
+i <- 1
+for(hypothesis in formulas){  
+  
+    # Preparar os dados de treinamento e validação
+  x_train <- model.matrix(hypothesis, train_data)
+  y_train <- train_data$class
+  
+  x_valid <- model.matrix(hypothesis, valid_data)
+  y_valid <- valid_data$class
+  
+  # Treinamento do modelo
+  model <- glmnet(train_data[,1:22], train_data$Risco.Hipertensao, family = "binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
+  
+  # Predicao do modelo
+  train_pred <- predict(model, newx=x_train[,1:22], type="response")
+  valid_pred <- predict(model, newx=x_valid[,1:22], type="response")
+  
+  # Transformaçao das predicoes em classes
+  train_class_pred                    <- train_pred
+  train_class_pred[train_pred >= 0.5] <- 1
+  train_class_pred[train_pred < 0.5]  <- 0
+  
+  valid_class_pred                    <- valid_pred
+  valid_class_pred[valid_pred >= 0.5] <- 1
+  valid_class_pred[valid_pred < 0.5]  <- 0
+  
+  # Calcula a loss dos dois conjuntos
+  train_losses <- getLoss(train_data$Risco.Hipertensao, train_pred)
+  valid_losses <- getLoss(valid_data$Risco.Hipertensao, valid_pred)
+
+  
+  # Calcula a matriz de confusão
+  train_cm <- confusionMatrix(data=as.factor(train_class_pred), 
+                        reference=as.factor(train_data$Risco.Hipertensao), 
+                        positive='1')
+  
+  valid_cm <- confusionMatrix(data=as.factor(valid_class_pred), 
+                        reference=as.factor(valid_data$Risco.Hipertensao), 
+                        positive='1')
+  
+  # Calcula mẽtrica de interesse
+  train_metrics = calculateMetrics(train_cm$table)
+  valid_metrics = calculateMetrics(valid_cm$table)
+  
+  
+  PrecisionPerCombination[i,]  <- c(i, train_metrics["Precision"], valid_metrics["Precision"]) 
+  RecallPerCombination[i,]  <- c(i, train_metrics["Recall"], valid_metrics["Recall"]) 
+  LossPerCombination[i,] <- c(i, train_losses["AverageLoss"], valid_losses["AverageLoss"])
+  F1PerCombination[i,]  <- c(i, train_metrics["F1"], valid_metrics["F1"]) 
+  
+  i <- i + 1
+}
 # Curva de viés e variância
+# Gráfico da Precisão
+PrecisionPerCombinationMelt <- melt(PrecisionPerCombination, id="combination") 
+p <- ggplot(data=PrecisionPerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("Precision") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico da Recall
+RecallPerCombinationMelt <- melt(RecallPerCombination, id="combination") 
+p <- ggplot(data=RecallPerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("Recall") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico da Loss
+LossPerCombinationMelt <- melt(LossPerCombination, id="combination") 
+p <- ggplot(data=LossPerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("Loss") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico da Acurácia
+F1PerCombinationMelt <- melt(F1PerCombination, id="combination")  # convert to long format
+p <- ggplot(data=F1PerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("F1") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 
 # Métricas de avaliação
 
