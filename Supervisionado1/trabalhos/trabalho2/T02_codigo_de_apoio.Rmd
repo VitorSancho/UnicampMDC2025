@@ -471,7 +471,31 @@ feature_names <- colnames(train_data)[1:(ncol(train_data) - 1)]
 
 valid_data <- valid_data[, c(setdiff(names(valid_data), coluna), coluna)]
 
-hypothesis <- getHypothesis(feature_names, 1, target = "Risco.Hipertensao")
+features_continuas <- c("Consumo.Sal", "Duracao.Sono", "IMC")
+features_categoricas <- c(
+  "Historico.Familiar",
+  "Fumante",
+  "Nivel.de.Estresse0",
+  "Nivel.de.Estresse1",
+  "Nivel.de.Estresse2",
+  "Nivel.de.Estresse3",
+  "Nivel.de.Estresse4",
+  "Nivel.de.Estresse5",
+  "Nivel.de.Estresse6",
+  "Nivel.de.Estresse7",
+  "Nivel.de.Estresse8",
+  "Nivel.de.Estresse9",
+  "Nivel.de.Estresse10",
+  
+  "Historico.Pressao.ArterialHipertensao",
+  "Historico.Pressao.ArterialNormal",
+  "Historico.Pressao.ArterialPre_hipertensao",
+  
+  "Nivel.ExercicioBaixo",
+  "Nivel.ExercicioModerado",
+  "Nivel.ExercicioAlto"
+)
+hypothesis <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao", 1)
 hypothesis
 
 # Treinamento    
