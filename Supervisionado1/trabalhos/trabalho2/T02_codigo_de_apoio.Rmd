@@ -266,6 +266,7 @@ summary(validacao_normalizado)
 
 ```
 
+
 Análise da distribuição dos dados de treino
 
 ```{r}
@@ -318,6 +319,11 @@ ggplot(treino_normalizado, aes(x = Fumante, fill = Fumante)) +
   geom_bar() +
   theme_minimal() +
   labs(title = "Distribuição por Fumante", x = "Fumante", y = "Contagem")
+
+ggplot(treino_normalizado, aes(x = Risco.Hipertensao, fill = Risco.Hipertensao)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Risco.Hipertensao", x = "Risco.Hipertensao", y = "Contagem")
 ```
 
 Análise da distribuição dos dados de validação
@@ -372,6 +378,7 @@ ggplot(validacao_normalizado, aes(x = Fumante, fill = Fumante)) +
   geom_bar() +
   theme_minimal() +
   labs(title = "Distribuição por Fumante", x = "Fumante", y = "Contagem")
+
 ```
 
 One hot encoding de features categóricas:
@@ -420,6 +427,9 @@ dados_para_encoding_validacao$Nivel.Exercicio <- NULL
 colnames(dados_para_encoding_validacao) <- gsub("-", "_", colnames(dados_para_encoding_validacao))
 ```
 
+
+
+
 1.1 – Quantas amostras existem no conjunto de dados?
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 No counto de treino temos 1349 amostras, já no validação temos 338.
@@ -432,10 +442,10 @@ Não observamos amostras com valores ausentes ou inválidos, tanto no conjunto d
 
 1.3 – Esse conjunto de dados é balanceado? Caso não seja, como pretendem tratá-lo e por que usar essa técnica específica?
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-Acima fizemos o plot da distribuição de dados, já normalizasa, para cada uma das 8 faetures presentes no conjunto de dados que caracterizam as amostras: Consumo de sal, duração do sono, IMC, nível de estresse, histórico de pressão arterial, histórico familiar, nível de exercício e quantidade de fumantes. Sobre a normalização, aplicamos a técnica de min-max.
+Acima fizemos o plot da distribuição de dados - já normalizada para o caso de features com valores contínuos -, para cada uma das 8 faetures presentes no conjunto de dados que caracterizam as amostras: Consumo de sal, duração do sono, IMC, nível de estresse, histórico de pressão arterial, histórico familiar, nível de exercício e quantidade de fumantes. Também o fizemos para a feature alvo no modelo de predição a ser desenvolvido: Risco de hipertensão. Sobre a normalização, aplicamos a técnica de min-max.
 As festures consumo de sal, duração do sono e IMC apresetam uma distribuição normal dos dados, já a feature de nível de estresse tem uma distribuição uniforme. Essas features possuem dados contínuos e a distribuição de seus valores é bem comportada, seguindo distribuição normal ou contínua, o que não afeta a qualidade do treinamento do modelo. 
-O dataset também possui features categóricas, que apresentam valores discretos. Para elas montamos gráficos com a quantidade de itens por cada valor possíveis para a feature. A análise da feature de histórico familiar indica que a quantidade de pessoas com valor positivo e negativo é quase igual. A de pressão arterial possui três possíveis valores: Hipertensão, Normal e Pre-hipertensão. Para esses três possíveis valores temos quantidades distintas de amostras, mas essa diferença observada não chega preocupar em termos do impacto na qualidade do treinamento do modelo. Porém isso não pode ser afirmar para as outras duas features categóricas do data set, o nível de exercício e fumante. A primeira apresenta um moderado grau de desbalanceamento, temos mais de 600 indivíduo com baixo nível de exercício, por volta de 270 com alto (menos da metado da quantidade de alto) e algo am torno de 430 com moderado. Provavelmente para essas ultimas duas feaures teremos que aplicar técnicas para balancear a quantidade de amostras entre os possíveis valores discretos. 
-(FALAR QUAL TÉCNICA DE BALANCEAMENTO APLICAMOS)
+O dataset também possui features categóricas, que apresentam valores discretos. Para elas montamos gráficos com a quantidade de itens por cada valor possíveis para a feature. A análise da feature de histórico familiar indica que a quantidade de pessoas com valor positivo e negativo é quase igual. A de pressão arterial possui três possíveis valores: Hipertensão, Normal e Pre-hipertensão. Isso não foi observado nas outras duas features categóricas do data set, o nível de exercício e fumante. Na primeira é possível notar uma grande diferença individuos com diferentes níveis de exercídios, temos mais de 600 indivíduos com baixo nível de exercício, por volta de 270 com alto (menos da metado da quantidade de alto) e algo am torno de 430 com moderado.Essa diferença também é notória na feature de fumantes. 
+Para a nossa feature de alvo - Risco de Hipertensão - não é possível notar um grau preocupante de desbalanceamento. Por isso não é necessário aplicar nenhuma técnica para equilibrar a quantidade de indivíduos com ou sem Risco de Hipertensão.
 Essa análise também foi realizada para o conjunto de dados de validação, que apresentou um perfil de distribuição, para cada uma das features, muito similiar ao de treino.
 <!-- Fim da resposta -->
 
