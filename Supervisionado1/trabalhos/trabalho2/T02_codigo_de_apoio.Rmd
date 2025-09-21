@@ -183,12 +183,18 @@ Carregue as bibliotecas necessárias e defina uma semente aleatória para garant
 ```{r atv0-code}
 # Adicione as bibliotecas necessárias
 #library(...)
-library(ggplot2)
+# install.packages("vcd")
 # install.packages("glmnet")
+library(ggplot2)
+library(vcd)
 library(glmnet)
 library(caret)
 library(corrplot)
-#set.seed(...)
+library(rpart)        # Árvore de decisão
+library(rpart.plot)   # Visualização de árvores de decisão
+library(randomForest) # Random Forest
+
+set.seed(42)
 ```
 
 # Tarefa 1 -- Inspeção de Dados
@@ -231,7 +237,7 @@ if (any(is.na(dados_validacao))) {
 # class(dados_treino$Fumante)
 # class(dados_treino$Risco.Hipertensao)
 # 
-# head(dados_treino)
+ # head(dados_treino)
 # 
 # head(dados_validacao)
 # 
@@ -379,6 +385,11 @@ ggplot(validacao_normalizado, aes(x = Fumante, fill = Fumante)) +
   geom_bar() +
   theme_minimal() +
   labs(title = "Distribuição por Fumante", x = "Fumante", y = "Contagem")
+
+ggplot(treino_normalizado, aes(x = Risco.Hipertensao, fill = Risco.Hipertensao)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribuição por Risco.Hipertensao", x = "Risco.Hipertensao", y = "Contagem")
 
 ```
 
@@ -575,8 +586,6 @@ Implementem soluções alternativas baseadas em regressão logística, seja atra
 # Analisando correlação entre features para features continuas
 
 ```{r}
-library(corrplot)
-
 # Calculando a matriz de correlação
 matriz_correlacao <- cor(train_data[,1:4][ , 1:(ncol(train_data[,1:4]) - 1)])
 
@@ -778,6 +787,8 @@ Treinem um modelo *baseline 2* de árvore de decisão **todas as features dispon
 
 ```{r atv5-code}
 # Treinamento    
+
+
 
 # Avaliação do Modelo 
 
