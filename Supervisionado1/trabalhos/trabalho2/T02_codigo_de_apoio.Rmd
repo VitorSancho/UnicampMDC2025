@@ -609,7 +609,7 @@ matriz_cramer
 ```
 
 ```{r atv3-code}
-# Hipóteses alternativas
+# Hipóteses alternativas - polinomial
 hypothesis_grau1 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",1)
 hypothesis_grau1
 
@@ -631,10 +631,10 @@ hypothesis_grau6
 # Treinamento
 formulas <- c(hypothesis_grau1, hypothesis_grau2, hypothesis_grau3, hypothesis_grau4, hypothesis_grau5, hypothesis_grau6)
 
-PrecisionPerCombination <- data.frame(combination=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
-RecallPerCombination <- data.frame(combination=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
-LossPerCombination <- data.frame(combination=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
-F1PerCombination  <- data.frame(combination=numeric(6), TrainF1=numeric(6), ValidF1=numeric(6))
+PrecisionPorGraus <- data.frame(graus=numeric(6), Precision=numeric(6), Precision=numeric(6))
+RecallPorGraus <- data.frame(graus=numeric(6), Recall=numeric(6), Recall=numeric(6))
+LossPorGraus <- data.frame(graus=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
+F1PorGraus  <- data.frame(graus=numeric(6), TrainF1=numeric(6), ValidF1=numeric(6))
 
 i <- 1
 for(hypothesis in formulas){  
@@ -681,47 +681,45 @@ for(hypothesis in formulas){
   valid_metrics = calculateMetrics(valid_cm$table)
   
   
-  PrecisionPerCombination[i,]  <- c(i, train_metrics["Precision"], valid_metrics["Precision"]) 
-  RecallPerCombination[i,]  <- c(i, train_metrics["Recall"], valid_metrics["Recall"]) 
-  LossPerCombination[i,] <- c(i, train_losses["AverageLoss"], valid_losses["AverageLoss"])
-  F1PerCombination[i,]  <- c(i, train_metrics["F1"], valid_metrics["F1"]) 
+  PrecisionPorGraus[i,]  <- c(i, train_metrics["Precision"], valid_metrics["Precision"]) 
+  RecallPorGraus[i,]  <- c(i, train_metrics["Recall"], valid_metrics["Recall"]) 
+  LossPorGraus[i,] <- c(i, train_losses["AverageLoss"], valid_losses["AverageLoss"])
+  F1PorGraus[i,]  <- c(i, train_metrics["F1"], valid_metrics["F1"]) 
   
   i <- i + 1
 }
 # Curva de viés e variância
 # Gráfico da Precisão
-PrecisionPerCombinationMelt <- melt(PrecisionPerCombination, id="combination") 
-p <- ggplot(data=PrecisionPerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+PrecisionPorGrausMelt <- melt(PrecisionPorGraus, id="graus") 
+p <- ggplot(data=PrecisionPorGrausMelt, aes(x=graus, y=value, colour=variable)) + geom_line() + geom_point()
 
-p <- p + ggtitle("Curva vies/variancia") + ylab("Precision") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+p <- p + ggtitle("Curva vies/variancia") + ylab("Precision") + scale_x_discrete(name ="graus", limits=as.character(1:length(formulas)))
 
 p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 
 # Gráfico da Recall
-RecallPerCombinationMelt <- melt(RecallPerCombination, id="combination") 
-p <- ggplot(data=RecallPerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+RecallPorGrausMelt <- melt(RecallPorGraus, id="graus") 
+p <- ggplot(data=RecallPorGrausMelt, aes(x=graus, y=value, colour=variable)) + geom_line() + geom_point()
 
-p <- p + ggtitle("Curva vies/variancia") + ylab("Recall") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+p <- p + ggtitle("Curva vies/variancia") + ylab("Recall") + scale_x_discrete(name ="graus", limits=as.character(1:length(formulas)))
 
 p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 
 # Gráfico da Loss
-LossPerCombinationMelt <- melt(LossPerCombination, id="combination") 
-p <- ggplot(data=LossPerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+LossPorGrausMelt <- melt(LossPorGraus, id="graus") 
+p <- ggplot(data=LossPorGrausMelt, aes(x=graus, y=value, colour=variable)) + geom_line() + geom_point()
 
-p <- p + ggtitle("Curva vies/variancia") + ylab("Loss") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+p <- p + ggtitle("Curva vies/variancia") + ylab("Loss") + scale_x_discrete(name ="graus", limits=as.character(1:length(formulas)))
 
 p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 
 # Gráfico da Acurácia
-F1PerCombinationMelt <- melt(F1PerCombination, id="combination")  # convert to long format
-p <- ggplot(data=F1PerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+F1PorGrausMelt <- melt(F1PorGraus, id="graus")  # convert to long format
+p <- ggplot(data=F1PorGrausMelt, aes(x=graus, y=value, colour=variable)) + geom_line() + geom_point()
 
-p <- p + ggtitle("Curva vies/variancia") + ylab("F1") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+p <- p + ggtitle("Curva vies/variancia") + ylab("F1") + scale_x_discrete(name ="graus", limits=as.character(1:length(formulas)))
 
 p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
-
-# Métricas de avaliação
 
 ```
 
