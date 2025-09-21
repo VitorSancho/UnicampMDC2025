@@ -258,7 +258,7 @@ if (any(is.na(dados_validacao))) {
 # Aplicando normalização min-max
 treino_normalizado <- dados_treino
 validacao_normalizado <- dados_validacao
-cols <- c(1, 4, 5)  # índices das colunas numericas que vamos normalizar
+cols <- c(1, 2, 4, 5)  # índices das colunas numericas que vamos normalizar
 
 min_features <- apply(treino_normalizado[, cols], 2, min)
 max_features <- apply(treino_normalizado[, cols], 2, max)
@@ -387,7 +387,7 @@ ggplot(validacao_normalizado, aes(x = Fumante, fill = Fumante)) +
   theme_minimal() +
   labs(title = "Distribuição por Fumante", x = "Fumante", y = "Contagem")
 
-ggplot(treino_normalizado, aes(x = Risco.Hipertensao, fill = Risco.Hipertensao)) +
+ggplot(validacao_normalizado, aes(x = Risco.Hipertensao, fill = Risco.Hipertensao)) +
   geom_bar() +
   theme_minimal() +
   labs(title = "Distribuição por Risco.Hipertensao", x = "Risco.Hipertensao", y = "Contagem")
@@ -400,11 +400,6 @@ One hot encoding de features categóricas:
 # One Hot Encoding
 paste("One hot encoding para conjunto de TREINO")
 dados_para_encoding_treino <- treino_normalizado
-dados_para_encoding_treino$Nivel.de.Estresse <- as.factor(dados_para_encoding_treino$Nivel.de.Estresse)
-one_hot <- model.matrix(~ Nivel.de.Estresse - 1, data = dados_para_encoding_treino)
-dados_para_encoding_treino <- cbind(dados_para_encoding_treino, one_hot)
-dados_para_encoding_treino$Nivel.de.Estresse <- NULL
-colnames(dados_para_encoding_treino) <- gsub("-", "_", colnames(dados_para_encoding_treino))
 
 dados_para_encoding_treino$Historico.Pressao.Arterial <- as.factor(dados_para_encoding_treino$Historico.Pressao.Arterial)
 one_hot <- model.matrix(~ Historico.Pressao.Arterial - 1, data = dados_para_encoding_treino)
@@ -421,11 +416,6 @@ colnames(dados_para_encoding_treino) <- gsub("-", "_", colnames(dados_para_encod
 paste("One hot encoding para conjunto de VALIDAÇÃO")
 
 dados_para_encoding_validacao <- validacao_normalizado
-dados_para_encoding_validacao$Nivel.de.Estresse <- as.factor(dados_para_encoding_validacao$Nivel.de.Estresse)
-one_hot <- model.matrix(~ Nivel.de.Estresse - 1, data = dados_para_encoding_validacao)
-dados_para_encoding_validacao <- cbind(dados_para_encoding_validacao, one_hot)
-dados_para_encoding_validacao$Nivel.de.Estresse <- NULL
-colnames(dados_para_encoding_validacao) <- gsub("-", "_", colnames(dados_para_encoding_validacao))
 
 dados_para_encoding_validacao$Historico.Pressao.Arterial <- as.factor(dados_para_encoding_validacao$Historico.Pressao.Arterial)
 one_hot <- model.matrix(~ Historico.Pressao.Arterial - 1, data = dados_para_encoding_validacao)
@@ -463,7 +453,7 @@ Essa análise também foi realizada para o conjunto de dados de validação, que
 <!-- Fim da resposta -->
 
 1.4 – Há alguma característica dos dados que pode impactar o desempenho do modelo?
-O desbalanceamento das features nível de exercício e fumante, como pontuado anteriormente, pode afetar a qualidade do modelo.
+A distribuição não igualitária das features nível de exercício e fumante chamou nossa atenção, e pode afetar a qualidade do modelo. 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
 <!-- Fim da resposta -->
@@ -488,17 +478,7 @@ features_continuas <- c("Consumo.Sal", "Duracao.Sono", "IMC")
 features_categoricas <- c(
   "Historico.Familiar",
   "Fumante",
-  "Nivel.de.Estresse0",
-  "Nivel.de.Estresse1",
-  "Nivel.de.Estresse2",
-  "Nivel.de.Estresse3",
-  "Nivel.de.Estresse4",
-  "Nivel.de.Estresse5",
-  "Nivel.de.Estresse6",
-  "Nivel.de.Estresse7",
-  "Nivel.de.Estresse8",
-  "Nivel.de.Estresse9",
-  "Nivel.de.Estresse10",
+  "Nivel.de.Estresse",
   
   "Historico.Pressao.ArterialHipertensao",
   "Historico.Pressao.ArterialNormal",
@@ -512,7 +492,7 @@ hypothesis <- getHypothesis(features_continuas, features_categoricas, target = "
 hypothesis
 
 # Treinamento    
-model <- glmnet(train_data[,1:22], train_data$Risco.Hipertensao, family = "binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
+model <- glmnet(train_data[,1:12], train_data$Risco.Hipertensao, family = "binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
 print(model$beta)
 print(model$a0)
 
@@ -523,8 +503,8 @@ y_train <- train_data$class
 x_valid <- model.matrix(hypothesis, data=valid_data)
 y_valid <- valid_data$class
 
-train_pred <- predict(model, newx=x_train[,1:22], type="response")
-valid_pred <- predict(model, newx=x_valid[,1:22], type="response")
+train_pred <- predict(model, newx=x_train[,1:12], type="response")
+valid_pred <- predict(model, newx=x_valid[,1:12], type="response")
 
 # De acordo com Threshold = 0.5, atribui valor previsto como verdadeiro ou falso 
 train_class_pred <- train_pred
@@ -576,8 +556,8 @@ results_baseline
 2.1 – O modelo baseline foi suficiente para resolver o problema? Quais métricas de avaliação vocês utilizaram para justificar a resposta?
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 Para o o problema de predizer o risco de hipertensão de uma pessoa, podemos dizer que é melhor termos uma grande quantidade de falsos positivos do que falsos negativos. Ou seja, não devemos deixar passar pessoas com risco, é melhor que o modelo diga que uma pessoa deve se cuidar mais, fazer exercícios, cuidar da alimentação e buscar exames para confirmar o risco de hipertensão, do que sugerir o contrário e a pessoa ter risco. Logo o modelo deve ser avaliado de acordo com a métrica que é penalizada pela quantidade de falsos negativos, que é o Recall.
-Levando isso em consideração, no conjunto de treinamento tivemos cerca de 77% de recall. O percentual caiu para 78% na validação, o que nos permite inferir que não ocorreu overfitting  no modelo. A precisão ficou em torno de 55%, superior ao recall, mas não vamos nos precupar com essa métrica, pois ela penaliza a presença de falsos positivos - e como dito anteriormente, não temos que temer dizer que uma pessoa tem risco quando na verdade não tem.
-Com esses desempenho o modelo se mostra capaz de prever bem os casos possível de hipertensão, mas ainda podemos melhorar o modelo para que o recall melhore e passemos a classificar corretamente os indivíduos com maior risco.
+Levando isso em consideração, no conjunto de treinamento tivemos cerca de 95,5% de recall, o que é um ótimo resultado, pois estamos deixando de mostrar o risco de hipertensão para apenas 4,5% das pessoas. Foi observado um percentual de 96% na validação, o que nos permite inferir a presença overfitting  no modelo. Para as demais métricas o resultado no conjunto de validação foi melhor do que no de treino, o que nos permite confirmas ocorrência do overfitting. A precisão ficou em torno de 55%, mas não vamos nos precupar com essa métrica, pois ela penaliza a presença de falsos positivos - e como dito anteriormente, não temos que temer dizer que uma pessoa tem risco quando na verdade não tem.
+Com esse desempenho o modelo se mostra capaz de prever bem os casos possível de hipertensão, mas ainda podemos melhorar o modelo para que deixe de estar em overfitting. Além disso, embora não seja o nosso objetivo, podemos melhorar a precisão do modelo, para que passemos a termos menos falsos positivos (o que penaliza a precisão do modelo). 
 <!-- Fim da resposta -->
 
 # Tarefa 3 -- Soluções alternativas da Regressão Logística
@@ -588,7 +568,7 @@ Implementem soluções alternativas baseadas em regressão logística, seja atra
 
 ```{r}
 # Calculando a matriz de correlação
-matriz_correlacao <- cor(train_data[,1:4][ , 1:(ncol(train_data[,1:4]) - 1)])
+matriz_correlacao <- cor(train_data[,1:5][ , 1:(ncol(train_data[,1:5]) - 1)])
 
 # Ajusta o tamanho do texto para todos os elementos do gráfico
 par(cex = 0.8)            
@@ -629,7 +609,7 @@ matriz_cramer
 ```
 
 ```{r atv3-code}
-# Hipóteses alternativas
+# Hipóteses alternativas - polinomial
 hypothesis_grau1 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",1)
 hypothesis_grau1
 
@@ -651,10 +631,10 @@ hypothesis_grau6
 # Treinamento
 formulas <- c(hypothesis_grau1, hypothesis_grau2, hypothesis_grau3, hypothesis_grau4, hypothesis_grau5, hypothesis_grau6)
 
-PrecisionPerCombination <- data.frame(combination=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
-RecallPerCombination <- data.frame(combination=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
-LossPerCombination <- data.frame(combination=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
-F1PerCombination  <- data.frame(combination=numeric(6), TrainF1=numeric(6), ValidF1=numeric(6))
+PrecisionPorGraus <- data.frame(graus=numeric(6), Precision=numeric(6), Precision=numeric(6))
+RecallPorGraus <- data.frame(graus=numeric(6), Recall=numeric(6), Recall=numeric(6))
+LossPorGraus <- data.frame(graus=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
+F1PorGraus  <- data.frame(graus=numeric(6), TrainF1=numeric(6), ValidF1=numeric(6))
 
 i <- 1
 for(hypothesis in formulas){  
@@ -667,11 +647,11 @@ for(hypothesis in formulas){
   y_valid <- valid_data$class
   
   # Treinamento do modelo
-  model <- glmnet(train_data[,1:22], train_data$Risco.Hipertensao, family = "binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
+  model <- glmnet(train_data[,1:12], train_data$Risco.Hipertensao, family = "binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
   
   # Predicao do modelo
-  train_pred <- predict(model, newx=x_train[,1:22], type="response")
-  valid_pred <- predict(model, newx=x_valid[,1:22], type="response")
+  train_pred <- predict(model, newx=x_train[,1:12], type="response")
+  valid_pred <- predict(model, newx=x_valid[,1:12], type="response")
   
   # Transformaçao das predicoes em classes
   train_class_pred                    <- train_pred
@@ -701,47 +681,45 @@ for(hypothesis in formulas){
   valid_metrics = calculateMetrics(valid_cm$table)
   
   
-  PrecisionPerCombination[i,]  <- c(i, train_metrics["Precision"], valid_metrics["Precision"]) 
-  RecallPerCombination[i,]  <- c(i, train_metrics["Recall"], valid_metrics["Recall"]) 
-  LossPerCombination[i,] <- c(i, train_losses["AverageLoss"], valid_losses["AverageLoss"])
-  F1PerCombination[i,]  <- c(i, train_metrics["F1"], valid_metrics["F1"]) 
+  PrecisionPorGraus[i,]  <- c(i, train_metrics["Precision"], valid_metrics["Precision"]) 
+  RecallPorGraus[i,]  <- c(i, train_metrics["Recall"], valid_metrics["Recall"]) 
+  LossPorGraus[i,] <- c(i, train_losses["AverageLoss"], valid_losses["AverageLoss"])
+  F1PorGraus[i,]  <- c(i, train_metrics["F1"], valid_metrics["F1"]) 
   
   i <- i + 1
 }
 # Curva de viés e variância
 # Gráfico da Precisão
-PrecisionPerCombinationMelt <- melt(PrecisionPerCombination, id="combination") 
-p <- ggplot(data=PrecisionPerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+PrecisionPorGrausMelt <- melt(PrecisionPorGraus, id="graus") 
+p <- ggplot(data=PrecisionPorGrausMelt, aes(x=graus, y=value, colour=variable)) + geom_line() + geom_point()
 
-p <- p + ggtitle("Curva vies/variancia") + ylab("Precision") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+p <- p + ggtitle("Curva vies/variancia") + ylab("Precision") + scale_x_discrete(name ="graus", limits=as.character(1:length(formulas)))
 
 p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 
 # Gráfico da Recall
-RecallPerCombinationMelt <- melt(RecallPerCombination, id="combination") 
-p <- ggplot(data=RecallPerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+RecallPorGrausMelt <- melt(RecallPorGraus, id="graus") 
+p <- ggplot(data=RecallPorGrausMelt, aes(x=graus, y=value, colour=variable)) + geom_line() + geom_point()
 
-p <- p + ggtitle("Curva vies/variancia") + ylab("Recall") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+p <- p + ggtitle("Curva vies/variancia") + ylab("Recall") + scale_x_discrete(name ="graus", limits=as.character(1:length(formulas)))
 
 p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 
 # Gráfico da Loss
-LossPerCombinationMelt <- melt(LossPerCombination, id="combination") 
-p <- ggplot(data=LossPerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+LossPorGrausMelt <- melt(LossPorGraus, id="graus") 
+p <- ggplot(data=LossPorGrausMelt, aes(x=graus, y=value, colour=variable)) + geom_line() + geom_point()
 
-p <- p + ggtitle("Curva vies/variancia") + ylab("Loss") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+p <- p + ggtitle("Curva vies/variancia") + ylab("Loss") + scale_x_discrete(name ="graus", limits=as.character(1:length(formulas)))
 
 p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 
 # Gráfico da Acurácia
-F1PerCombinationMelt <- melt(F1PerCombination, id="combination")  # convert to long format
-p <- ggplot(data=F1PerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+F1PorGrausMelt <- melt(F1PorGraus, id="graus")  # convert to long format
+p <- ggplot(data=F1PorGrausMelt, aes(x=graus, y=value, colour=variable)) + geom_line() + geom_point()
 
-p <- p + ggtitle("Curva vies/variancia") + ylab("F1") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+p <- p + ggtitle("Curva vies/variancia") + ylab("F1") + scale_x_discrete(name ="graus", limits=as.character(1:length(formulas)))
 
 p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
-
-# Métricas de avaliação
 
 ```
 
