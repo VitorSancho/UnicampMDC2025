@@ -193,6 +193,7 @@ library(corrplot)
 library(rpart)        # Árvore de decisão
 library(rpart.plot)   # Visualização de árvores de decisão
 library(randomForest) # Random Forest
+library(reshape2) 
 
 set.seed(42)
 ```
@@ -788,15 +789,76 @@ Treinem um modelo *baseline 2* de árvore de decisão **todas as features dispon
 ```{r atv5-code}
 # Treinamento    
 
+# não precisamos de one-hot encoding para treinar a árvore de decisão
+summary(treino_normalizado)
 
+baseline2 <- rpart(Risco.Hipertensao ~ Consumo.Sal + Nivel.de.Estresse + 
+                      Historico.Pressao.Arterial + Duracao.Sono + IMC +
+                      Historico.Familiar + Nivel.Exercicio + Fumante, 
+                    data=treino_normalizado,
+                    method="class",
+                    control=rpart.control(minsplit=2, cp=0.0, xval=10),
+                    parms=list(split="gini"))
 
 # Avaliação do Modelo 
 
+print(baseline2$cptable)
+print(baseline2$variable.importance)
+
 ```
+Avaliando o modelo Baseline 2 (árvore de decisão):
+
+
+```{r}
+# Predicao do modelo
+baseline2_train_pred <- predict(baseline2, treino_normalizado, type="class")
+baseline2_valid_pred <- predict(baseline2, validacao_normalizado, type="class")
+
+# gera o Loss para as bases de treino e validação
+baseline2_train_losses <- getLoss(treino_normalizado$Risco.Hipertensao, baseline2_train_pred)
+baseline2_valid_losses <- getLoss(validacao_normalizado$Risco.Hipertensao, baseline2_valid_pred)
+
+# Calcula a matriz de confusão
+baseline2_train_cm <- confusionMatrix(data=as.factor(baseline2_train_pred), 
+                      reference=as.factor(treino_normalizado$Risco.Hipertensao), 
+                      positive='1')
+
+baseline2_valid_cm <- confusionMatrix(data=as.factor(baseline2_valid_pred), 
+                      reference=as.factor(validacao_normalizado$Risco.Hipertensao), 
+                      positive='1')
+
+
+# Calculando as métricas para o conjunto de treino
+baseline2_train_metrics = calculateMetrics(baseline2_train_cm$table)
+
+# Calculando as métricas para o conjunto de validação
+baseline2_valid_metrics = calculateMetrics(baseline2_valid_cm$table)
+
+# Organizando os resultados em um dataframe
+results_baseline2 <- data.frame(
+  Train  = baseline2_train_metrics,
+  Valid  = baseline2_valid_metrics
+)
+
+# Formatando os resultados para melhor leitura
+results_baseline2$Train <- as.numeric(results_baseline2$Train)
+results_baseline2$Valid <- as.numeric(results_baseline2$Valid)
+
+# Evitando notação científica na exibição dos resultados
+results_baseline2$Train <- format(results_baseline2$Train, scientific = FALSE)
+results_baseline2$Valid <- format(results_baseline2$Valid, scientific = FALSE)
+
+# Exibindo os resultados
+results_baseline2
+```
+
+
 
 5.1 – O modelo *baseline 2* foi suficiente para resolver o problema? Quais métricas de avaliação vocês utilizaram para justificar a resposta?
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+
+Apesar de, em termos absolutos, um resultado de Acurácia Balanceada 84% na validação parecer bom, ao comparar com o conjunto de treinamento, e considerando também a profundidade e quantidade de nós no modelo baseline2, tudo indica que estamos num cenário de overfitting, e a performance no mundo real poderia ser bem menor. 
 
 <!-- Fim da resposta -->
 
