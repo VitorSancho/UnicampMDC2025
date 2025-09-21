@@ -570,6 +570,52 @@ Levando isso em consideração, no conjunto de treinamento tivemos certa de 77% 
 
 Implementem soluções alternativas baseadas em regressão logística, seja através da combinação das *features* **ou** de modelos polinomiais para melhorar o resultado do *baseline*. Comparem suas soluções reportando métricas de interesse no **conjunto de validação**.
 
+# Analisando correlação entre features para features continuas
+
+```{r}
+library(corrplot)
+
+# Calculando a matriz de correlação
+matriz_correlacao <- cor(train_data[,1:4][ , 1:(ncol(train_data[,1:4]) - 1)])
+
+# Ajusta o tamanho do texto para todos os elementos do gráfico
+par(cex = 0.8)            
+
+# Plota a matriz de correlação diretamente
+corrplot(matriz_correlacao, 
+         method = "color", 
+         type = "upper",
+         addCoef.col = "black", 
+         tl.col = "black", 
+         tl.srt = 45,           # ângulo dos labels
+         number.cex = 0.8)      # tamanho do texto dos coeficientes
+
+
+```
+# Analisando correlação entre features para features discretas
+
+```{r}
+# Instalar o pacote se ainda não tiver
+# install.packages("vcd")
+
+categoricas <- dados_treino[, c("Fumante", "Nivel.Exercicio", "Nivel.de.Estresse", "Historico.Familiar","Historico.Pressao.Arterial","Risco.Hipertensao")]
+
+# Função para calcular Cramér's V entre duas variáveis
+cramers_v <- function(x, y) {
+  tbl <- table(x, y)
+  assocstats(tbl)$cramer
+}
+
+# Matriz de Cramér's V
+matriz_cramer <- outer(1:ncol(categoricas), 1:ncol(categoricas), 
+                       Vectorize(function(i,j) cramers_v(categoricas[,i], categoricas[,j])))
+colnames(matriz_cramer) <- colnames(categoricas)
+rownames(matriz_cramer) <- colnames(categoricas)
+
+matriz_cramer
+
+```
+
 ```{r atv3-code}
 # Hipóteses alternativas
 
@@ -582,6 +628,7 @@ Implementem soluções alternativas baseadas em regressão logística, seja atra
 ```
 
 3.1 – Quais foram os critérios utilizados para selecionar a técnica alternativa?
+Fizemos a análise de correlação entre as features contínuas e as discretas. Nas duas não foi possível observar uma forte correlação entre 2 ou mais features. Por isso não pudemos agrupar e assim reduzir o total de features do modelo.
 
 3.2 – Alguma combinação gerou um impacto positivo ou negativo significativo no desempenho do modelo? Por quê?
 
