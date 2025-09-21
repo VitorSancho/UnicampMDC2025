@@ -814,9 +814,9 @@ Avaliando o modelo Baseline 2 (árvore de decisão):
 baseline2_train_pred <- predict(baseline2, treino_normalizado, type="class")
 baseline2_valid_pred <- predict(baseline2, validacao_normalizado, type="class")
 
-# gera o Loss para as bases de treino e validação
-baseline2_train_losses <- getLoss(treino_normalizado$Risco.Hipertensao, baseline2_train_pred)
-baseline2_valid_losses <- getLoss(validacao_normalizado$Risco.Hipertensao, baseline2_valid_pred)
+# # gera o Loss para as bases de treino e validação
+# baseline2_train_losses <- getLoss(treino_normalizado$Risco.Hipertensao, baseline2_train_pred)
+# baseline2_valid_losses <- getLoss(validacao_normalizado$Risco.Hipertensao, baseline2_valid_pred)
 
 # Calcula a matriz de confusão
 baseline2_train_cm <- confusionMatrix(data=as.factor(baseline2_train_pred), 
@@ -858,7 +858,7 @@ results_baseline2
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
-Apesar de, em termos absolutos, um resultado de Acurácia Balanceada 84% na validação parecer bom, ao comparar com o conjunto de treinamento, e considerando também a profundidade e quantidade de nós no modelo baseline2, tudo indica que estamos num cenário de overfitting, e a performance no mundo real poderia ser bem menor. 
+O modelo baseline 2 parece bom no conjunto de validação, pois atinge uma Acurácia Balanceada de 84,5%. No entanto, ao comparar com o erro de treinamento e considerando também a profundidade e quantidade de nós no modelo baseline 2, tudo indica que estamos na realidade num cenário de overfitting, e a performance no mundo real poderia ser bem menor.
 
 <!-- Fim da resposta -->
 
@@ -869,9 +869,63 @@ Treinem árvores de decisão variando a profundidade máxima. Mostrem a curva de
 ```{r atv6-code}
 # Busca de hiperparâmetros
 
+depths <- 1:20
+
+AccPerDepth  <- data.frame(depth=length(depths), TrainAcc=length(depths), ValidAcc=length(depths))
+F1PerDepth  <- data.frame(depth=length(depths), TrainF1=length(depths), ValidF1=length(depths))
+
+for(i in depths){
+  depth_tree_model <- rpart(Risco.Hipertensao ~ Consumo.Sal + Nivel.de.Estresse + 
+                      Historico.Pressao.Arterial + Duracao.Sono + IMC +
+                      Historico.Familiar + Nivel.Exercicio + Fumante, 
+                    data=treino_normalizado,
+                    method="class",
+                    control=rpart.control(minsplit=2, cp=0.0, xval=10, maxdepth=i),
+                    parms=list(split="gini"))
+  
+  depth_train_pred <- predict(depth_tree_model, treino_normalizado, type="class")
+  depth_valid_pred <- predict(depth_tree_model, validacao_normalizado, type="class")
+
+  # Calcula a matriz de confusão
+  depth_train_cm <- confusionMatrix(data=as.factor(depth_train_pred), 
+                        reference=as.factor(treino_normalizado$Risco.Hipertensao), 
+                        positive='1')
+  
+  depth_valid_cm <- confusionMatrix(data=as.factor(depth_valid_pred), 
+                        reference=as.factor(validacao_normalizado$Risco.Hipertensao), 
+                        positive='1')
+  
+  
+  # Calculando as métricas para o conjunto de treino
+  depth_train_metrics = calculateMetrics(depth_train_cm$table)
+  
+  # Calculando as métricas para o conjunto de validação
+  depth_valid_metrics = calculateMetrics(depth_valid_cm$table)
+  
+  AccPerDepth[i,]  <- c(i, depth_train_metrics["BalAcc"], depth_valid_metrics["BalAcc"])
+  F1PerDepth[i,]  <- c(i, depth_train_metrics["F1"], depth_valid_metrics["F1"])
+  
+}
+
+
 # Treinamento
 
 # Curva de viés e variância
+
+AccPerDepthMelt <- melt(AccPerDepth, id="depth")
+p_acc <- ggplot(data=AccPerDepthMelt, aes(x=depth, y=value, colour=variable)) + geom_line() + geom_point()
+
+p_acc <- p_acc + ggtitle("Curva vies/variancia") + ylab("Acurácia Balanceada") + scale_x_discrete(name="Profundidade", limits=as.character(1:20))
+
+p_acc + theme(legend.position = c(0.2, 0.1), legend.title = element_blank())
+
+F1PerDepthMelt <- melt(F1PerDepth, id="depth")
+p_f1 <- ggplot(data=F1PerDepthMelt, aes(x=depth, y=value, colour=variable)) + geom_line() + geom_point()
+
+p_f1 <- p_f1 + ggtitle("Curva vies/variancia") + ylab("F1-Score") + scale_x_discrete(name="Profundidade", limits=as.character(1:20))
+
+p_f1 + theme(legend.position = c(0.2, 0.1), legend.title = element_blank())
+
 
 # Métricas de avaliação
 
@@ -879,11 +933,25 @@ Treinem árvores de decisão variando a profundidade máxima. Mostrem a curva de
 
 6.1 – Como a profundidade afetou o desempenho do modelo?
 
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+Conforme aumentamos a profundidade máxima permitida para a árvore, vimos a acurácia no conjunto de treinamento aumentar continuamente, acompanhada da acurácia de validação. Este comportamento persiste até por volta da profundidade 5, aonde notamos um afastamento constante da acurácia de treinamento, que chega a 1 para a de validação, que gravita em torno do valor 0.85, sugerindo overfitting.
+
+<!-- Fim da resposta -->
+
 6.2 – Houve um ponto ótimo onde o erro foi minimizado? Como vocês identificaram esse ponto?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+Ao comparar as curvas para o F1-score e Acurácia Balanceada, vemos os comportamentos se repetindo, onde ambas as métricas melhoram até a profundidade 5 e, a partir disso, a métrica na validação se estabiliza enquanto a métrica de treinamento continua aumentando até 100%, sugerindo que 5 seria uma profundidade ideal para não ter underfitting nem overfitting.
+
+<!-- Fim da resposta -->
 
 6.3 – Em quais regiões da curva de viés e variância foi possível identificar *underfitting* e *overfitting*?
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+
+O comportamento das curvas sugere que nas profundidades 1, 2 e 3 estaríamos ainda em underfitting, pois a métrica aumenta consideravelmente de um passo para o outro. Entre os niveis 4 e 5 já vemos uma mudança mais estável na métrica, sugerindo um fit ideal, com 5 sendo o ponto máximo, aonde poderíamos ter a melhor performance no mundo real (métrica de validação máxima). Da profundidade 5 em diante, já estamos em overfitting, pois nota-se uma queda acentuada na métrica de validação, com aumento constante da métrica de treino.
 
 <!-- Fim da resposta -->
 
