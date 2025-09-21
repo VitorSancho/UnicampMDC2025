@@ -618,6 +618,20 @@ matriz_cramer
 
 ```{r atv3-code}
 # Hipóteses alternativas
+hypothesis_grau2 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",2)
+hypothesis_grau2
+
+hypothesis_grau3 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",3)
+hypothesis_grau3
+
+hypothesis_grau4 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",4)
+hypothesis_grau4
+
+hypothesis_grau5 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",5)
+hypothesis_grau5
+
+hypothesis_grau6 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",6)
+hypothesis_grau6
 
 # Treinamento
 
