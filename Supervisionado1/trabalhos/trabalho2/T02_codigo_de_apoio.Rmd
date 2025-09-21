@@ -537,9 +537,9 @@ results_baseline
 ```
 
 2.1 – O modelo baseline foi suficiente para resolver o problema? Quais métricas de avaliação vocês utilizaram para justificar a resposta?
-
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
+Para o o problema de predizer o risco de hipertensão de uma pessoa, podemos dizer que é melhor termos uma grande quantidade de falsos positivos do que falsos negativos. Ou seja, não devemos deixar passar pessoas com risco, é melhor que o modelo diga que uma pessoa deve se cuidar mais, fazer exercícios, cuidar da alimentação e buscar exames para confirmar o risco de hipertensão, do que sugerir o contrário e a pessoa ter risco. Logo o modelo deve ser avaliado de acordo com a métrica que é penalizada pela quantidade de falsos negativos, que é o Recall.
+Levando isso em consideração, no conjunto de treinamento tivemos certa de 77% de recall. O percentual caiu para 68% na validação, não ocorrendo então um overfitting  no modelo. A precisão ficou em torno de 55%, mas não vamos nos precupar com essa métrica, pois ela penaliza a presença de falsos positivos - e como dito anteriormente, não temos que temer dizer que uma pessoa tem risco quando na verdade não tem.
 <!-- Fim da resposta -->
 
 # Tarefa 3 -- Soluções alternativas da Regressão Logística
