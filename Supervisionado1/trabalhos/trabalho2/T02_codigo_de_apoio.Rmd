@@ -187,6 +187,7 @@ library(ggplot2)
 # install.packages("glmnet")
 library(glmnet)
 library(caret)
+library(corrplot)
 #set.seed(...)
 ```
 
@@ -471,7 +472,31 @@ feature_names <- colnames(train_data)[1:(ncol(train_data) - 1)]
 
 valid_data <- valid_data[, c(setdiff(names(valid_data), coluna), coluna)]
 
-hypothesis <- getHypothesis(feature_names, 1, target = "Risco.Hipertensao")
+features_continuas <- c("Consumo.Sal", "Duracao.Sono", "IMC")
+features_categoricas <- c(
+  "Historico.Familiar",
+  "Fumante",
+  "Nivel.de.Estresse0",
+  "Nivel.de.Estresse1",
+  "Nivel.de.Estresse2",
+  "Nivel.de.Estresse3",
+  "Nivel.de.Estresse4",
+  "Nivel.de.Estresse5",
+  "Nivel.de.Estresse6",
+  "Nivel.de.Estresse7",
+  "Nivel.de.Estresse8",
+  "Nivel.de.Estresse9",
+  "Nivel.de.Estresse10",
+  
+  "Historico.Pressao.ArterialHipertensao",
+  "Historico.Pressao.ArterialNormal",
+  "Historico.Pressao.ArterialPre_hipertensao",
+  
+  "Nivel.ExercicioBaixo",
+  "Nivel.ExercicioModerado",
+  "Nivel.ExercicioAlto"
+)
+hypothesis <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao", 1)
 hypothesis
 
 # Treinamento    
@@ -539,25 +564,179 @@ results_baseline
 2.1 – O modelo baseline foi suficiente para resolver o problema? Quais métricas de avaliação vocês utilizaram para justificar a resposta?
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 Para o o problema de predizer o risco de hipertensão de uma pessoa, podemos dizer que é melhor termos uma grande quantidade de falsos positivos do que falsos negativos. Ou seja, não devemos deixar passar pessoas com risco, é melhor que o modelo diga que uma pessoa deve se cuidar mais, fazer exercícios, cuidar da alimentação e buscar exames para confirmar o risco de hipertensão, do que sugerir o contrário e a pessoa ter risco. Logo o modelo deve ser avaliado de acordo com a métrica que é penalizada pela quantidade de falsos negativos, que é o Recall.
-Levando isso em consideração, no conjunto de treinamento tivemos certa de 77% de recall. O percentual caiu para 68% na validação, não ocorrendo então um overfitting  no modelo. A precisão ficou em torno de 55%, mas não vamos nos precupar com essa métrica, pois ela penaliza a presença de falsos positivos - e como dito anteriormente, não temos que temer dizer que uma pessoa tem risco quando na verdade não tem.
+Levando isso em consideração, no conjunto de treinamento tivemos cerca de 77% de recall. O percentual caiu para 78% na validação, o que nos permite inferir que não ocorreu overfitting  no modelo. A precisão ficou em torno de 55%, superior ao recall, mas não vamos nos precupar com essa métrica, pois ela penaliza a presença de falsos positivos - e como dito anteriormente, não temos que temer dizer que uma pessoa tem risco quando na verdade não tem.
+Com esses desempenho o modelo se mostra capaz de prever bem os casos possível de hipertensão, mas ainda podemos melhorar o modelo para que o recall melhore e passemos a classificar corretamente os indivíduos com maior risco.
 <!-- Fim da resposta -->
 
 # Tarefa 3 -- Soluções alternativas da Regressão Logística
 
 Implementem soluções alternativas baseadas em regressão logística, seja através da combinação das *features* **ou** de modelos polinomiais para melhorar o resultado do *baseline*. Comparem suas soluções reportando métricas de interesse no **conjunto de validação**.
 
+# Analisando correlação entre features para features continuas
+
+```{r}
+library(corrplot)
+
+# Calculando a matriz de correlação
+matriz_correlacao <- cor(train_data[,1:4][ , 1:(ncol(train_data[,1:4]) - 1)])
+
+# Ajusta o tamanho do texto para todos os elementos do gráfico
+par(cex = 0.8)            
+
+# Plota a matriz de correlação diretamente
+corrplot(matriz_correlacao, 
+         method = "color", 
+         type = "upper",
+         addCoef.col = "black", 
+         tl.col = "black", 
+         tl.srt = 45,           # ângulo dos labels
+         number.cex = 0.8)      # tamanho do texto dos coeficientes
+
+
+```
+# Analisando correlação entre features para features discretas
+
+```{r}
+# Instalar o pacote se ainda não tiver
+# install.packages("vcd")
+
+categoricas <- dados_treino[, c("Fumante", "Nivel.Exercicio", "Nivel.de.Estresse", "Historico.Familiar","Historico.Pressao.Arterial","Risco.Hipertensao")]
+
+# Função para calcular Cramér's V entre duas variáveis
+cramers_v <- function(x, y) {
+  tbl <- table(x, y)
+  assocstats(tbl)$cramer
+}
+
+# Matriz de Cramér's V
+matriz_cramer <- outer(1:ncol(categoricas), 1:ncol(categoricas), 
+                       Vectorize(function(i,j) cramers_v(categoricas[,i], categoricas[,j])))
+colnames(matriz_cramer) <- colnames(categoricas)
+rownames(matriz_cramer) <- colnames(categoricas)
+
+matriz_cramer
+
+```
+
 ```{r atv3-code}
 # Hipóteses alternativas
+hypothesis_grau1 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",1)
+hypothesis_grau1
+
+hypothesis_grau2 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",2)
+hypothesis_grau2
+
+hypothesis_grau3 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",3)
+hypothesis_grau3
+
+hypothesis_grau4 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",4)
+hypothesis_grau4
+
+hypothesis_grau5 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",5)
+hypothesis_grau5
+
+hypothesis_grau6 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",6)
+hypothesis_grau6
 
 # Treinamento
+formulas <- c(hypothesis_grau1, hypothesis_grau2, hypothesis_grau3, hypothesis_grau4, hypothesis_grau5, hypothesis_grau6)
 
+PrecisionPerCombination <- data.frame(combination=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
+RecallPerCombination <- data.frame(combination=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
+LossPerCombination <- data.frame(combination=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
+F1PerCombination  <- data.frame(combination=numeric(6), TrainF1=numeric(6), ValidF1=numeric(6))
+
+i <- 1
+for(hypothesis in formulas){  
+  
+    # Preparar os dados de treinamento e validação
+  x_train <- model.matrix(hypothesis, train_data)
+  y_train <- train_data$class
+  
+  x_valid <- model.matrix(hypothesis, valid_data)
+  y_valid <- valid_data$class
+  
+  # Treinamento do modelo
+  model <- glmnet(train_data[,1:22], train_data$Risco.Hipertensao, family = "binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
+  
+  # Predicao do modelo
+  train_pred <- predict(model, newx=x_train[,1:22], type="response")
+  valid_pred <- predict(model, newx=x_valid[,1:22], type="response")
+  
+  # Transformaçao das predicoes em classes
+  train_class_pred                    <- train_pred
+  train_class_pred[train_pred >= 0.5] <- 1
+  train_class_pred[train_pred < 0.5]  <- 0
+  
+  valid_class_pred                    <- valid_pred
+  valid_class_pred[valid_pred >= 0.5] <- 1
+  valid_class_pred[valid_pred < 0.5]  <- 0
+  
+  # Calcula a loss dos dois conjuntos
+  train_losses <- getLoss(train_data$Risco.Hipertensao, train_pred)
+  valid_losses <- getLoss(valid_data$Risco.Hipertensao, valid_pred)
+
+  
+  # Calcula a matriz de confusão
+  train_cm <- confusionMatrix(data=as.factor(train_class_pred), 
+                        reference=as.factor(train_data$Risco.Hipertensao), 
+                        positive='1')
+  
+  valid_cm <- confusionMatrix(data=as.factor(valid_class_pred), 
+                        reference=as.factor(valid_data$Risco.Hipertensao), 
+                        positive='1')
+  
+  # Calcula mẽtrica de interesse
+  train_metrics = calculateMetrics(train_cm$table)
+  valid_metrics = calculateMetrics(valid_cm$table)
+  
+  
+  PrecisionPerCombination[i,]  <- c(i, train_metrics["Precision"], valid_metrics["Precision"]) 
+  RecallPerCombination[i,]  <- c(i, train_metrics["Recall"], valid_metrics["Recall"]) 
+  LossPerCombination[i,] <- c(i, train_losses["AverageLoss"], valid_losses["AverageLoss"])
+  F1PerCombination[i,]  <- c(i, train_metrics["F1"], valid_metrics["F1"]) 
+  
+  i <- i + 1
+}
 # Curva de viés e variância
+# Gráfico da Precisão
+PrecisionPerCombinationMelt <- melt(PrecisionPerCombination, id="combination") 
+p <- ggplot(data=PrecisionPerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("Precision") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico da Recall
+RecallPerCombinationMelt <- melt(RecallPerCombination, id="combination") 
+p <- ggplot(data=RecallPerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("Recall") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico da Loss
+LossPerCombinationMelt <- melt(LossPerCombination, id="combination") 
+p <- ggplot(data=LossPerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("Loss") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico da Acurácia
+F1PerCombinationMelt <- melt(F1PerCombination, id="combination")  # convert to long format
+p <- ggplot(data=F1PerCombinationMelt, aes(x=combination, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("F1") + scale_x_discrete(name ="Combination", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 
 # Métricas de avaliação
 
 ```
 
 3.1 – Quais foram os critérios utilizados para selecionar a técnica alternativa?
+Fizemos a análise de correlação entre as features contínuas e as discretas. Nas duas não foi possível observar uma forte correlação entre 2 ou mais features. Por isso não pudemos agrupar e assim reduzir o total de features do modelo.
 
 3.2 – Alguma combinação gerou um impacto positivo ou negativo significativo no desempenho do modelo? Por quê?
 
