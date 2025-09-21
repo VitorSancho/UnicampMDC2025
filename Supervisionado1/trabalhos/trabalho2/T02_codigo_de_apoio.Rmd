@@ -387,7 +387,7 @@ ggplot(validacao_normalizado, aes(x = Fumante, fill = Fumante)) +
   theme_minimal() +
   labs(title = "Distribuição por Fumante", x = "Fumante", y = "Contagem")
 
-ggplot(treino_normalizado, aes(x = Risco.Hipertensao, fill = Risco.Hipertensao)) +
+ggplot(validacao_normalizado, aes(x = Risco.Hipertensao, fill = Risco.Hipertensao)) +
   geom_bar() +
   theme_minimal() +
   labs(title = "Distribuição por Risco.Hipertensao", x = "Risco.Hipertensao", y = "Contagem")
