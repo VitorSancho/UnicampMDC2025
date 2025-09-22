@@ -676,7 +676,7 @@ for(hypothesis in formulas){
                         reference=as.factor(valid_data$Risco.Hipertensao), 
                         positive='1')
   
-  # Calcula mẽtrica de interesse
+  # Calcula métrica de interesse
   train_metrics = calculateMetrics(train_cm$table)
   valid_metrics = calculateMetrics(valid_cm$table)
   
@@ -781,53 +781,59 @@ baseline2 <- rpart(Risco.Hipertensao ~ Consumo.Sal + Nivel.de.Estresse +
 # Avaliação do Modelo 
 
 print(baseline2$cptable)
-print(baseline2$variable.importance)
-
 ```
 Avaliando o modelo Baseline 2 (árvore de decisão):
 
 
 ```{r}
 # Predicao do modelo
-baseline2_train_pred <- predict(baseline2, treino_normalizado, type="class")
-baseline2_valid_pred <- predict(baseline2, validacao_normalizado, type="class")
 
-# # gera o Loss para as bases de treino e validação
-# baseline2_train_losses <- getLoss(treino_normalizado$Risco.Hipertensao, baseline2_train_pred)
-# baseline2_valid_losses <- getLoss(validacao_normalizado$Risco.Hipertensao, baseline2_valid_pred)
+getModelMetrics <- function(model, training_set, validation_set){
+  model_train_pred <- predict(model, training_set, type="class")
+  model_valid_pred <- predict(model, validacao_normalizado, type="class")
 
-# Calcula a matriz de confusão
-baseline2_train_cm <- confusionMatrix(data=as.factor(baseline2_train_pred), 
-                      reference=as.factor(treino_normalizado$Risco.Hipertensao), 
-                      positive='1')
+  # Calcula a matriz de confusão
+  train_cm <- confusionMatrix(data=as.factor(model_train_pred), 
+                        reference=as.factor(training_set$Risco.Hipertensao), 
+                        positive='1')
+  
+  valid_cm <- confusionMatrix(data=as.factor(model_valid_pred), 
+                        reference=as.factor(validation_set$Risco.Hipertensao), 
+                        positive='1')
+  
+  
+  # Calculando as métricas para o conjunto de treino
+  train_metrics = calculateMetrics(train_cm$table)
+  
+  # Calculando as métricas para o conjunto de validação
+  valid_metrics = calculateMetrics(valid_cm$table)
+  
+  # Organizando os resultados em um dataframe
+  results <- data.frame(
+    Train  = train_metrics,
+    Valid  = valid_metrics
+  )
+  
+  # Formatando os resultados para melhor leitura
+  results$Train <- as.numeric(results$Train)
+  results$Valid <- as.numeric(results$Valid)
+  
+  # Evitando notação científica na exibição dos resultados
+  results$Train <- format(results$Train, scientific = FALSE)
+  results$Valid <- format(results$Valid, scientific = FALSE)
+  
+  # Exibindo os resultados
+  list(train_cm=getRelativeConfusionMatrix(train_cm),
+       valid_cm=getRelativeConfusionMatrix(valid_cm),
+       metrics=results
+  )
+}
 
-baseline2_valid_cm <- confusionMatrix(data=as.factor(baseline2_valid_pred), 
-                      reference=as.factor(validacao_normalizado$Risco.Hipertensao), 
-                      positive='1')
 
-
-# Calculando as métricas para o conjunto de treino
-baseline2_train_metrics = calculateMetrics(baseline2_train_cm$table)
-
-# Calculando as métricas para o conjunto de validação
-baseline2_valid_metrics = calculateMetrics(baseline2_valid_cm$table)
-
-# Organizando os resultados em um dataframe
-results_baseline2 <- data.frame(
-  Train  = baseline2_train_metrics,
-  Valid  = baseline2_valid_metrics
-)
-
-# Formatando os resultados para melhor leitura
-results_baseline2$Train <- as.numeric(results_baseline2$Train)
-results_baseline2$Valid <- as.numeric(results_baseline2$Valid)
-
-# Evitando notação científica na exibição dos resultados
-results_baseline2$Train <- format(results_baseline2$Train, scientific = FALSE)
-results_baseline2$Valid <- format(results_baseline2$Valid, scientific = FALSE)
-
-# Exibindo os resultados
-results_baseline2
+baseline2_metrics <- getModelMetrics(baseline2, treino_normalizado, validacao_normalizado)
+baseline2_metrics$train_cm
+baseline2_metrics$valid_cm
+baseline2_metrics$metrics
 ```
 
 
@@ -847,57 +853,73 @@ Treinem árvores de decisão variando a profundidade máxima. Mostrem a curva de
 ```{r atv6-code}
 # Busca de hiperparâmetros
 
-depths <- 1:20
+depthSearch <- function(formula, training_set, validation_set, max_depth = 20){
+  depths <- 1:20
+  
+  AccPerDepth  <- data.frame(depth=length(depths), 
+                             TrainAcc=length(depths), ValidAcc=length(depths))
+  F1PerDepth  <- data.frame(depth=length(depths), 
+                            TrainF1=length(depths), ValidF1=length(depths))
+  RecallPerDepth  <- data.frame(depth=length(depths), 
+                              TrainRec=length(depths), ValidRec=length(depths))
+  PrecisionPerDepth  <- data.frame(depth=length(depths), 
+                            TrainPrec=length(depths), ValidPrec=length(depths))
 
-AccPerDepth  <- data.frame(depth=length(depths), TrainAcc=length(depths), ValidAcc=length(depths))
-F1PerDepth  <- data.frame(depth=length(depths), TrainF1=length(depths), ValidF1=length(depths))
 
-for(i in depths){
-  depth_tree_model <- rpart(Risco.Hipertensao ~ Consumo.Sal + Nivel.de.Estresse + 
-                      Historico.Pressao.Arterial + Duracao.Sono + IMC +
-                      Historico.Familiar + Nivel.Exercicio + Fumante, 
-                    data=treino_normalizado,
-                    method="class",
-                    control=rpart.control(minsplit=2, cp=0.0, xval=10, maxdepth=i),
-                    parms=list(split="gini"))
+  for(i in depths){
+    depth_tree_model <- rpart(formula, 
+                      data=training_set,
+                      method="class",
+                      control=rpart.control(minsplit=2, cp=0.0, xval=10, maxdepth=i),
+                      parms=list(split="gini"))
+    
+    depth_train_pred <- predict(depth_tree_model, training_set, type="class")
+    depth_valid_pred <- predict(depth_tree_model, validation_set, type="class")
   
-  depth_train_pred <- predict(depth_tree_model, treino_normalizado, type="class")
-  depth_valid_pred <- predict(depth_tree_model, validacao_normalizado, type="class")
-
-  # Calcula a matriz de confusão
-  depth_train_cm <- confusionMatrix(data=as.factor(depth_train_pred), 
-                        reference=as.factor(treino_normalizado$Risco.Hipertensao), 
-                        positive='1')
-  
-  depth_valid_cm <- confusionMatrix(data=as.factor(depth_valid_pred), 
-                        reference=as.factor(validacao_normalizado$Risco.Hipertensao), 
-                        positive='1')
-  
-  
-  # Calculando as métricas para o conjunto de treino
-  depth_train_metrics = calculateMetrics(depth_train_cm$table)
-  
-  # Calculando as métricas para o conjunto de validação
-  depth_valid_metrics = calculateMetrics(depth_valid_cm$table)
-  
-  AccPerDepth[i,]  <- c(i, depth_train_metrics["BalAcc"], depth_valid_metrics["BalAcc"])
-  F1PerDepth[i,]  <- c(i, depth_train_metrics["F1"], depth_valid_metrics["F1"])
-  
+    # Calcula a matriz de confusão
+    depth_train_cm <- confusionMatrix(data=as.factor(depth_train_pred), 
+                          reference=as.factor(training_set$Risco.Hipertensao), 
+                          positive='1')
+    
+    depth_valid_cm <- confusionMatrix(data=as.factor(depth_valid_pred), 
+                          reference=as.factor(validation_set$Risco.Hipertensao), 
+                          positive='1')
+    
+    
+    # Calculando as métricas para o conjunto de treino
+    depth_train_metrics = calculateMetrics(depth_train_cm$table)
+    
+    # Calculando as métricas para o conjunto de validação
+    depth_valid_metrics = calculateMetrics(depth_valid_cm$table)
+    
+    AccPerDepth[i,]  <- c(i, depth_train_metrics["BalAcc"], depth_valid_metrics["BalAcc"])
+    F1PerDepth[i,]  <- c(i, depth_train_metrics["F1"], depth_valid_metrics["F1"])
+    RecallPerDepth[i,]  <- c(i, depth_train_metrics["Recall"], depth_valid_metrics["Recall"])
+    PrecisionPerDepth[i,]  <- c(i, depth_train_metrics["Precision"], depth_valid_metrics["Precision"])
+  }
+  list(BalAccuracy=AccPerDepth, Precision=PrecisionPerDepth, Recall=RecallPerDepth, F1=F1PerDepth)
 }
 
+
+metricsCurve <- depthSearch(
+              formula = Risco.Hipertensao ~ Consumo.Sal + Nivel.de.Estresse + 
+                        Historico.Pressao.Arterial + Duracao.Sono + IMC +
+                        Historico.Familiar + Nivel.Exercicio + Fumante,
+              treino_normalizado,
+              validacao_normalizado)
 
 # Treinamento
 
 # Curva de viés e variância
 
-AccPerDepthMelt <- melt(AccPerDepth, id="depth")
+AccPerDepthMelt <- melt(metricsCurve$BalAccuracy, id="depth")
 p_acc <- ggplot(data=AccPerDepthMelt, aes(x=depth, y=value, colour=variable)) + geom_line() + geom_point()
 
 p_acc <- p_acc + ggtitle("Curva vies/variancia") + ylab("Acurácia Balanceada") + scale_x_discrete(name="Profundidade", limits=as.character(1:20))
 
 p_acc + theme(legend.position = c(0.2, 0.1), legend.title = element_blank())
 
-F1PerDepthMelt <- melt(F1PerDepth, id="depth")
+F1PerDepthMelt <- melt(metricsCurve$F1, id="depth")
 p_f1 <- ggplot(data=F1PerDepthMelt, aes(x=depth, y=value, colour=variable)) + geom_line() + geom_point()
 
 p_f1 <- p_f1 + ggtitle("Curva vies/variancia") + ylab("F1-Score") + scale_x_discrete(name="Profundidade", limits=as.character(1:20))
@@ -907,6 +929,25 @@ p_f1 + theme(legend.position = c(0.2, 0.1), legend.title = element_blank())
 
 # Métricas de avaliação
 
+```
+Matriz de confusão do melhor modelo por profundidade
+
+```{r}
+
+
+optimal_depth_tree_model <- rpart(Risco.Hipertensao ~ Consumo.Sal + 
+                      Nivel.de.Estresse + Historico.Pressao.Arterial + 
+                      Duracao.Sono + IMC + Historico.Familiar + 
+                      Nivel.Exercicio + Fumante, 
+                    data=treino_normalizado,
+                    method="class",
+                    control=rpart.control(minsplit=2, cp=0.0, xval=10, maxdepth=5),
+                    parms=list(split="gini"))
+  
+optimal_depth_tree_metrics <- getModelMetrics(optimal_depth_tree_model, treino_normalizado, validacao_normalizado)
+optimal_depth_tree_metrics$train_cm
+optimal_depth_tree_metrics$valid_cm
+optimal_depth_tree_metrics$metrics
 ```
 
 6.1 – Como a profundidade afetou o desempenho do modelo?
@@ -940,14 +981,113 @@ Explorem pelo menos dois subconjuntos de *features* para treinar diferentes árv
 **Dica: observem a importância de cada *feature* por meio do atributo *variable.importance*.**
 
 ```{r atv7-code}
+print(baseline2$variable.importance)
+
 # Hipóteses alternativas
 
+alternativo_5melhores_formula <- Risco.Hipertensao ~ Consumo.Sal + Nivel.de.Estresse + 
+                  Historico.Pressao.Arterial + Duracao.Sono + IMC
+
+alternativo_3melhores_formula <- Risco.Hipertensao ~ Consumo.Sal + 
+              Historico.Pressao.Arterial + Duracao.Sono
+
+alternativo_5piores_formula <- Risco.Hipertensao ~ IMC + Nivel.Exercicio +
+              Nivel.de.Estresse + Fumante + Historico.Familiar
+
 # Treinamento
+
+
+alternativo_5melhores_model <- rpart(alternativo_5melhores_formula, 
+                    data=treino_normalizado,
+                    method="class",
+                    control=rpart.control(minsplit=2, cp=0.0, xval=10, maxdepth=10),
+                    parms=list(split="gini"))
+
+alternativo_3melhores_model <- rpart(alternativo_3melhores_formula, 
+                    data=treino_normalizado,
+                    method="class",
+                    control=rpart.control(minsplit=2, cp=0.0, xval=10, maxdepth=10),
+                    parms=list(split="gini"))
+
+alternativo_5piores_model <- rpart(alternativo_5piores_formula, 
+                    data=treino_normalizado,
+                    method="class",
+                    control=rpart.control(minsplit=2, cp=0.0, xval=10, maxdepth=10),
+                    parms=list(split="gini"))
+
+```
+
+Calculando métricas dos modelos alternativos
+
+
+```{r}
+
+alternativo_5melhores_metrics <- getModelMetrics(alternativo_5melhores_model, treino_normalizado, validacao_normalizado)
+alternativo_5melhores_metrics$train_cm
+alternativo_5melhores_metrics$valid_cm
+alternativo_5melhores_metrics$metrics
+
+```
+```{r}
+alternativo_3melhores_metrics <- getModelMetrics(alternativo_3melhores_model, treino_normalizado, validacao_normalizado)
+alternativo_3melhores_metrics$train_cm
+alternativo_3melhores_metrics$valid_cm
+alternativo_3melhores_metrics$metrics
+
+```
+```{r}
+
+alternativo_5piores_metrics <- getModelMetrics(alternativo_5piores_model, treino_normalizado, validacao_normalizado)
+alternativo_5piores_metrics$train_cm
+alternativo_5piores_metrics$valid_cm
+alternativo_5piores_metrics$metrics
+
+```
+
+Determinado que o modelo Alternativo com as 5 features mais importantes foi o que teve melhor performance na Acurácia Balanceada, exploraremos as variações do hiperparâmetro maxdepth neste mesmo modelo:
+
+```{r}
+
+
+metricsCurve_5melhores <- depthSearch(
+              formula = alternativo_5melhores_formula,
+              treino_normalizado,
+              validacao_normalizado)
+
+# Treinamento
+
+# Curva de viés e variância
+
+AccPerDepthMelt <- melt(metricsCurve$BalAccuracy, id="depth")
+p_acc <- ggplot(data=AccPerDepthMelt, aes(x=depth, y=value, colour=variable)) + geom_line() + geom_point()
+
+p_acc <- p_acc + ggtitle("Curva vies/variancia") + ylab("Acurácia Balanceada") + scale_x_discrete(name="Profundidade", limits=as.character(1:20))
+
+p_acc + theme(legend.position = c(0.2, 0.1), legend.title = element_blank())
 
 # Métricas de avaliação
 ```
 
+```{r}
+
+alternativo_5melhores_maxdepth_model <- rpart(alternativo_5melhores_formula, 
+                    data=treino_normalizado,
+                    method="class",
+                    control=rpart.control(minsplit=2, cp=0.0, xval=10, maxdepth=5),
+                    parms=list(split="gini"))
+
+alternativo_5melhores_maxdepth_metrics <- getModelMetrics(alternativo_5melhores_maxdepth_model, treino_normalizado, validacao_normalizado)
+alternativo_5melhores_maxdepth_metrics$train_cm
+alternativo_5melhores_maxdepth_metrics$valid_cm
+alternativo_5melhores_maxdepth_metrics$metrics
+
+```
+
 7.1 – Quais foram os critérios utilizados para selecionar a técnica alternativa?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
 
 7.2 – Alguma combinação gerou um impacto positivo ou negativo significativo no desempenho do modelo? Por quê?
 
