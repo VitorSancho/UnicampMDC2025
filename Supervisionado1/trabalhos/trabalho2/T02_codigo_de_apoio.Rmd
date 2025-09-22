@@ -1371,7 +1371,50 @@ Implementem manualmente um protocolo de *ensemble* (e.g., *Bagging*, *Pasting* o
 Após identificar o melhor modelo, utilizem-no para fazer previsões no conjunto de teste e avaliem o seu desempenho.
 
 ```{r atv10-code}
+# Ingestão de arquivo de teste
+dados_teste <- read.csv("T02_test_set.csv")
+
+if (any(is.na(dados_teste))) {
+  cat("Aviso: Existem valores ausentes no conjunto de teste\n")
+} else {
+  cat("Nenhum valor ausente encontrado no conjunto de teste\n")
+}
+
+# Avaliando dados presentes no data set
+# class(dados_teste$Consumo.Sal)
+# class(dados_teste$Nivel.de.Estresse)
+# class(dados_teste$Historico.Pressao.Arterial)
+# class(dados_teste$IMC)
+# class(dados_teste$Historico.Familiar)
+# class(dados_teste$Nivel.Exercicio)
+# class(dados_teste$Fumante)
+# class(dados_teste$Risco.Hipertensao)
+
+# summary(dados_teste)
+
+cols <- c(1, 2, 4, 5)  # índices das colunas numericas que vamos normalizar
+dados_teste_normalizado <- dados_teste
+dados_teste_normalizado[, cols] <- sweep(dados_teste[, cols], 2, min_features, "-")
+dados_teste_normalizado[, cols] <- sweep(dados_teste[, cols], 2, diff, "/")
+
+dados_para_encoding_teste <- dados_teste_normalizado
+
+dados_para_encoding_teste$Historico.Pressao.Arterial <- as.factor(dados_para_encoding_teste$Historico.Pressao.Arterial)
+one_hot <- model.matrix(~ Historico.Pressao.Arterial - 1, data = dados_para_encoding_teste)
+dados_para_encoding_teste <- cbind(dados_para_encoding_teste, one_hot)
+dados_para_encoding_teste$Historico.Pressao.Arterial <- NULL
+colnames(dados_para_encoding_teste) <- gsub("-", "_", colnames(dados_para_encoding_teste))
+
+dados_para_encoding_teste$Nivel.Exercicio <- as.factor(dados_para_encoding_teste$Nivel.Exercicio)
+one_hot <- model.matrix(~ Nivel.Exercicio - 1, data = dados_para_encoding_teste)
+dados_para_encoding_teste <- cbind(dados_para_encoding_teste, one_hot)
+dados_para_encoding_teste$Nivel.Exercicio <- NULL
+colnames(dados_para_encoding_teste) <- gsub("-", "_", colnames(dados_para_encoding_teste))
+
 # Predição no conjunto de teste
+# dados_teste_tratados <- dados_para_encoding_teste
+# melhor_modelo <- # PREENCHER COM O MELHOR MODELO ENCONTRADO
+# resultado_final <- getModelMetrics(melhor_modelo, treino_normalizado, dados_teste_normalizado)
 
 # Métricas de avaliação
 
