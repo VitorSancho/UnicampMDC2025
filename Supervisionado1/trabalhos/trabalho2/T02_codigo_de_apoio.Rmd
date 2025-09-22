@@ -1296,6 +1296,8 @@ p_acc + theme(legend.position = c(0.2, 0.1), legend.title = element_blank())
 # Métricas de avaliação
 ```
 
+Novamente, o melhor valor de maxdepth parece ser 5, então faremos uma simulação extra, com este hiperparâmetro calibrado para a melhor performance. 
+
 ```{r}
 
 alternativo_5melhores_maxdepth_model <- rpart(alternativo_5melhores_formula, 
@@ -1315,11 +1317,15 @@ alternativo_5melhores_maxdepth_metrics$metrics
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
+Usamos como critério a importância atribuída pelo processo de construção das árvores de decisão. Considerando essa informação, notamos que a Pressão Arterial é, de longe, o atributo mais importante para 
+
 <!-- Fim da resposta -->
 
 7.2 – Alguma combinação gerou um impacto positivo ou negativo significativo no desempenho do modelo? Por quê?
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+
+Todas as seleções alternativas pioraram a performance global do modelo. Em especial, a redução de Acurácia Balanceada mais notável foi a do modelo com as 5 "piores" features, como já era esperado. Com este modelo, tivemos uma redução na métrica de 86%, no modelo ótimo anterior, para 63%. Dentre os modelos alternativos, o que desempenhou melhor foi o com as 5 melhores features, mas sua performance ainda assim foi inferior, atingindo apenas 79% contra os 86% originais, mesmo após calibragem de profundidade máxima.
 
 <!-- Fim da resposta -->
 
@@ -1330,45 +1336,117 @@ Treinem *N* florestas aleatórias, variando o número de árvores. Mostrem a cur
 ```{r atv8-code}
 # Busca de hiperparâmetros
 
+treino_normalizado_rf <- treino_normalizado
+treino_normalizado_rf$Risco.Hipertensao <- as.factor(treino_normalizado_rf$Risco.Hipertensao)
+
+valid_normalizado_rf <- validacao_normalizado
+valid_normalizado_rf$Risco.Hipertensao <- as.factor(valid_normalizado_rf$Risco.Hipertensao)
+
+tree_count <- 1:20
+
+rf_acc <- data.frame(trees=length(tree_count), 
+                             TrainAcc=length(tree_count), ValidAcc=length(tree_count))
+
+rf_rec <- data.frame(trees=length(tree_count), 
+                             TrainRecall=length(tree_count), ValidRecall=length(tree_count))
+
 # Treinamento
+for(trees in tree_count){
+  rf_model <- randomForest(Risco.Hipertensao ~ ., 
+                         data = treino_normalizado_rf, 
+                         tree = trees,
+                         maxnodes = 21,
+                         mtry = 4) # metade da quantidade de features (floor)
+  
+  rf_train_pred <- predict(rf_model, treino_normalizado_rf, type="class")
+  rf_valid_pred <- predict(rf_model, valid_normalizado_rf, type="class")
 
-# Curva de viés e variância
+  # Calcula a matriz de confusão
+  rf_train_cm <- confusionMatrix(data=rf_train_pred, 
+                        reference=treino_normalizado_rf$Risco.Hipertensao, 
+                        positive='1')
+  
+  rf_valid_cm <- confusionMatrix(data=rf_valid_pred, 
+                        reference=valid_normalizado_rf$Risco.Hipertensao, 
+                        positive='1')
+  
+  
+  # Calculando as métricas para o conjunto de treino
+  rf_train_metrics = calculateMetrics(rf_train_cm$table)
+  
+  # Calculando as métricas para o conjunto de validação
+  rf_valid_metrics = calculateMetrics(rf_valid_cm$table)
+  
+  rf_acc[trees,]  <- c(trees, rf_train_metrics["BalAcc"], rf_valid_metrics["BalAcc"])
+  rf_rec[trees,]  <- c(trees, rf_train_metrics["Recall"], rf_valid_metrics["Recall"])
+}
 
-# Métricas de avaliação
+rf_acc_melt <- melt(rf_acc, id="trees")
+rf_gg_acc <- ggplot(data=rf_acc_melt, aes(x=trees, y=value, colour=variable)) + geom_line() + geom_point()
+
+rf_gg_acc <- rf_gg_acc + ggtitle("Curva vies/variancia") + ylab("Acurácia Balanceada") + scale_x_discrete(name="# de árvores", limits=as.character(1:20))
+
+rf_gg_acc + theme(legend.position = c(0.2, 0.1), legend.title = element_blank())
+
+
+rf_rec_melt <- melt(rf_rec, id="trees")
+rf_gg_rec <- ggplot(data=rf_rec_melt, aes(x=trees, y=value, colour=variable)) + geom_line() + geom_point()
+
+rf_gg_rec <- rf_gg_rec + ggtitle("Curva vies/variancia") + ylab("Recall") + scale_x_discrete(name="# de árvores", limits=as.character(1:20))
+
+rf_gg_rec + theme(legend.position = c(0.2, 0.1), legend.title = element_blank())
+
+```
+
+Avaliando a matriz de confusão para o modelo ótimo, com 10 árvores:
+
+```{r}
+
+optimal_rf_model <- randomForest(Risco.Hipertensao ~ ., 
+                         data = treino_normalizado_rf, 
+                         tree = 10,
+                         maxnodes = 21,
+                         mtry = 4) # metade da quantidade de features (floor)
+
+optimal_depth_tree_metrics <- getModelMetrics(optimal_rf_model, treino_normalizado_rf, valid_normalizado_rf)
+optimal_depth_tree_metrics$train_cm
+optimal_depth_tree_metrics$valid_cm
+optimal_depth_tree_metrics$metrics
 
 ```
 
 8.1 – Como a quantidade de árvores afetou o desempenho do modelo?
 
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+Ao treinar com o algoritmo padrão do pacote randomForest, notamos que a estratégia parecia estar causando overfitting logo de início, pois a acurácia de treinamento estava fixa em 100%, e com poucas variações na acurácia de validação. Isso era devido ao fato de não haver nenhuma restrição sobre a profundidade de cada árvore da floresta, então caíamos no problema visto no modelo original. Infelizmente, o pacote randomForest não expõe nenhum parametro para controlar diretamente a profundidade, então calculamos a quantidade de nós utilizados pela árvore de profundidade ideal que encontramos e utilizamos este valor (21) como uma aproximação para limitar a profundidade, como gostaríamos. Ao executar essa operação, conseguimos um comportamento mais normal da curva viés/variância, onde temos o número de árvores abaixo de 5 causando uma melhora na acurácia de treinamento, mas sem alterar a validação. Conforme aumentamos o valor, o efeito deste hiperparâmetro nas curvas se torna bem ruidoso.
+
+<!-- Fim da resposta -->
+
 8.2 – Houve um ponto ótimo onde o erro foi minimizado? Como vocês identificaram esse ponto?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+Como a curva não segue uma tendência clara, foi um pouco difícil isolar um ponto apenas observando uma métrica. Retomando o argumento utilizado na tarefa 2, resolvemos utilizar o Recall como métrica complementar. Ao comparar as duas curvas, elas parecem sugerir o valor de 10 árvores como ótimo para ambas as métricas, embora essa intensidade varie a cada experimento, dada a natureza aleatória do Random Forest.
+
+<!-- Fim da resposta -->
+
 
 8.3 – Em quais regiões da curva de viés e variância foi possível identificar *underfitting* e *overfitting*?
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
-<!-- Fim da resposta -->
-
-# Tarefa 9 -- (Opcional) Ensembles
-
-Implementem manualmente um protocolo de *ensemble* (e.g., *Bagging*, *Pasting* ou *Random Forest*), ajustando os parâmetros dessas técnicas.
-
-```{r atv9-code}
-# Treinamento
-
-# Métricas de avaliaçao
-```
-
-9.1 – Qual foi o critério para a decisão da técnica utilizada?
-
-9.2 – O resultado foi melhor comparado com outros cenários já testados?
-
-**Resposta:** <!-- Escreva sua resposta abaixo -->
+Pelo comportamento das curvas, não foi possível isolar regiões muito bem demarcadas, pois tanto a curva de validação quanto de treinamento oscilam bastante juntas, sugerindo que toda a região avaliada é passível de prover um bom fit dos dados.
 
 <!-- Fim da resposta -->
+
 
 # Tarefa 10 -- Conjunto de Teste
 
 Após identificar o melhor modelo, utilizem-no para fazer previsões no conjunto de teste e avaliem o seu desempenho.
+
+Avaliando uma combinação das 4 métricas de classificação geradas ao longo do trabalho, o modelo completo com profundidade 5 e o modelo de random forest com 10 árvores tem desempenhos muito próximos, com o random forest sendo ligeiramente superior. Escolheremos o modelo Random Forest para utilizar no teste final.
+
 
 ```{r atv10-code}
 # Ingestão de arquivo de teste
@@ -1423,9 +1501,21 @@ colnames(dados_para_encoding_teste) <- gsub("-", "_", colnames(dados_para_encodi
 
 10.1 – Qual foi o critério adotado para definir o melhor modelo?
 
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
 10.2 – Como os resultados no conjunto de teste se comparam aos obtidos no conjunto de validação? Houve algum indício degradação ou melhora do modelo?
 
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
+
 10.4 – Expliquem a diferença entre os modelos e o porquê que estas diferenças levaram a resultados piores ou melhores.
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
+<!-- Fim da resposta -->
 
 10.5 – Considerando as diferentes abordagens testadas, quais estratégias poderiam ser aplicadas para melhorar ainda mais o desempenho do modelo?
 
