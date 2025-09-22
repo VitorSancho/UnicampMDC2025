@@ -191,7 +191,6 @@ library(glmnet)
 library(caret)
 library(corrplot)
 library(rpart)        # Árvore de decisão
-library(rpart.plot)   # Visualização de árvores de decisão
 library(randomForest) # Random Forest
 library(reshape2) 
 
@@ -397,8 +396,8 @@ ggplot(validacao_normalizado, aes(x = Risco.Hipertensao, fill = Risco.Hipertensa
 One hot encoding de features categóricas:
 
 ```{r}
-# One Hot Encoding
-paste("One hot encoding para conjunto de TREINO")
+# One hot encoding para conjunto de TREINO
+
 dados_para_encoding_treino <- treino_normalizado
 
 dados_para_encoding_treino$Historico.Pressao.Arterial <- as.factor(dados_para_encoding_treino$Historico.Pressao.Arterial)
@@ -413,7 +412,7 @@ dados_para_encoding_treino <- cbind(dados_para_encoding_treino, one_hot)
 dados_para_encoding_treino$Nivel.Exercicio <- NULL
 colnames(dados_para_encoding_treino) <- gsub("-", "_", colnames(dados_para_encoding_treino))
 
-paste("One hot encoding para conjunto de VALIDAÇÃO")
+# One hot encoding para conjunto de VALIDAÇÃO
 
 dados_para_encoding_validacao <- validacao_normalizado
 
@@ -493,8 +492,6 @@ hypothesis
 
 # Treinamento    
 model <- glmnet(train_data[,1:12], train_data$Risco.Hipertensao, family = "binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
-print(model$beta)
-print(model$a0)
 
 # Avaliação do Modelo
 x_train <- model.matrix(hypothesis, data=train_data)
@@ -554,17 +551,19 @@ results_baseline
 ```
 
 2.1 – O modelo baseline foi suficiente para resolver o problema? Quais métricas de avaliação vocês utilizaram para justificar a resposta?
+
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-Para o o problema de predizer o risco de hipertensão de uma pessoa, podemos dizer que é melhor termos uma grande quantidade de falsos positivos do que falsos negativos. Ou seja, não devemos deixar passar pessoas com risco, é melhor que o modelo diga que uma pessoa deve se cuidar mais, fazer exercícios, cuidar da alimentação e buscar exames para confirmar o risco de hipertensão, do que sugerir o contrário e a pessoa ter risco. Logo o modelo deve ser avaliado de acordo com a métrica que é penalizada pela quantidade de falsos negativos, que é o Recall.
-Levando isso em consideração, no conjunto de treinamento tivemos cerca de 95,5% de recall, o que é um ótimo resultado, pois estamos deixando de mostrar o risco de hipertensão para apenas 4,5% das pessoas. Foi observado um percentual de 96% na validação, o que nos permite inferir a presença overfitting  no modelo. Para as demais métricas o resultado no conjunto de validação foi melhor do que no de treino, o que nos permite confirmas ocorrência do overfitting. A precisão ficou em torno de 55%, mas não vamos nos precupar com essa métrica, pois ela penaliza a presença de falsos positivos - e como dito anteriormente, não temos que temer dizer que uma pessoa tem risco quando na verdade não tem.
-Com esse desempenho o modelo se mostra capaz de prever bem os casos possível de hipertensão, mas ainda podemos melhorar o modelo para que deixe de estar em overfitting. Além disso, embora não seja o nosso objetivo, podemos melhorar a precisão do modelo, para que passemos a termos menos falsos positivos (o que penaliza a precisão do modelo). 
+
+Para o problema de predizer o risco de hipertensão de uma pessoa, podemos dizer que é melhor termos uma grande quantidade de falsos positivos do que falsos negativos. Ou seja, não devemos deixar passar pessoas com risco, é melhor que o modelo diga que uma pessoa deve se cuidar mais, fazer exercícios, cuidar da alimentação e buscar exames para confirmar o risco de hipertensão, do que sugerir o contrário e a pessoa ter risco. Logo, o modelo deve ser avaliado de acordo com a métrica que é penalizada pela quantidade de falsos negativos, que é o Recall.
+Levando isso em consideração, no conjunto de treinamento tivemos cerca de 95,5% de recall, o que é um ótimo resultado, pois estamos deixando de mostrar o risco de hipertensão para apenas 4,5% das pessoas. Foi observado um percentual de 96% na validação, o que nos permite inferir a presença overfitting no modelo. Para as demais métricas, o resultado no conjunto de validação foi melhor do que no de treino. A precisão ficou em torno de 55%, mas não vamos nos precupar com essa métrica, pois ela penaliza a presença de falsos positivos - e como dito anteriormente, não temos que temer dizer que uma pessoa tem risco quando na verdade não tem.
+Com esse desempenho, o modelo se mostra capaz de prever bem os casos possível de hipertensão, mas ainda podemos melhorar o modelo para que deixe de estar em overfitting. Além disso, embora não seja o nosso objetivo, podemos melhorar a precisão do modelo, para que passemos a termos menos falsos positivos.
 <!-- Fim da resposta -->
 
 # Tarefa 3 -- Soluções alternativas da Regressão Logística
 
 Implementem soluções alternativas baseadas em regressão logística, seja através da combinação das *features* **ou** de modelos polinomiais para melhorar o resultado do *baseline*. Comparem suas soluções reportando métricas de interesse no **conjunto de validação**.
 
-# Analisando correlação entre features para features continuas
+Analisando correlação entre features para features continuas
 
 ```{r}
 # Calculando a matriz de correlação
@@ -584,7 +583,7 @@ corrplot(matriz_correlacao,
 
 
 ```
-# Analisando correlação entre features para features discretas
+Analisando correlação entre features para features discretas
 
 ```{r}
 # Instalar o pacote se ainda não tiver
@@ -632,8 +631,8 @@ hypothesis_grau6
 # Treinamento
 formulas <- c(hypothesis_grau1, hypothesis_grau2, hypothesis_grau3, hypothesis_grau4, hypothesis_grau5, hypothesis_grau6)
 
-PrecisionPorGraus <- data.frame(graus=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
-RecallPorGraus <- data.frame(graus=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
+PrecisionPorGraus <- data.frame(graus=numeric(6), TrainPrecision=numeric(6), ValidPrecision=numeric(6))
+RecallPorGraus <- data.frame(graus=numeric(6), TrainRecall=numeric(6), ValidRecall=numeric(6))
 LossPorGraus <- data.frame(graus=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
 F1PorGraus  <- data.frame(graus=numeric(6), TrainF1=numeric(6), ValidF1=numeric(6))
 
@@ -677,7 +676,7 @@ for(hypothesis in formulas){
                         reference=as.factor(valid_data$Risco.Hipertensao), 
                         positive='1')
   
-  # Calcula mẽtrica de interesse
+  # Calcula métrica de interesse
   train_metrics = calculateMetrics(train_cm$table)
   valid_metrics = calculateMetrics(valid_cm$table)
   
@@ -727,7 +726,7 @@ p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 
 
 
-```{r atv3-code}
+```{r}
 # Hipóteses alternativas - polinomial
 hypothesis_grau1 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",1)
 hypothesis_grau1
@@ -750,8 +749,8 @@ hypothesis_grau6
 # Treinamento
 formulas <- c(hypothesis_grau1, hypothesis_grau2, hypothesis_grau3, hypothesis_grau4, hypothesis_grau5, hypothesis_grau6)
 
-PrecisionPorGraus <- data.frame(graus=numeric(6), Precision=numeric(6), Precision=numeric(6))
-RecallPorGraus <- data.frame(graus=numeric(6), Recall=numeric(6), Recall=numeric(6))
+PrecisionPorGraus <- data.frame(graus=numeric(6), TrainPrecision=numeric(6), ValidPrecision=numeric(6))
+RecallPorGraus <- data.frame(graus=numeric(6), TrainRecall=numeric(6), ValidRecall=numeric(6))
 LossPorGraus <- data.frame(graus=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
 F1PorGraus  <- data.frame(graus=numeric(6), TrainF1=numeric(6), ValidF1=numeric(6))
 
@@ -843,14 +842,27 @@ p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 ```
 
 3.1 – Quais foram os critérios utilizados para selecionar a técnica alternativa?
+
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
 Fizemos a análise de correlação entre as features contínuas e as discretas. Nas duas não foi possível observar uma forte correlação entre 2 ou mais features. Por isso não pudemos agrupar e assim reduzir o total de features do modelo. Com isso, combinamos as features contínuas para treinarmos o modelo polinomial.
 
+<!-- Fim da resposta -->
+
 3.2 – Alguma combinação gerou um impacto positivo ou negativo significativo no desempenho do modelo? Por quê?
+
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+
 Ao aumentar o grau do polinomio de 1 para 2 notamos o valor do Recall caiu, mas já foi possível observar que o modelo saiu de uma região de overfitting. 
 
+<!-- Fim da resposta -->
+
 3.3 – Existe alguma relação entre viés e variância no seu modelo ao modificar o modelo (seja por combinações de *features* ou polinomiais)?
-Para todas as métricas, em exceção o recall, foi possível notar que ao aumentar o grau do polinomio os modelos não conseguiram sair da condição de overfitting.
+
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+
+Para todas as métricas, em exceção o recall, foi possível notar que ao aumentar o grau do polinomio os modelos não conseguiram sair da condição de overfitting.
 
 <!-- Fim da resposta -->
 
@@ -915,7 +927,7 @@ for(l in lambda_values){
                         reference=as.factor(valid_data$Risco.Hipertensao), 
                         positive='1')
   
-  # Calcula mẽtrica de interesse
+  # Calcula métrica de interesse
   train_metrics = calculateMetrics(train_cm$table)
   valid_metrics = calculateMetrics(valid_cm$table)
 
@@ -965,25 +977,33 @@ p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 ```
 
 4.1 – Como a regularização afetou o desempenho do modelo?
+
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+
 A regularização impactou positivamente o modelo, especialmente no Recall, métrica mais relevante para nosso problema. Com o parâmetro de 1e-3, obtivemos Recall de 0.9421, valor próximo ao do modelo inicial, mas agora com maior evidência de ausência de overfitting, pois o desempenho no conjunto de treinamento se manteve equilibrado em relação ao de validação.
 
 <!-- Fim da resposta -->
 
 4.2 – Foi utilizada regularização Lasso ou Ridge? Por quê?
+
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+
 Optamos pela regularização Ridge, pois os modelos anteriores apresentavam sinais de overfitting, e o Ridge ajuda a reduzir a variância sem zerar coeficientes, preservando informações das features.
 
 <!-- Fim da resposta -->
 
 4.3 – Houve um ponto ótimo onde o erro foi minimizado? Como vocês identificaram esse ponto?
+
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+
 Com o parâmetro de 1e-5, o Recall apresentou melhora, indicando redução do erro nessa métrica. No entanto, esse ponto já se situa em uma região de overfitting, evidenciada pelo aumento do desempenho no treino em relação à validação.
 
 <!-- Fim da resposta -->
 
 4.4 – Em quais regiões da curva de viés e variância foi possível identificar underfitting e overfitting?
+
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+
 Observando o F1 e o Loss, percebemos que ao reduzir o parâmetro de regularização de 1e-3 para 1e-4, a diferença entre treino e validação aumenta significativamente, caracterizando overfitting. Antes de 1e-3, o modelo apresentava underfitting, enquanto para o Recall, entre 1e-3 e 1e-4, a validação se aproxima do desempenho do treino, reforçando a identificação dessas regiões.
 
 <!-- Fim da resposta -->
@@ -1018,7 +1038,7 @@ Avaliando o modelo Baseline 2 (árvore de decisão):
 
 getModelMetrics <- function(model, training_set, validation_set){
   model_train_pred <- predict(model, training_set, type="class")
-  model_valid_pred <- predict(model, validacao_normalizado, type="class")
+  model_valid_pred <- predict(model, validation_set, type="class")
 
   # Calcula a matriz de confusão
   train_cm <- confusionMatrix(data=as.factor(model_train_pred), 
@@ -1445,7 +1465,9 @@ Pelo comportamento das curvas, não foi possível isolar regiões muito bem dema
 
 Após identificar o melhor modelo, utilizem-no para fazer previsões no conjunto de teste e avaliem o seu desempenho.
 
-Avaliando uma combinação das 4 métricas de classificação geradas ao longo do trabalho, o modelo completo com profundidade 5 e o modelo de random forest com 10 árvores tem desempenhos muito próximos, com o random forest sendo ligeiramente superior. Escolheremos o modelo Random Forest para utilizar no teste final.
+
+
+Como o modelo ótimo é baseado em árvore de decisão, não precisaremos fazer nenhum tipo de encoding nas features categóricas do conjunto de teste, sendo necessário apenas aplicar a normalização que aplicamos nas etapas de treino e validação.
 
 
 ```{r atv10-code}
@@ -1458,16 +1480,6 @@ if (any(is.na(dados_teste))) {
   cat("Nenhum valor ausente encontrado no conjunto de teste\n")
 }
 
-# Avaliando dados presentes no data set
-# class(dados_teste$Consumo.Sal)
-# class(dados_teste$Nivel.de.Estresse)
-# class(dados_teste$Historico.Pressao.Arterial)
-# class(dados_teste$IMC)
-# class(dados_teste$Historico.Familiar)
-# class(dados_teste$Nivel.Exercicio)
-# class(dados_teste$Fumante)
-# class(dados_teste$Risco.Hipertensao)
-
 # summary(dados_teste)
 
 cols <- c(1, 2, 4, 5)  # índices das colunas numericas que vamos normalizar
@@ -1475,33 +1487,22 @@ dados_teste_normalizado <- dados_teste
 dados_teste_normalizado[, cols] <- sweep(dados_teste[, cols], 2, min_features, "-")
 dados_teste_normalizado[, cols] <- sweep(dados_teste[, cols], 2, diff, "/")
 
-dados_para_encoding_teste <- dados_teste_normalizado
-
-dados_para_encoding_teste$Historico.Pressao.Arterial <- as.factor(dados_para_encoding_teste$Historico.Pressao.Arterial)
-one_hot <- model.matrix(~ Historico.Pressao.Arterial - 1, data = dados_para_encoding_teste)
-dados_para_encoding_teste <- cbind(dados_para_encoding_teste, one_hot)
-dados_para_encoding_teste$Historico.Pressao.Arterial <- NULL
-colnames(dados_para_encoding_teste) <- gsub("-", "_", colnames(dados_para_encoding_teste))
-
-dados_para_encoding_teste$Nivel.Exercicio <- as.factor(dados_para_encoding_teste$Nivel.Exercicio)
-one_hot <- model.matrix(~ Nivel.Exercicio - 1, data = dados_para_encoding_teste)
-dados_para_encoding_teste <- cbind(dados_para_encoding_teste, one_hot)
-dados_para_encoding_teste$Nivel.Exercicio <- NULL
-colnames(dados_para_encoding_teste) <- gsub("-", "_", colnames(dados_para_encoding_teste))
+dados_teste_normalizado$Risco.Hipertensao <- as.factor(dados_teste_normalizado$Risco.Hipertensao)
 
 # Predição no conjunto de teste
-# dados_teste_tratados <- dados_para_encoding_teste
-# melhor_modelo <- # PREENCHER COM O MELHOR MODELO ENCONTRADO
-# resultado_final <- getModelMetrics(melhor_modelo, treino_normalizado, dados_teste_normalizado)
 
-# Métricas de avaliação
-
-# Métricas de avaliação
+melhor_modelo <- optimal_rf_model
+resultado_final <- getModelMetrics(melhor_modelo, valid_normalizado_rf, dados_teste_normalizado)
+resultado_final$train_cm
+resultado_final$valid_cm
+resultado_final$metrics
 ```
 
 10.1 – Qual foi o critério adotado para definir o melhor modelo?
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+
+Avaliando uma combinação das 4 métricas de classificação geradas ao longo do trabalho, o modelo completo com profundidade 5 e o modelo de random forest com 10 árvores tem desempenhos muito próximos, com o random forest sendo ligeiramente superior. Todas as métricas são superiores, exceto o Recall, que é menos de 1% inferior no Random Forest, comparado à arvore simples com profundidade 5. Por este motivo, escolhemos o modelo Random Forest para utilizar no teste final.
 
 <!-- Fim da resposta -->
 
@@ -1509,17 +1510,23 @@ colnames(dados_para_encoding_teste) <- gsub("-", "_", colnames(dados_para_encodi
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
+O resultado no conjunto de teste é consideravelmente pior do que no conjunto de treinamento, o que sugere algum grau de overfitting. No entanto, curiosamente, o recall foi uma métrica que melhorou em comparação com a validação do modelo. No geral, observamos uma redução de mais de 10%, em termos absolutos, entre as métricas na validação e no teste. Neste cenário, podemos afirmar que houve uma forte degradação do modelo ao ir para "produção".
+
 <!-- Fim da resposta -->
 
 10.4 – Expliquem a diferença entre os modelos e o porquê que estas diferenças levaram a resultados piores ou melhores.
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
+Ambos modelos são similares, com a diferença da estratégia de random forest. Inclusive, ambos têm restrições similares em relação à profundidade máxima das árvores, mas o algoritmo de random forest consegue capturar mais nuances do modelo, por treinar diversas árvores (10, no nosso caso) sobre subconjuntos dos dados.
+
 <!-- Fim da resposta -->
 
 10.5 – Considerando as diferentes abordagens testadas, quais estratégias poderiam ser aplicadas para melhorar ainda mais o desempenho do modelo?
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+
+Poderíamos tentar calibrar melhor a quantidade de features usadas no Random Forest e, com isso, alterar a quantidade de árvores, com a hipótese de que uma quantidade maior árvores mais simples pode ser melhor que uma menor de árvores complexas. Uma outra alternativa mais óbvia, porém não necessariamente simples, seria coletar mais dados de treinamento, já que um conjunto de cerca de 1300 exemplos pode não ser suficiente para que o modelo aprenda a generalizar tão bem.
 
 <!-- Fim da resposta -->
 
