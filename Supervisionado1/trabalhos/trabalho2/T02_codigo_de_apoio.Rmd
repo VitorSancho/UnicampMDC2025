@@ -608,6 +608,125 @@ matriz_cramer
 
 ```
 
+
+```{r atv3-code}
+# Hipóteses alternativas - polinomial
+hypothesis_grau1 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",1)
+hypothesis_grau1
+
+hypothesis_grau2 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",2)
+hypothesis_grau2
+
+hypothesis_grau3 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",3)
+hypothesis_grau3
+
+hypothesis_grau4 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",4)
+hypothesis_grau4
+
+hypothesis_grau5 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",5)
+hypothesis_grau5
+
+hypothesis_grau6 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",6)
+hypothesis_grau6
+
+# Treinamento
+formulas <- c(hypothesis_grau1, hypothesis_grau2, hypothesis_grau3, hypothesis_grau4, hypothesis_grau5, hypothesis_grau6)
+
+PrecisionPorGraus <- data.frame(graus=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
+RecallPorGraus <- data.frame(graus=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
+LossPorGraus <- data.frame(graus=numeric(6), TrainLoss=numeric(6), ValidLoss=numeric(6))
+F1PorGraus  <- data.frame(graus=numeric(6), TrainF1=numeric(6), ValidF1=numeric(6))
+
+i <- 1
+for(hypothesis in formulas){  
+  
+    # Preparar os dados de treinamento e validação
+  x_train <- model.matrix(hypothesis, train_data)
+  y_train <- train_data$class
+  
+  x_valid <- model.matrix(hypothesis, valid_data)
+  y_valid <- valid_data$class
+  
+  # Treinamento do modelo
+  model <- glmnet(train_data[,1:12], train_data$Risco.Hipertensao, family = "binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=1e-6)
+  
+  # Predicao do modelo
+  train_pred <- predict(model, newx=x_train[,1:12], type="response")
+  valid_pred <- predict(model, newx=x_valid[,1:12], type="response")
+  
+  # Transformaçao das predicoes em classes
+  train_class_pred                    <- train_pred
+  train_class_pred[train_pred >= 0.5] <- 1
+  train_class_pred[train_pred < 0.5]  <- 0
+  
+  valid_class_pred                    <- valid_pred
+  valid_class_pred[valid_pred >= 0.5] <- 1
+  valid_class_pred[valid_pred < 0.5]  <- 0
+  
+  # Calcula a loss dos dois conjuntos
+  train_losses <- getLoss(train_data$Risco.Hipertensao, train_pred)
+  valid_losses <- getLoss(valid_data$Risco.Hipertensao, valid_pred)
+
+  
+  # Calcula a matriz de confusão
+  train_cm <- confusionMatrix(data=as.factor(train_class_pred), 
+                        reference=as.factor(train_data$Risco.Hipertensao), 
+                        positive='1')
+  
+  valid_cm <- confusionMatrix(data=as.factor(valid_class_pred), 
+                        reference=as.factor(valid_data$Risco.Hipertensao), 
+                        positive='1')
+  
+  # Calcula mẽtrica de interesse
+  train_metrics = calculateMetrics(train_cm$table)
+  valid_metrics = calculateMetrics(valid_cm$table)
+  
+  
+  PrecisionPorGraus[i,]  <- c(i, train_metrics["Precision"], valid_metrics["Precision"]) 
+  RecallPorGraus[i,]  <- c(i, train_metrics["Recall"], valid_metrics["Recall"]) 
+  LossPorGraus[i,] <- c(i, train_losses["AverageLoss"], valid_losses["AverageLoss"])
+  F1PorGraus[i,]  <- c(i, train_metrics["F1"], valid_metrics["F1"]) 
+  
+  i <- i + 1
+}
+# Curva de viés e variância
+# Gráfico da Precisão
+PrecisionPorGrausMelt <- melt(PrecisionPorGraus, id="graus") 
+p <- ggplot(data=PrecisionPorGrausMelt, aes(x=graus, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("Precision") + scale_x_discrete(name ="graus", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico da Recall
+RecallPorGrausMelt <- melt(RecallPorGraus, id="graus") 
+p <- ggplot(data=RecallPorGrausMelt, aes(x=graus, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("Recall") + scale_x_discrete(name ="graus", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico da Loss
+LossPorGrausMelt <- melt(LossPorGraus, id="graus") 
+p <- ggplot(data=LossPorGrausMelt, aes(x=graus, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("Loss") + scale_x_discrete(name ="graus", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico da Acurácia
+F1PorGrausMelt <- melt(F1PorGraus, id="graus")  # convert to long format
+p <- ggplot(data=F1PorGrausMelt, aes(x=graus, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia") + ylab("F1") + scale_x_discrete(name ="graus", limits=as.character(1:length(formulas)))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+```
+
+
+
+
+
 ```{r atv3-code}
 # Hipóteses alternativas - polinomial
 hypothesis_grau1 <- getHypothesis(features_continuas, features_categoricas, target = "Risco.Hipertensao",1)
@@ -724,12 +843,13 @@ p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 ```
 
 3.1 – Quais foram os critérios utilizados para selecionar a técnica alternativa?
-Fizemos a análise de correlação entre as features contínuas e as discretas. Nas duas não foi possível observar uma forte correlação entre 2 ou mais features. Por isso não pudemos agrupar e assim reduzir o total de features do modelo.
+Fizemos a análise de correlação entre as features contínuas e as discretas. Nas duas não foi possível observar uma forte correlação entre 2 ou mais features. Por isso não pudemos agrupar e assim reduzir o total de features do modelo. Com isso, combinamos as features contínuas para treinarmos o modelo polinomial.
 
 3.2 – Alguma combinação gerou um impacto positivo ou negativo significativo no desempenho do modelo? Por quê?
+Ao aumentar o grau do polinomio de 1 para 2 notamos o valor do Recall caiu, mas já foi possível observar que o modelo saiu de uma região de overfitting. 
 
 3.3 – Existe alguma relação entre viés e variância no seu modelo ao modificar o modelo (seja por combinações de *features* ou polinomiais)?
-
+Para todas as métricas, em exceção o recall, foi possível notar que ao aumentar o grau do polinomio os modelos não conseguiram sair da condição de overfitting.
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
 <!-- Fim da resposta -->
@@ -740,23 +860,131 @@ Escolham um dos modelos do item anterior e variem o fator de regularização ($\
 
 ```{r atv4-code}
 # Busca de hiperparâmetros
+lambda_values <- c(0.1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6)
+
+PrecisionPerRegularizationRigde <- data.frame(regularization=numeric(length(lambda_values)), 
+                                    TrainPrecision=numeric(length(lambda_values)),
+                                    ValPrecision=numeric(length(lambda_values)))
+RecallPerRegularizationRigde <- data.frame(regularization=numeric(length(lambda_values)), 
+                                    TrainRecall=numeric(length(lambda_values)),
+                                    ValRecall=numeric(length(lambda_values)))
+LossPerRegularizationRigde <- data.frame(regularization=numeric(length(lambda_values)), 
+                                    TrainLoss=numeric(length(lambda_values)),
+                                    ValLoss=numeric(length(lambda_values)))
+
+F1PerRegularizationRigde <- data.frame(regularization=numeric(length(lambda_values)), 
+                                   TrainF1=numeric(length(lambda_values)),
+                                   ValF1=numeric(length(lambda_values)))
 
 # Treinamento
+i <- 1
+for(l in lambda_values){  
+  
+  # Preparar os dados de treinamento e validação
+  x_train <- model.matrix(hypothesis, train_data)
+  
+  x_valid <- model.matrix(hypothesis, valid_data)
+  
+  # Treinamento do modelo
+  model <- glmnet(train_data[,1:12], train_data$Risco.Hipertensao, family = "binomial", standardize=FALSE, maxit=1e+05, alpha=0, lambda=l)
+  
+  # Predicao do modelo
+  train_pred <- predict(model, newx=x_train[,1:12], type="response")
+  valid_pred <- predict(model, newx=x_valid[,1:12], type="response")
+  
+  # Transformaçao das predicoes em classes
+  train_class_pred                    <- train_pred
+  train_class_pred[train_pred >= 0.5] <- 1
+  train_class_pred[train_pred < 0.5]  <- 0
+  
+  valid_class_pred                    <- valid_pred
+  valid_class_pred[valid_pred >= 0.5] <- 1
+  valid_class_pred[valid_pred < 0.5]  <- 0
+  
+  # Calcula a loss dos dois conjuntos
+  train_losses <- getLoss(train_data$Risco.Hipertensao, train_pred)
+  valid_losses <- getLoss(valid_data$Risco.Hipertensao, valid_pred)
+
+  
+  # Calcula a matriz de confusão
+  train_cm <- confusionMatrix(data=as.factor(train_class_pred), 
+                        reference=as.factor(train_data$Risco.Hipertensao), 
+                        positive='1')
+  
+  valid_cm <- confusionMatrix(data=as.factor(valid_class_pred), 
+                        reference=as.factor(valid_data$Risco.Hipertensao), 
+                        positive='1')
+  
+  # Calcula mẽtrica de interesse
+  train_metrics = calculateMetrics(train_cm$table)
+  valid_metrics = calculateMetrics(valid_cm$table)
+
+  PrecisionPerRegularizationRigde[i,] <- c(i, train_metrics["Precision"], valid_metrics["Precision"])
+  RecallPerRegularizationRigde[i,] <- c(i, train_metrics["Recall"], valid_metrics["Recall"])
+  LossPerRegularizationRigde[i,] <- c(i, train_losses["AverageLoss"], valid_losses["AverageLoss"])
+  F1PerRegularizationRigde[i,]  <- c(i, train_metrics["F1"], valid_metrics["F1"]) 
+  
+  i <- i + 1
+}
+```
+
+```{r}
+# Gráfico da Precisão
+PrecisionPerRegularizationRigdeMelt <- melt(PrecisionPerRegularizationRigde, id="regularization") 
+p <- ggplot(data=PrecisionPerRegularizationRigdeMelt, aes(x=regularization, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia - Ridge") + ylab("Precisão") + scale_x_discrete(name ="Parametro de regularizacao", limits=c("0.1", "1e-2", "1e-3", "1e-4", "1e-5", "1e-6"))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico do Recall
+RecallPerRegularizationRigdeMelt <- melt(RecallPerRegularizationRigde, id="regularization") 
+p <- ggplot(data=RecallPerRegularizationRigdeMelt, aes(x=regularization, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia - Ridge") + ylab("Recall") + scale_x_discrete(name ="Parametro de regularizacao", limits=c("0.1", "1e-2", "1e-3", "1e-4", "1e-5", "1e-6"))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
+
+# Gráfico da Loss
+LossPerRegularizationMelt <- melt(LossPerRegularizationRigde, id="regularization") 
+p <- ggplot(data=LossPerRegularizationMelt, aes(x=regularization, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia - Ridge") + ylab("Loss") + scale_x_discrete(name ="Parametro de regularizacao", limits=c("0.1", "1e-2", "1e-3", "1e-4", "1e-5", "1e-6"))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 
 # Curva de viés e variância
+F1PerRegularizationMelt <- melt(F1PerRegularizationRigde, id="regularization")
+p <- ggplot(data=F1PerRegularizationMelt, aes(x=regularization, y=value, colour=variable)) + geom_line() + geom_point()
+
+p <- p + ggtitle("Curva vies/variancia - Ridge") + ylab("F1 Balanced") + scale_x_discrete(name ="Parametro de regularizacao", limits=c("0.1", "1e-2", "1e-3", "1e-4", "1e-5", "1e-6"))
+
+p + theme(legend.position = c(0.7, 0.50), legend.title = element_blank())
 
 # Métricas de avaliação
 ```
 
 4.1 – Como a regularização afetou o desempenho do modelo?
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+A regularização impactou positivamente o modelo, especialmente no Recall, métrica mais relevante para nosso problema. Com o parâmetro de 1e-3, obtivemos Recall de 0.9421, valor próximo ao do modelo inicial, mas agora com maior evidência de ausência de overfitting, pois o desempenho no conjunto de treinamento se manteve equilibrado em relação ao de validação.
+
+<!-- Fim da resposta -->
 
 4.2 – Foi utilizada regularização Lasso ou Ridge? Por quê?
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+Optamos pela regularização Ridge, pois os modelos anteriores apresentavam sinais de overfitting, e o Ridge ajuda a reduzir a variância sem zerar coeficientes, preservando informações das features.
+
+<!-- Fim da resposta -->
 
 4.3 – Houve um ponto ótimo onde o erro foi minimizado? Como vocês identificaram esse ponto?
-
-4.4 – Em quais regiões da curva de viés e variância foi possível identificar *underfitting* e *overfitting*?
-
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+Com o parâmetro de 1e-5, o Recall apresentou melhora, indicando redução do erro nessa métrica. No entanto, esse ponto já se situa em uma região de overfitting, evidenciada pelo aumento do desempenho no treino em relação à validação.
+
+<!-- Fim da resposta -->
+
+4.4 – Em quais regiões da curva de viés e variância foi possível identificar underfitting e overfitting?
+**Resposta:** <!-- Escreva sua resposta abaixo -->
+Observando o F1 e o Loss, percebemos que ao reduzir o parâmetro de regularização de 1e-3 para 1e-4, a diferença entre treino e validação aumenta significativamente, caracterizando overfitting. Antes de 1e-3, o modelo apresentava underfitting, enquanto para o Recall, entre 1e-3 e 1e-4, a validação se aproxima do desempenho do treino, reforçando a identificação dessas regiões.
 
 <!-- Fim da resposta -->
 
