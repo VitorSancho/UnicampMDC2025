@@ -152,8 +152,7 @@ a) Qual o menor número de componentes, tal que a variância acumulada seja pelo
 which(var_acumulada >= 0.80)[1]
 ```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 80% precisamos de 48 componentes.
 <!-- Fim da resposta -->
 
 b) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `90%` do total? 
@@ -161,8 +160,7 @@ b) Qual o menor número de componentes, tal que a variância acumulada seja pelo
 which(var_acumulada >= 0.90)[1]
 ```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 90% precisamos de 112 componentes.
 <!-- Fim da resposta -->
 
 c) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `95%` do total? 
@@ -170,8 +168,7 @@ c) Qual o menor número de componentes, tal que a variância acumulada seja pelo
 which(var_acumulada >= 0.95)[1]
 ```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 95% precisamos de 200 componentes.
 <!-- Fim da resposta -->
 
 d) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `99%` do total? 
@@ -179,14 +176,15 @@ d) Qual o menor número de componentes, tal que a variância acumulada seja pelo
 which(var_acumulada >= 0.99)[1]
 ```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 99% precisamos de 401 componentes.
 <!-- Fim da resposta -->
 
 e) Quais as principais diferenças entre a aplicação do PCA nesse conjunto dados com e sem normalização? Qual opção parece ser mais adequada para esse conjunto de dados? Justifique sua resposta. 
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+Quando aplicamos o PCA com normalização, percebemos que precisamos de mais componentes para explicar a mesma quantidade de informação do que sem normalização. Por exemplo, para chegar a 80% da variância, foram necessários 48 componentes com normalização, enquanto sem normalização bastavam 38. Isso acontece porque a normalização coloca todas as variáveis na mesma “escala”, dando a mesma importância para variáveis grandes e pequenas. Sem normalização, as variáveis com números maiores acabam dominando a análise.
 
+Portanto, a normalização é útil quando queremos que todas as características tenham peso parecido na análise. No caso da base speech.csv, como as variáveis têm valores bem diferentes, usar PCA com normalização ajuda a considerar melhor todas as informações, mesmo que precisemos de mais componentes.
 
 <!-- Fim da resposta -->
 
