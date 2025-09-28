@@ -34,7 +34,10 @@ Antes de começar a implementação do seu trabalho configure o _workspace_ e im
 
 ```{r atv0-code}
 # Adicione os demais pacotes usados neste trabalho:
-
+library(ggplot2)
+library(umap)
+library(Rtsne)
+set.seed(123)
 
 # Configure ambiente de trabalho na mesma pasta 
 # onde colocou a base de dados:
@@ -65,47 +68,57 @@ com um valor mais baixo antes de gerar a versão final do PDF. -->
 ```{r atv1-code}
 
 # Executando a redução de dimensionalidade com o prcomp
+dados_para_PCA <- speech[, 1:617]
+pca <- prcomp(dados_para_PCA, scale. = FALSE)
 
 # Analisando as componentes com o comando summary
+summary(pca)
 
-
+# Analise de vari^ancia explicada
+var_exp <- (pca$sdev^2) / sum(pca$sdev^2)
+cum_var_exp <- cumsum(var_exp)
+head(cum_var_exp, 20)
 ```
 
 ## Análise
 
 a) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `80%` do total? 
-
+```{r}
+which(cum_var_exp >= 0.80)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 80% precisamos de 38 componentes.
 <!-- Fim da resposta -->
 
 b) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `90%` do total? 
-
+```{r}
+which(cum_var_exp >= 0.90)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 90% precisamos de 91 componentes.
 <!-- Fim da resposta -->
 
 c) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `95%` do total? 
-
+```{r}
+which(cum_var_exp >= 0.95)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 95% precisamos de 170 componentes.
 <!-- Fim da resposta -->
 
 d) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `99%` do total? 
-
+```{r}
+which(cum_var_exp >= 0.99)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 99% precisamos de 382 componentes.
 <!-- Fim da resposta -->
 
 e) Faça um breve resumo dos resultados dos itens *a)-d)* destacando o impacto da redução de dimensionalidade. 
-
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+A análise dos componentes principais mostra que a variabilidade dos dados pode ser representada de forma eficiente por um subconjunto dos componentes. Observa-se que os primeiros 38 componentes capturam aproximadamente 80% da variância total, indicando que grande parte da informação está concentrada nesses poucos componentes iniciais. Ao aumentar o nível de variância desejada, a quantidade de componentes necessários cresce: 91 componentes explicam 90% da variância, 170 componentes explicam 95%, e para atingir 99% da variância, é necessário manter 382 componentes.
 
-
+Esses resultados evidenciam que, embora seja possível reduzir a dimensionalidade do conjunto de dados, existe um trade-off entre simplificação e preservação da informação. A redução de dimensionalidade ajuda a eliminar redundâncias e ruídos, facilita visualização, diminui custos computacionais e pode melhorar o desempenho de algoritmos de aprendizado de máquina. Por outro lado, se quisermos capturar praticamente toda a variabilidade (99%), a redução se torna menos significativa, pois é necessário manter a maioria das componentes. Portanto, a escolha do número de componentes deve equilibrar a economia de dimensionalidade com a preservação da informação relevante para análise ou modelagem.
 <!-- Fim da resposta -->
 
 # Atividade 2 -- Análise de Componentes Principais e Normalização (*2,0 pts*)
@@ -117,46 +130,64 @@ Em seguida, use o comando `summary`, analise o resultado e os itens a seguir:
 
 # Executando a redução de dimensionalidade com o prcomp
  # com normalização dos dados
+pca_normalizado <- prcomp(dados_para_PCA, scale. = TRUE)
 
 # Analisando as componentes com o comando summary
+summary(pca_normalizado)
 
+# Variância explicada por cada componente
+var_explicada <- pca_normalizado$sdev^2 / sum(pca_normalizado$sdev^2)
+var_acumulada <- cumsum(var_explicada)
+
+n_80 <- which(var_acumulada >= 0.80)[1]
+n_90 <- which(var_acumulada >= 0.90)[1]
+n_95 <- which(var_acumulada >= 0.95)[1]
+n_99 <- which(var_acumulada >= 0.99)[1]
+
+n_80; n_90; n_95; n_99
 
 ```
 
 ## Análise
 
 a) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `80%` do total? 
-
+```{r}
+which(var_acumulada >= 0.80)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 80% precisamos de 48 componentes.
 <!-- Fim da resposta -->
 
 b) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `90%` do total? 
-
+```{r}
+which(var_acumulada >= 0.90)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 90% precisamos de 112 componentes.
 <!-- Fim da resposta -->
 
 c) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `95%` do total? 
-
+```{r}
+which(var_acumulada >= 0.95)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 95% precisamos de 200 componentes.
 <!-- Fim da resposta -->
 
 d) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `99%` do total? 
-
+```{r}
+which(var_acumulada >= 0.99)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 99% precisamos de 401 componentes.
 <!-- Fim da resposta -->
 
 e) Quais as principais diferenças entre a aplicação do PCA nesse conjunto dados com e sem normalização? Qual opção parece ser mais adequada para esse conjunto de dados? Justifique sua resposta. 
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+Quando aplicamos o PCA com normalização, percebemos que precisamos de mais componentes para explicar a mesma quantidade de informação do que sem normalização. Por exemplo, para chegar a 80% da variância, foram necessários 48 componentes com normalização, enquanto sem normalização bastavam 38. Isso acontece porque a normalização coloca todas as variáveis na mesma “escala”, dando a mesma importância para variáveis grandes e pequenas. Sem normalização, as variáveis com números maiores acabam dominando a análise.
 
+Portanto, a normalização é útil quando queremos que todas as características tenham peso parecido na análise. No caso da base speech.csv, como as variáveis têm valores bem diferentes, usar PCA com normalização ajuda a considerar melhor todas as informações, mesmo que precisemos de mais componentes.
 
 <!-- Fim da resposta -->
 
@@ -170,9 +201,22 @@ a) Aplique a redução de dimensionalidade com a técnica PCA e gere um gráfico
 ```{r atv3a-code}
 
 # Aplicando redução de dimensionalidade com a técnica PCA
+pca_res <- prcomp(speech[,1:617], scale.=FALSE)
 
-# Gerando o gráfico de dispersão
+# Pegando as duas primeiras componentes
+pca_2d <- data.frame(PC1 = pca_res$x[,1],
+                     PC2 = pca_res$x[,2],
+                     LETRA = speech$LETRA)
 
+# Gerando gráfico de dispersão
+library(ggplot2)
+ggplot(pca_2d, aes(x=PC1, y=PC2, color=LETRA)) +
+  geom_point(alpha=0.7) +
+  labs(title="PCA - Redução para 2 dimensões",
+       x="PC1",
+       y="PC2") +
+  theme_minimal() +
+  theme(legend.position="right")
 ```
 
 b) Aplique a redução de dimensionalidade com a técnica UMAP e gere um gráfico de dispersão dos dados. Use a coluna `618` para classificar as amostras e definir uma coloração. 
@@ -180,9 +224,21 @@ b) Aplique a redução de dimensionalidade com a técnica UMAP e gere um gráfic
 ```{r atv3b-code}
 
 # Aplicando redução de dimensionalidade com a técnica UMAP
+umap_res <- umap(speech[,1:617])
+
+umap_2d <- data.frame(
+  UMAP1 = umap_res$layout[,1],
+  UMAP2 = umap_res$layout[,2],
+  LETRA = speech$LETRA
+)
 
 # Gerando o gráfico de dispersão
-
+ggplot(umap_2d, aes(x=UMAP1, y=UMAP2, color=LETRA)) +
+  geom_point(alpha=0.7) +
+  labs(title="UMAP - Redução para 2 dimensões",
+       x="UMAP1", y="UMAP2") +
+  theme_minimal() +
+  theme(legend.position="right")
 
 ```
 
@@ -191,9 +247,21 @@ c) Aplique a redução de dimensionalidade com a técnica T-SNE e gere um gráfi
 ```{r atv3c-code}
 
 # Aplicando redução de dimensionalidade com a técnica T-SNE
+tsne_res <- Rtsne(speech[,1:617], dims=2, perplexity=30, verbose=TRUE)
 
-# Gerando o gráfico de dispersão
+tsne_2d <- data.frame(
+  TSNE1 = tsne_res$Y[,1],
+  TSNE2 = tsne_res$Y[,2],
+  LETRA = speech$LETRA
+)
 
+# Gerando gráfico de dispersão
+ggplot(tsne_2d, aes(x=TSNE1, y=TSNE2, color=LETRA)) +
+  geom_point(alpha=0.7) +
+  labs(title="t-SNE - Redução para 2 dimensões",
+       x="TSNE1", y="TSNE2") +
+  theme_minimal() +
+  theme(legend.position="right")
 
 ```
 
@@ -201,11 +269,11 @@ c) Aplique a redução de dimensionalidade com a técnica T-SNE e gere um gráfi
 ## Análise
 
 d) Qual técnica você acredita que apresentou a melhor projeção? Justifique.
-
-
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+O PCA mostra uma grande sobreposição entre os grupos de letras. Muitos pontos de diferentes letras aparecem misturados, e é difícil identificar aglomerados distintos. Isso acontece porque o PCA foca apenas na variância dos dados, sem tentar preservar a estrutura local ou a similaridade entre os pontos.
+O UMAP também mostra os grupos separados, mas de forma mais compacta e organizada. Cada letra forma um aglomerado mais definido, com menor sobreposição entre os grupos. É possível perceber claramente quais pontos pertencem a cada letra, e a separação geral entre os diferentes grupos está mais limpa que no t-SNE. Essa organização facilita a visualização e a interpretação dos dados.
+Já no t-SNE observamos grupos de pontos coloridos representando diferentes letras. O t-SNE conseguiu separar bem muitos grupos, criando aglomerados distintos que não se misturam muito. Porém, alguns grupos ainda aparecem misturados, principalmente no centro, e os pontos estão espalhados de forma irregular, o que pode dificultar identificar claramente todos os grupos.
+Levando isso em consideração, podemos concluir que o UMAP parece ter apresentado a melhor projeção. Ele organiza os pontos de forma mais clara e separa os grupos de letras de maneira bem definida, tornando fácil visualizar quais pontos pertencem a cada letra. O t-SNE também funciona bem, mas é um pouco mais confuso no centro, enquanto o PCA mistura tudo e não deixa os grupos tão visíveis. Em termos simples, UMAP “arrumou a bagunça” melhor que as outras duas técnicas.
 <!-- Fim da resposta -->
 
 # Atividade 4 -- Agrupamento com o $K$*-means* (*2,0 pts*)
