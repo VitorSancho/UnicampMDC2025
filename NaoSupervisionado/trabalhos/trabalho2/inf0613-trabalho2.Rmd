@@ -65,8 +65,8 @@ com um valor mais baixo antes de gerar a versão final do PDF. -->
 ```{r atv1-code}
 
 # Executando a redução de dimensionalidade com o prcomp
-X <- speech[, 1:617]
-pca <- prcomp(X, scale. = FALSE)
+dados_para_PCA <- speech[, 1:617]
+pca <- prcomp(dados_para_PCA, scale. = FALSE)
 
 # Analisando as componentes com o comando summary
 summary(pca)
@@ -127,37 +127,57 @@ Em seguida, use o comando `summary`, analise o resultado e os itens a seguir:
 
 # Executando a redução de dimensionalidade com o prcomp
  # com normalização dos dados
+pca_normalizado <- prcomp(dados_para_PCA, scale. = TRUE)
 
 # Analisando as componentes com o comando summary
+summary(pca_normalizado)
 
+# Variância explicada por cada componente
+var_explicada <- pca_normalizado$sdev^2 / sum(pca_normalizado$sdev^2)
+var_acumulada <- cumsum(var_explicada)
+
+n_80 <- which(var_acumulada >= 0.80)[1]
+n_90 <- which(var_acumulada >= 0.90)[1]
+n_95 <- which(var_acumulada >= 0.95)[1]
+n_99 <- which(var_acumulada >= 0.99)[1]
+
+n_80; n_90; n_95; n_99
 
 ```
 
 ## Análise
 
 a) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `80%` do total? 
-
+```{r}
+which(var_acumulada >= 0.80)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
 
 <!-- Fim da resposta -->
 
 b) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `90%` do total? 
-
+```{r}
+which(var_acumulada >= 0.90)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
 
 <!-- Fim da resposta -->
 
 c) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `95%` do total? 
-
+```{r}
+which(var_acumulada >= 0.95)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
 
 <!-- Fim da resposta -->
 
 d) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `99%` do total? 
-
+```{r}
+which(var_acumulada >= 0.99)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
 
