@@ -269,11 +269,11 @@ ggplot(tsne_2d, aes(x=TSNE1, y=TSNE2, color=LETRA)) +
 ## Análise
 
 d) Qual técnica você acredita que apresentou a melhor projeção? Justifique.
-
-
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+O PCA mostra uma grande sobreposição entre os grupos de letras. Muitos pontos de diferentes letras aparecem misturados, e é difícil identificar aglomerados distintos. Isso acontece porque o PCA foca apenas na variância dos dados, sem tentar preservar a estrutura local ou a similaridade entre os pontos.
+O UMAP também mostra os grupos separados, mas de forma mais compacta e organizada. Cada letra forma um aglomerado mais definido, com menor sobreposição entre os grupos. É possível perceber claramente quais pontos pertencem a cada letra, e a separação geral entre os diferentes grupos está mais limpa que no t-SNE. Essa organização facilita a visualização e a interpretação dos dados.
+Já no t-SNE observamos grupos de pontos coloridos representando diferentes letras. O t-SNE conseguiu separar bem muitos grupos, criando aglomerados distintos que não se misturam muito. Porém, alguns grupos ainda aparecem misturados, principalmente no centro, e os pontos estão espalhados de forma irregular, o que pode dificultar identificar claramente todos os grupos.
+Levando isso em consideração, podemos concluir que o UMAP parece ter apresentado a melhor projeção. Ele organiza os pontos de forma mais clara e separa os grupos de letras de maneira bem definida, tornando fácil visualizar quais pontos pertencem a cada letra. O t-SNE também funciona bem, mas é um pouco mais confuso no centro, enquanto o PCA mistura tudo e não deixa os grupos tão visíveis. Em termos simples, UMAP “arrumou a bagunça” melhor que as outras duas técnicas.
 <!-- Fim da resposta -->
 
 # Atividade 4 -- Agrupamento com o $K$*-means* (*2,0 pts*)
