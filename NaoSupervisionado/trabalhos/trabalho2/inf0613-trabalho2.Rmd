@@ -3,8 +3,8 @@ title:  INF0613 -- Aprendizado de Máquina Não Supervisionado
 output: pdf_document
 subtitle: Trabalho 2 - Redução de Dimensionalidade e Técnicas de Agrupamento
 author: 
-  - Nome completo Integrante 1
-  - Nome completo Integrante 2
+  - Vitor de Oliveira Fernandez Araujo
+  - Vitor Sancho Cardoso
 ---
 
 <!-- !!!!! Atenção !!!!! -->
@@ -72,9 +72,10 @@ dados_para_PCA <- speech[, 1:617]
 pca <- prcomp(dados_para_PCA, scale. = FALSE)
 
 # Analisando as componentes com o comando summary
+options(max.print=50)
 summary(pca)
 
-# Analise de vari^ancia explicada
+# Analise de variância explicada
 var_exp <- (pca$sdev^2) / sum(pca$sdev^2)
 cum_var_exp <- cumsum(var_exp)
 head(cum_var_exp, 20)
@@ -118,7 +119,7 @@ e) Faça um breve resumo dos resultados dos itens *a)-d)* destacando o impacto d
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 A análise dos componentes principais mostra que a variabilidade dos dados pode ser representada de forma eficiente por um subconjunto dos componentes. Observa-se que os primeiros 38 componentes capturam aproximadamente 80% da variância total, indicando que grande parte da informação está concentrada nesses poucos componentes iniciais. Ao aumentar o nível de variância desejada, a quantidade de componentes necessários cresce: 91 componentes explicam 90% da variância, 170 componentes explicam 95%, e para atingir 99% da variância, é necessário manter 382 componentes.
 
-Esses resultados evidenciam que, embora seja possível reduzir a dimensionalidade do conjunto de dados, existe um trade-off entre simplificação e preservação da informação. A redução de dimensionalidade ajuda a eliminar redundâncias e ruídos, facilita visualização, diminui custos computacionais e pode melhorar o desempenho de algoritmos de aprendizado de máquina. Por outro lado, se quisermos capturar praticamente toda a variabilidade (99%), a redução se torna menos significativa, pois é necessário manter a maioria das componentes. Portanto, a escolha do número de componentes deve equilibrar a economia de dimensionalidade com a preservação da informação relevante para análise ou modelagem.
+Esses resultados evidenciam que, embora seja possível reduzir a dimensionalidade do conjunto de dados, existe um trade-off entre simplificação e preservação da informação. A redução de dimensionalidade ajuda a eliminar redundâncias e ruídos, facilita visualização, diminui custos computacionais e pode melhorar o desempenho de algoritmos de aprendizado de máquina. Os resultados mostram que a estrutura dos dados que temos para analisar é complexa, sendo necessário utilizar muitos componentes para conservar a maior parte da informação (99% da variância). Isto nos indica que os pontos em alta dimensão representados no conjunto não têm relações lineares de correlação muito fortes em nenhuma direção em particular
 <!-- Fim da resposta -->
 
 # Atividade 2 -- Análise de Componentes Principais e Normalização (*2,0 pts*)
@@ -133,6 +134,7 @@ Em seguida, use o comando `summary`, analise o resultado e os itens a seguir:
 pca_normalizado <- prcomp(dados_para_PCA, scale. = TRUE)
 
 # Analisando as componentes com o comando summary
+options(max.print=50)
 summary(pca_normalizado)
 
 # Variância explicada por cada componente
@@ -187,7 +189,7 @@ e) Quais as principais diferenças entre a aplicação do PCA nesse conjunto dad
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 Quando aplicamos o PCA com normalização, percebemos que precisamos de mais componentes para explicar a mesma quantidade de informação do que sem normalização. Por exemplo, para chegar a 80% da variância, foram necessários 48 componentes com normalização, enquanto sem normalização bastavam 38. Isso acontece porque a normalização coloca todas as variáveis na mesma “escala”, dando a mesma importância para variáveis grandes e pequenas. Sem normalização, as variáveis com números maiores acabam dominando a análise.
 
-Portanto, a normalização é útil quando queremos que todas as características tenham peso parecido na análise. No caso da base speech.csv, como as variáveis têm valores bem diferentes, usar PCA com normalização ajuda a considerar melhor todas as informações, mesmo que precisemos de mais componentes.
+No caso deste dataset, a normalização piorou a performance do PCA, pois todos os dados já parecem estar numa mesma "unidade" (assumindo que os dados representam algo como intensidades de som em diferentes frequências). Por este motivo, ao aplicar a normalização, acabamos perdendo um pouco de variância no conjunto como um todo, tornando a representação por PCA mais difícil.
 
 <!-- Fim da resposta -->
 
@@ -209,9 +211,9 @@ pca_2d <- data.frame(PC1 = pca_res$x[,1],
                      LETRA = speech$LETRA)
 
 # Gerando gráfico de dispersão
-library(ggplot2)
-ggplot(pca_2d, aes(x=PC1, y=PC2, color=LETRA)) +
-  geom_point(alpha=0.7) +
+
+ggplot(pca_2d, aes(x=PC1, y=PC2, label=LETRA, color=LETRA)) +
+  geom_text(size=2) +
   labs(title="PCA - Redução para 2 dimensões",
        x="PC1",
        y="PC2") +
@@ -224,6 +226,7 @@ b) Aplique a redução de dimensionalidade com a técnica UMAP e gere um gráfic
 ```{r atv3b-code}
 
 # Aplicando redução de dimensionalidade com a técnica UMAP
+set.seed(123)
 umap_res <- umap(speech[,1:617])
 
 umap_2d <- data.frame(
@@ -233,8 +236,8 @@ umap_2d <- data.frame(
 )
 
 # Gerando o gráfico de dispersão
-ggplot(umap_2d, aes(x=UMAP1, y=UMAP2, color=LETRA)) +
-  geom_point(alpha=0.7) +
+ggplot(umap_2d, aes(x=UMAP1, y=UMAP2, label=LETRA, color=LETRA)) +
+  geom_text(size=3) +
   labs(title="UMAP - Redução para 2 dimensões",
        x="UMAP1", y="UMAP2") +
   theme_minimal() +
@@ -247,7 +250,8 @@ c) Aplique a redução de dimensionalidade com a técnica T-SNE e gere um gráfi
 ```{r atv3c-code}
 
 # Aplicando redução de dimensionalidade com a técnica T-SNE
-tsne_res <- Rtsne(speech[,1:617], dims=2, perplexity=30, verbose=TRUE)
+set.seed(123)
+tsne_res <- Rtsne(speech[,1:617], dims=2, perplexity=100, verbose=TRUE)
 
 tsne_2d <- data.frame(
   TSNE1 = tsne_res$Y[,1],
@@ -256,8 +260,8 @@ tsne_2d <- data.frame(
 )
 
 # Gerando gráfico de dispersão
-ggplot(tsne_2d, aes(x=TSNE1, y=TSNE2, color=LETRA)) +
-  geom_point(alpha=0.7) +
+ggplot(tsne_2d, aes(x=TSNE1, y=TSNE2, color=LETRA, label=LETRA)) +
+  geom_text(size=3) +
   labs(title="t-SNE - Redução para 2 dimensões",
        x="TSNE1", y="TSNE2") +
   theme_minimal() +
@@ -270,10 +274,10 @@ ggplot(tsne_2d, aes(x=TSNE1, y=TSNE2, color=LETRA)) +
 
 d) Qual técnica você acredita que apresentou a melhor projeção? Justifique.
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-O PCA mostra uma grande sobreposição entre os grupos de letras. Muitos pontos de diferentes letras aparecem misturados, e é difícil identificar aglomerados distintos. Isso acontece porque o PCA foca apenas na variância dos dados, sem tentar preservar a estrutura local ou a similaridade entre os pontos.
-O UMAP também mostra os grupos separados, mas de forma mais compacta e organizada. Cada letra forma um aglomerado mais definido, com menor sobreposição entre os grupos. É possível perceber claramente quais pontos pertencem a cada letra, e a separação geral entre os diferentes grupos está mais limpa que no t-SNE. Essa organização facilita a visualização e a interpretação dos dados.
-Já no t-SNE observamos grupos de pontos coloridos representando diferentes letras. O t-SNE conseguiu separar bem muitos grupos, criando aglomerados distintos que não se misturam muito. Porém, alguns grupos ainda aparecem misturados, principalmente no centro, e os pontos estão espalhados de forma irregular, o que pode dificultar identificar claramente todos os grupos.
-Levando isso em consideração, podemos concluir que o UMAP parece ter apresentado a melhor projeção. Ele organiza os pontos de forma mais clara e separa os grupos de letras de maneira bem definida, tornando fácil visualizar quais pontos pertencem a cada letra. O t-SNE também funciona bem, mas é um pouco mais confuso no centro, enquanto o PCA mistura tudo e não deixa os grupos tão visíveis. Em termos simples, UMAP “arrumou a bagunça” melhor que as outras duas técnicas.
+O PCA mostra uma grande sobreposição entre os grupos de letras. Muitos pontos de diferentes letras aparecem misturados, e é difícil identificar aglomerados distintos. Isso acontece porque o PCA foca apenas na variância dos dados, sem tentar preservar a estrutura local ou a similaridade entre os pontos. Sua medida de proximidade é exclusivamente linear, então para o caso de dados com relações complexas, como observamos aqui, sua eficácia de separação se torna baixa. 
+O UMAP mostra os grupos muito mais definidos e compactos. Cada letra forma um aglomerado mais definido, com menor sobreposição entre os grupos. A separação clara dos grupos permite perceber mais claramente as relações entre as letras, por exemplo, podemos ver uma proximidade entre as letras M e N, e F e S, cujas pronúncias em inglês realmente são bem parecidas. Além disso, temos um outro grande grupo formado majoritariamente por V, G, J e K, em que se sugere que estas letras podem ter pronúncias parecidas, a depender do sotaque de quem fala, pois estão presentes em mais de um cluster e, no maior cluster elas cobrem uma grande área, mostrando grande variação em sua pronúncia.
+No t-SNE, observamos uma quantidade maior de grupos, que conservam uma boa definição de cada letra, mas estão mais próximos entre si. Porém, alguns grupos ainda aparecem misturados, principalmente no centro, e os pontos estão espalhados de forma irregular, o que pode dificultar identificar claramente todos os grupos. Testamos com os valores de perplexidade 10, 30, 50 e 100. Acreditamos ter o melhor resultado com o valor 100, que nos permitiu enxergar estruturas parecidas com o UMAP, apesar de ainda assim ter um menor afastamento entre grupos. 
+Levando isso em consideração, podemos concluir que o UMAP parece ter apresentado a melhor projeção. Ele organiza os pontos de forma mais clara e separa os grupos de letras de maneira bem definida, tornando fácil visualizar quais pontos pertencem a cada letra. O t-SNE funciona bem, mas constroi uma estrutura global mais compacta, bagunçando a visualização. O PCA não consegue competir com ambos, pois se restringe a relações lineares e, por isso, mistura os pontos completamente com apenas 2 componentes principais. Em termos simples, UMAP “arrumou a bagunça” melhor que as outras duas técnicas.
 <!-- Fim da resposta -->
 
 # Atividade 4 -- Agrupamento com o $K$*-means* (*2,0 pts*)
