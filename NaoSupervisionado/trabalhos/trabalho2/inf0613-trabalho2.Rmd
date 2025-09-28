@@ -65,47 +65,57 @@ com um valor mais baixo antes de gerar a versão final do PDF. -->
 ```{r atv1-code}
 
 # Executando a redução de dimensionalidade com o prcomp
+X <- speech[, 1:617]
+pca <- prcomp(X, scale. = FALSE)
 
 # Analisando as componentes com o comando summary
+summary(pca)
 
-
+# Analise de vari^ancia explicada
+var_exp <- (pca$sdev^2) / sum(pca$sdev^2)
+cum_var_exp <- cumsum(var_exp)
+head(cum_var_exp, 20)
 ```
 
 ## Análise
 
 a) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `80%` do total? 
-
+```{r}
+which(cum_var_exp >= 0.80)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 80% precisamos de 38 componentes.
 <!-- Fim da resposta -->
 
 b) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `90%` do total? 
-
+```{r}
+which(cum_var_exp >= 0.90)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 90% precisamos de 91 componentes.
 <!-- Fim da resposta -->
 
 c) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `95%` do total? 
-
+```{r}
+which(cum_var_exp >= 0.95)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 95% precisamos de 170 componentes.
 <!-- Fim da resposta -->
 
 d) Qual o menor número de componentes, tal que a variância acumulada seja pelo menos `99%` do total? 
-
+```{r}
+which(cum_var_exp >= 0.99)[1]
+```
 **Resposta:** <!-- Escreva sua resposta abaixo -->
-
-
+Para carregar uma variância acumulada de ao menos 99% precisamos de 382 componentes.
 <!-- Fim da resposta -->
 
 e) Faça um breve resumo dos resultados dos itens *a)-d)* destacando o impacto da redução de dimensionalidade. 
-
 **Resposta:** <!-- Escreva sua resposta abaixo -->
+A análise dos componentes principais mostra que a variabilidade dos dados pode ser representada de forma eficiente por um subconjunto dos componentes. Observa-se que os primeiros 38 componentes capturam aproximadamente 80% da variância total, indicando que grande parte da informação está concentrada nesses poucos componentes iniciais. Ao aumentar o nível de variância desejada, a quantidade de componentes necessários cresce: 91 componentes explicam 90% da variância, 170 componentes explicam 95%, e para atingir 99% da variância, é necessário manter 382 componentes.
 
-
+Esses resultados evidenciam que, embora seja possível reduzir a dimensionalidade do conjunto de dados, existe um trade-off entre simplificação e preservação da informação. A redução de dimensionalidade ajuda a eliminar redundâncias e ruídos, facilita visualização, diminui custos computacionais e pode melhorar o desempenho de algoritmos de aprendizado de máquina. Por outro lado, se quisermos capturar praticamente toda a variabilidade (99%), a redução se torna menos significativa, pois é necessário manter a maioria das componentes. Portanto, a escolha do número de componentes deve equilibrar a economia de dimensionalidade com a preservação da informação relevante para análise ou modelagem.
 <!-- Fim da resposta -->
 
 # Atividade 2 -- Análise de Componentes Principais e Normalização (*2,0 pts*)
