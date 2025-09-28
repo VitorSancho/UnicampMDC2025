@@ -34,7 +34,10 @@ Antes de começar a implementação do seu trabalho configure o _workspace_ e im
 
 ```{r atv0-code}
 # Adicione os demais pacotes usados neste trabalho:
-
+library(ggplot2)
+library(umap)
+library(Rtsne)
+set.seed(123)
 
 # Configure ambiente de trabalho na mesma pasta 
 # onde colocou a base de dados:
@@ -198,9 +201,22 @@ a) Aplique a redução de dimensionalidade com a técnica PCA e gere um gráfico
 ```{r atv3a-code}
 
 # Aplicando redução de dimensionalidade com a técnica PCA
+pca_res <- prcomp(speech[,1:617], scale.=FALSE)
 
-# Gerando o gráfico de dispersão
+# Pegando as duas primeiras componentes
+pca_2d <- data.frame(PC1 = pca_res$x[,1],
+                     PC2 = pca_res$x[,2],
+                     LETRA = speech$LETRA)
 
+# Gerando gráfico de dispersão
+library(ggplot2)
+ggplot(pca_2d, aes(x=PC1, y=PC2, color=LETRA)) +
+  geom_point(alpha=0.7) +
+  labs(title="PCA - Redução para 2 dimensões",
+       x="PC1",
+       y="PC2") +
+  theme_minimal() +
+  theme(legend.position="right")
 ```
 
 b) Aplique a redução de dimensionalidade com a técnica UMAP e gere um gráfico de dispersão dos dados. Use a coluna `618` para classificar as amostras e definir uma coloração. 
@@ -208,9 +224,21 @@ b) Aplique a redução de dimensionalidade com a técnica UMAP e gere um gráfic
 ```{r atv3b-code}
 
 # Aplicando redução de dimensionalidade com a técnica UMAP
+umap_res <- umap(speech[,1:617])
+
+umap_2d <- data.frame(
+  UMAP1 = umap_res$layout[,1],
+  UMAP2 = umap_res$layout[,2],
+  LETRA = speech$LETRA
+)
 
 # Gerando o gráfico de dispersão
-
+ggplot(umap_2d, aes(x=UMAP1, y=UMAP2, color=LETRA)) +
+  geom_point(alpha=0.7) +
+  labs(title="UMAP - Redução para 2 dimensões",
+       x="UMAP1", y="UMAP2") +
+  theme_minimal() +
+  theme(legend.position="right")
 
 ```
 
@@ -219,9 +247,21 @@ c) Aplique a redução de dimensionalidade com a técnica T-SNE e gere um gráfi
 ```{r atv3c-code}
 
 # Aplicando redução de dimensionalidade com a técnica T-SNE
+tsne_res <- Rtsne(speech[,1:617], dims=2, perplexity=30, verbose=TRUE)
 
-# Gerando o gráfico de dispersão
+tsne_2d <- data.frame(
+  TSNE1 = tsne_res$Y[,1],
+  TSNE2 = tsne_res$Y[,2],
+  LETRA = speech$LETRA
+)
 
+# Gerando gráfico de dispersão
+ggplot(tsne_2d, aes(x=TSNE1, y=TSNE2, color=LETRA)) +
+  geom_point(alpha=0.7) +
+  labs(title="t-SNE - Redução para 2 dimensões",
+       x="TSNE1", y="TSNE2") +
+  theme_minimal() +
+  theme(legend.position="right")
 
 ```
 
