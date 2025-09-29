@@ -37,6 +37,7 @@ Antes de começar a implementação do seu trabalho configure o _workspace_ e im
 library(ggplot2)
 library(umap)
 library(Rtsne)
+library(cluster)
 set.seed(123)
 
 # Configure ambiente de trabalho na mesma pasta 
@@ -290,6 +291,17 @@ a) Aplique a redução de dimensionalidade com a melhor configuração encontrad
 
 ```{r atv4a-code}
 # Aplicando a redução de dimensionalidade no conjunto de dados original
+dados_para_PCA <- speech[, 1:617]
+
+# Aplica PCA sem normalização, pois foi o que apresentou melhor resultado
+pca <- prcomp(dados_para_PCA, scale. = FALSE)
+
+var_acum <- cumsum(pca$sdev^2) / sum(pca$sdev^2)
+num_comp <- which(var_acum >= 0.80)[1]
+num_comp
+
+# Reduzindo o conjunto de features
+dados_reduzidos <- pca$x[, 1:num_comp]
 
 ```
 
@@ -297,22 +309,49 @@ b) *Gráfico \textsl{Elbow Curve}:* Construa um gráfico com a soma das distânc
 
 ```{r atv4b-code}
 # Construindo um gráfico com as distâncias intra-cluster
+wss <- sapply(1:30, function(k){
+  kmeans(dados_reduzidos, centers=k, nstart=10)$tot.withinss
+})
 
+plot(1:30, wss, type="b", pch=19, frame=FALSE,
+     xlab="Número de clusters K",
+     ylab="Soma de quadrados intra-cluster (WSS)",
+     main="Elbow Curve")
 ```
 
 c) *Gráfico da Silhueta:* Construa um gráfico com o valor da silhueta para $K$ variando de $1$ a $30$.
 
 ```{r atv4c-code}
 # Construindo um gráfico com os valores da silhueta
+sil <- sapply(2:30, function(k){
+  ss <- silhouette(km$cluster, dist(dados_reduzidos))
+  mean(ss[, 3])  # média da largura da silhueta
+})
 
+plot(2:30, sil, type="b", pch=19, frame=FALSE,
+     xlab="Número de clusters K",
+     ylab="Coeficiente médio de silhueta",
+     main="Silhouette")
 ```
 
 d) *Escolha do $K$:* Avalie os gráficos gerados nos itens anteriores e escolha o melhor valor  de $K$ com base nas informações desses gráficos e na sua análise. Com o valor de $K$ definido, gere um gráfico de dispersão (atribuindo cores diferentes para cada grupo).
 
 ```{r atv4d-code}
 # Aplicando o k-means com o k escolhido 
+k = 15
+km_final <- kmeans(dados_reduzidos, centers=k, nstart=25)
+
+# Prepara dados para plotar (apenas 2 PCs para visualização)
+dados_plot <- data.frame(PC1 = dados_reduzidos[,1],
+                         PC2 = dados_reduzidos[,2],
+                         cluster = factor(km_final$cluster))
 
 # Construindo um gráfico de dispersão
+ggplot(dados_plot, aes(x=PC1, y=PC2, color=cluster)) +
+  geom_point(alpha=0.7) +
+  labs(title=paste("K-means com K =", k),
+       x="PC1", y="PC2") +
+  theme_minimal()
 
 ```
 
