@@ -309,8 +309,9 @@ b) *Gráfico \textsl{Elbow Curve}:* Construa um gráfico com a soma das distânc
 
 ```{r atv4b-code}
 # Construindo um gráfico com as distâncias intra-cluster
+set.seed(123)
 wss <- sapply(1:30, function(k){
-  kmeans(dados_reduzidos, centers=k, nstart=10)$tot.withinss
+  kmeans(dados_reduzidos, centers=k)$tot.withinss
 })
 
 plot(1:30, wss, type="b", pch=19, frame=FALSE,
@@ -323,7 +324,9 @@ c) *Gráfico da Silhueta:* Construa um gráfico com o valor da silhueta para $K$
 
 ```{r atv4c-code}
 # Construindo um gráfico com os valores da silhueta
+set.seed(123)
 sil <- sapply(2:30, function(k){
+  km <- kmeans(dados_reduzidos, centers=k)
   ss <- silhouette(km$cluster, dist(dados_reduzidos))
   mean(ss[, 3])  # média da largura da silhueta
 })
@@ -338,8 +341,9 @@ d) *Escolha do $K$:* Avalie os gráficos gerados nos itens anteriores e escolha 
 
 ```{r atv4d-code}
 # Aplicando o k-means com o k escolhido 
-k = 15
-km_final <- kmeans(dados_reduzidos, centers=k, nstart=25)
+k_final <- 17
+set.seed(123)
+km_final <- kmeans(dados_reduzidos, centers=k_final, nstart=25)
 
 # Prepara dados para plotar (apenas 2 PCs para visualização)
 dados_plot <- data.frame(PC1 = dados_reduzidos[,1],
@@ -347,9 +351,9 @@ dados_plot <- data.frame(PC1 = dados_reduzidos[,1],
                          cluster = factor(km_final$cluster))
 
 # Construindo um gráfico de dispersão
-ggplot(dados_plot, aes(x=PC1, y=PC2, color=cluster)) +
-  geom_point(alpha=0.7) +
-  labs(title=paste("K-means com K =", k),
+ggplot(dados_plot, aes(x=PC1, y=PC2, color=cluster, label=speech$LETRA)) +
+  geom_text(size=3) +
+  labs(title=paste("K-means com K =", k_final),
        x="PC1", y="PC2") +
   theme_minimal()
 
@@ -363,6 +367,7 @@ e) Faça um breve resumo dos resultados, indicando a escolha do $K$ e a análise
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
+Como o algoritmo PCA não conseguiu prover uma simplificação dos dados com forte separação, ao aplicarmos o kmeans e trazer de volta para 2 dimensões, o resultado do agrupamento não ficou simples de interpretar. Escolhemos K = 17 pois apresenta um valor mais alto de silhueta, com a distância intra-cluster um pouco menor. A escolha de valor para K não foi algo muito claro, pois o decréscimo de distancias na curva WSS x K se comportou de forma relativamente constante. Isso indica que não tivemos um valor de K com muito potencial para agrupamento. Pelo gráfico, conseguimos observar que os clusters capturaram alguma estrutura em alta dimensão, pois algumas letras estão agrupadas de forma coerente, como o 'R' e o 'O', mas no geral a visualização dos dados ainda está bem prejudicada.
 
 <!-- Fim da resposta -->
 
@@ -377,6 +382,20 @@ a) Aplique a redução de dimensionalidade com a melhor configuração encontrad
 
 ```{r atv5a-code}
 # Aplicando a redução de dimensionalidade no conjunto de dados original
+
+# Aplicando a redução de dimensionalidade no conjunto de dados original
+dados_para_PCA <- speech[, 1:617]
+
+# Aplica PCA sem normalização, pois foi o que apresentou melhor resultado
+pca <- prcomp(dados_para_PCA, scale. = FALSE)
+
+var_acum <- cumsum(pca$sdev^2) / sum(pca$sdev^2)
+num_comp <- which(var_acum >= 0.80)[1]
+num_comp
+
+# Reduzindo o conjunto de features
+dados_reduzidos <- pca$x[, 1:num_comp]
+
 
 ```
 
