@@ -34,6 +34,7 @@ Antes de começar a implementação do seu trabalho configure o _workspace_ e im
 
 ```{r atv0-code}
 # Adicione os demais pacotes usados neste trabalho:
+library(dbscan)
 library(ggplot2)
 library(umap)
 library(Rtsne)
@@ -402,11 +403,36 @@ dados_reduzidos <- pca$x[, 1:num_comp]
 b) *Ajuste de Parâmetros:* Experimente com valores diferentes para os parâmetros *eps* e *minPts*. Verifique o impacto dos diferentes valores nos agrupamentos.
 
 ```{r atv5b-code}
-# Experimento com valores de eps e minPts
 
-# Experimento com valores de eps e minPts
+eps_values <- seq(1, 10, by = 1)
+minPts_values <- seq(5,50, by=5)
 
-# Experimento com valores de eps e minPts
+results <- data.frame()
+
+for (eps in eps_values) {
+  for (minPts in minPts_values) {
+    model <- dbscan(dados_reduzidos, eps = eps, minPts = minPts)
+    clusters <- model$cluster
+
+    if (length(unique(clusters[clusters != 0])) >= 2) {
+      sil <- silhouette(clusters, dist(dados_reduzidos))
+      silhouette_avg <- mean(sil[, 3], na.rm = TRUE)
+    } else {
+      silhouette_avg <- NA
+    }
+
+    results <- rbind(results, data.frame(
+      eps = eps,
+      minPts = minPts,
+      clusters_found = length(unique(clusters[clusters != 0])),
+      noise_points = sum(clusters == 0),
+      silhouette = silhouette_avg
+    ))
+  }
+}
+
+results_sorted <- results[order(-results$silhouette), ]
+print(results_sorted)
 
 ```
 
@@ -414,6 +440,9 @@ c) *Determinando Ruídos:* Escolha o valor de *minPts* que obteve o melhor resul
 
 ```{r atv5c-code}
 # Encontrando o melhor eps com o kNNdistplot
+
+best_minpts <- 45
+kNNdistplot(dados_reduzidos, k = best_minpts)
 
 ```
 
@@ -423,6 +452,23 @@ d) *Visualizando os Grupos:* Após a escolha dos parâmetros *eps* e *minPts*, u
 # Aplicando o DBscan com os parâmetros escolhidos
 
 # Construindo um gráfico de dispersão
+set.seed(123)
+best_minpts <- 45
+best_eps <- 6
+dbscan_final <- dbscan(dados_reduzidos, eps = best_eps, minPts = best_minpts)
+
+# Prepara dados para plotar (apenas 2 PCs para visualização)
+dados_plot <- data.frame(PC1 = dados_reduzidos[,1],
+                         PC2 = dados_reduzidos[,2],
+                         cluster = factor(dbscan_final$cluster))
+
+# Construindo um gráfico de dispersão
+ggplot(dados_plot, aes(x=PC1, y=PC2, color=cluster, label=speech$LETRA)) +
+  geom_text(size=3) +
+  labs(title=paste("DBSCAN com eps =", best_eps, " minPts =", best_minpts),
+       x="PC1", y="PC2") +
+  theme_minimal()
+
 
 ```
 
@@ -433,7 +479,7 @@ e) Faça um breve resumo dos resultados, indicando a escolha dos parâmetros *ep
 
 **Resposta:** <!-- Escreva sua resposta abaixo -->
 
-
+Pelo grid search feito no item b, identificamos minPts = 45 como o parâmetro que gera o melhor valor de silhueta. Ao analisar o knnDistPlot, escolhemos o valor de eps = 6 e validamos com o plot 2d dos clusters. Conseguimos 5 clusters e 2032 pontos identificados como ruído. Quanto à qualidade do agrupamento, ao incluir a informação dos labels de cada ponto, vemos que o agrupamento não foi bom, pois juntou letras que não fazem sentido juntas, como 'H', 'Z' e  'K' (cluster 1). Neste sentido, parece que o algoritmo K-means conseguiu uma performance um pouco melhor, apesar de ambos terem dificuldades de encontrar um bom agrupamento no espaço dimensional encontrado pelo PCA.
 <!-- Fim da resposta -->
 
 
