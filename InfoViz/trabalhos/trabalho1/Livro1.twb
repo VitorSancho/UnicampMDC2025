@@ -1,0 +1,748 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!-- build 20252.25.0912.2314                               -->
+<workbook original-version='18.1' source-build='2025.2.3 (20252.25.0912.2314)' source-platform='win' version='18.1' xmlns:user='http://www.tableausoftware.com/xml/user'>
+  <document-format-change-manifest>
+    <AnimationOnByDefault />
+    <MarkAnimation />
+    <ObjectModelEncapsulateLegacy />
+    <ObjectModelExtractV2 />
+    <ObjectModelTableType />
+    <SchemaViewerObjectModel />
+    <SheetIdentifierTracking />
+    <_.fcp.VConnDownstreamExtractsWithWarnings.true...VConnDownstreamExtractsWithWarnings />
+    <WindowsPersistSimpleIdentifiers />
+  </document-format-change-manifest>
+  <preferences>
+    <preference name='ui.encoding.shelf.height' value='24' />
+    <preference name='ui.shelf.height' value='26' />
+  </preferences>
+  <datasources>
+    <datasource caption='links.csv+ (Múltiplas conexões)' inline='true' name='federated.1w4huta04dvn161bjf0kn08oybep' version='18.1'>
+      <connection class='federated'>
+        <named-connections>
+          <named-connection caption='links' name='textscan.1lupzf10ah31go1e2srsl1ef0sma'>
+            <connection class='textscan' directory='C:/Users/Vitor/Desktop/Curso Unicamp - MDC/UnicampMDC2025/InfoViz/trabalhos/trabalho1/ml-latest-small' filename='links.csv' password='' server='' />
+          </named-connection>
+          <named-connection caption='movies' name='textscan.0pbl6lb0v0wxko114y1pv1v10t6w'>
+            <connection class='textscan' directory='C:/Users/Vitor/Desktop/Curso Unicamp - MDC/UnicampMDC2025/InfoViz/trabalhos/trabalho1/ml-latest-small' filename='movies.csv' password='' server='' />
+          </named-connection>
+          <named-connection caption='ratings' name='textscan.0cuo00r0uruz7c1gv4wmd1a6ppkb'>
+            <connection class='textscan' directory='C:/Users/Vitor/Desktop/Curso Unicamp - MDC/UnicampMDC2025/InfoViz/trabalhos/trabalho1/ml-latest-small' filename='ratings.csv' password='' server='' />
+          </named-connection>
+          <named-connection caption='tags' name='textscan.1c8rf070j05r5c17zvmkk193phpz'>
+            <connection class='textscan' directory='C:/Users/Vitor/Desktop/Curso Unicamp - MDC/UnicampMDC2025/InfoViz/trabalhos/trabalho1/ml-latest-small' filename='tags.csv' password='' server='' />
+          </named-connection>
+          <named-connection caption='movies_and_genres' name='textscan.15xfhnm075apgj1c8zayi17ifww1'>
+            <connection class='textscan' directory='C:/Users/Vitor/Desktop/Curso Unicamp - MDC/UnicampMDC2025/InfoViz/trabalhos/trabalho1' filename='movies_and_genres.csv' password='' server='' />
+          </named-connection>
+        </named-connections>
+        <relation type='collection'>
+          <relation connection='textscan.1lupzf10ah31go1e2srsl1ef0sma' name='links.csv' table='[links#csv]' type='table'>
+            <columns character-set='UTF-8' header='yes' locale='pt_BR'>
+              <column datatype='integer' name='movieId' ordinal='0' />
+              <column datatype='integer' name='imdbId' ordinal='1' />
+              <column datatype='integer' name='tmdbId' ordinal='2' />
+            </columns>
+          </relation>
+          <relation connection='textscan.0cuo00r0uruz7c1gv4wmd1a6ppkb' name='movies.csv' table='[movies#csv]' type='table'>
+            <columns character-set='UTF-8' header='yes' locale='pt_BR' separator=';'>
+              <column datatype='integer' name='movieId' ordinal='0' />
+              <column datatype='string' name='title' ordinal='1' />
+              <column datatype='string' name='genres' ordinal='2' />
+            </columns>
+          </relation>
+          <relation connection='textscan.0cuo00r0uruz7c1gv4wmd1a6ppkb' name='ratings.csv' table='[ratings#csv]' type='table'>
+            <columns character-set='UTF-8' header='yes' locale='pt_BR'>
+              <column datatype='integer' name='userId' ordinal='0' />
+              <column datatype='integer' name='movieId' ordinal='1' />
+              <column datatype='string' name='rating' ordinal='2' />
+              <column datatype='integer' name='timestamp' ordinal='3' />
+            </columns>
+          </relation>
+          <relation connection='textscan.0cuo00r0uruz7c1gv4wmd1a6ppkb' name='tags.csv' table='[tags#csv]' type='table'>
+            <columns character-set='UTF-8' header='yes' locale='pt_BR'>
+              <column datatype='integer' name='userId' ordinal='0' />
+              <column datatype='integer' name='movieId' ordinal='1' />
+              <column datatype='string' name='tag' ordinal='2' />
+              <column datatype='integer' name='timestamp' ordinal='3' />
+            </columns>
+          </relation>
+        </relation>
+        <cols>
+          <map key='[genres]' value='[movies.csv].[genres]' />
+          <map key='[imdbId]' value='[links.csv].[imdbId]' />
+          <map key='[movieId (movies.csv)]' value='[movies.csv].[movieId]' />
+          <map key='[movieId (ratings.csv)]' value='[ratings.csv].[movieId]' />
+          <map key='[movieId (tags.csv)]' value='[tags.csv].[movieId]' />
+          <map key='[movieId]' value='[links.csv].[movieId]' />
+          <map key='[rating]' value='[ratings.csv].[rating]' />
+          <map key='[tag]' value='[tags.csv].[tag]' />
+          <map key='[timestamp (tags.csv)]' value='[tags.csv].[timestamp]' />
+          <map key='[timestamp]' value='[ratings.csv].[timestamp]' />
+          <map key='[title]' value='[movies.csv].[title]' />
+          <map key='[tmdbId]' value='[links.csv].[tmdbId]' />
+          <map key='[userId (tags.csv)]' value='[tags.csv].[userId]' />
+          <map key='[userId]' value='[ratings.csv].[userId]' />
+        </cols>
+        <metadata-records>
+          <metadata-record class='capability'>
+            <remote-name />
+            <remote-type>0</remote-type>
+            <parent-name>[links.csv]</parent-name>
+            <remote-alias />
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='character-set'>&quot;UTF-8&quot;</attribute>
+              <attribute datatype='string' name='collation'>&quot;pt_BR&quot;</attribute>
+              <attribute datatype='string' name='currency'>&quot;R$&quot;</attribute>
+              <attribute datatype='string' name='decimal-char'>&quot;,&quot;</attribute>
+              <attribute datatype='string' name='header-row'>&quot;true&quot;</attribute>
+              <attribute datatype='string' name='locale'>&quot;pt_BR&quot;</attribute>
+              <attribute datatype='string' name='single-char'>&quot;&quot;</attribute>
+              <attribute datatype='string' name='thousands-char'>&quot;.&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='capability'>
+            <remote-name />
+            <remote-type>0</remote-type>
+            <parent-name>[movies.csv]</parent-name>
+            <remote-alias />
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='character-set'>&quot;UTF-8&quot;</attribute>
+              <attribute datatype='string' name='collation'>&quot;pt_BR&quot;</attribute>
+              <attribute datatype='string' name='currency'>&quot;R$&quot;</attribute>
+              <attribute datatype='string' name='decimal-char'>&quot;,&quot;</attribute>
+              <attribute datatype='string' name='field-delimiter'>&quot;;&quot;</attribute>
+              <attribute datatype='string' name='header-row'>&quot;true&quot;</attribute>
+              <attribute datatype='string' name='locale'>&quot;pt_BR&quot;</attribute>
+              <attribute datatype='string' name='single-char'>&quot;&quot;</attribute>
+              <attribute datatype='string' name='thousands-char'>&quot;.&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='capability'>
+            <remote-name />
+            <remote-type>0</remote-type>
+            <parent-name>[ratings.csv]</parent-name>
+            <remote-alias />
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='character-set'>&quot;UTF-8&quot;</attribute>
+              <attribute datatype='string' name='collation'>&quot;pt_BR&quot;</attribute>
+              <attribute datatype='string' name='currency'>&quot;R$&quot;</attribute>
+              <attribute datatype='string' name='decimal-char'>&quot;,&quot;</attribute>
+              <attribute datatype='string' name='header-row'>&quot;true&quot;</attribute>
+              <attribute datatype='string' name='locale'>&quot;pt_BR&quot;</attribute>
+              <attribute datatype='string' name='single-char'>&quot;&quot;</attribute>
+              <attribute datatype='string' name='thousands-char'>&quot;.&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='capability'>
+            <remote-name />
+            <remote-type>0</remote-type>
+            <parent-name>[tags.csv]</parent-name>
+            <remote-alias />
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='character-set'>&quot;UTF-8&quot;</attribute>
+              <attribute datatype='string' name='collation'>&quot;pt_BR&quot;</attribute>
+              <attribute datatype='string' name='currency'>&quot;R$&quot;</attribute>
+              <attribute datatype='string' name='decimal-char'>&quot;,&quot;</attribute>
+              <attribute datatype='string' name='header-row'>&quot;true&quot;</attribute>
+              <attribute datatype='string' name='locale'>&quot;pt_BR&quot;</attribute>
+              <attribute datatype='string' name='single-char'>&quot;&quot;</attribute>
+              <attribute datatype='string' name='thousands-char'>&quot;.&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>movieId</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[movieId]</local-name>
+            <parent-name>[links.csv]</parent-name>
+            <remote-alias>movieId</remote-alias>
+            <ordinal>0</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>imdbId</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[imdbId]</local-name>
+            <parent-name>[links.csv]</parent-name>
+            <remote-alias>imdbId</remote-alias>
+            <ordinal>1</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>tmdbId</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[tmdbId]</local-name>
+            <parent-name>[links.csv]</parent-name>
+            <remote-alias>tmdbId</remote-alias>
+            <ordinal>2</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>movieId</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[movieId (movies.csv)]</local-name>
+            <parent-name>[movies.csv]</parent-name>
+            <remote-alias>movieId</remote-alias>
+            <ordinal>3</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>title</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[title]</local-name>
+            <parent-name>[movies.csv]</parent-name>
+            <remote-alias>title</remote-alias>
+            <ordinal>4</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LPT_RBR' />
+            <object-id>[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>genres</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[genres]</local-name>
+            <parent-name>[movies.csv]</parent-name>
+            <remote-alias>genres</remote-alias>
+            <ordinal>5</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LPT_RBR' />
+            <object-id>[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>userId</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[userId]</local-name>
+            <parent-name>[ratings.csv]</parent-name>
+            <remote-alias>userId</remote-alias>
+            <ordinal>6</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>movieId</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[movieId (ratings.csv)]</local-name>
+            <parent-name>[ratings.csv]</parent-name>
+            <remote-alias>movieId</remote-alias>
+            <ordinal>7</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>rating</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[rating]</local-name>
+            <parent-name>[ratings.csv]</parent-name>
+            <remote-alias>rating</remote-alias>
+            <ordinal>8</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LPT_RBR' />
+            <object-id>[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>timestamp</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[timestamp]</local-name>
+            <parent-name>[ratings.csv]</parent-name>
+            <remote-alias>timestamp</remote-alias>
+            <ordinal>9</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>userId</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[userId (tags.csv)]</local-name>
+            <parent-name>[tags.csv]</parent-name>
+            <remote-alias>userId</remote-alias>
+            <ordinal>10</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[tags.csv_565FE035F514411B88DB9993142EDBC8]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>movieId</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[movieId (tags.csv)]</local-name>
+            <parent-name>[tags.csv]</parent-name>
+            <remote-alias>movieId</remote-alias>
+            <ordinal>11</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[tags.csv_565FE035F514411B88DB9993142EDBC8]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>tag</remote-name>
+            <remote-type>129</remote-type>
+            <local-name>[tag]</local-name>
+            <parent-name>[tags.csv]</parent-name>
+            <remote-alias>tag</remote-alias>
+            <ordinal>12</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <scale>1</scale>
+            <width>1073741823</width>
+            <contains-null>true</contains-null>
+            <collation flag='0' name='LPT_RBR' />
+            <object-id>[tags.csv_565FE035F514411B88DB9993142EDBC8]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>timestamp</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[timestamp (tags.csv)]</local-name>
+            <parent-name>[tags.csv]</parent-name>
+            <remote-alias>timestamp</remote-alias>
+            <ordinal>13</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[tags.csv_565FE035F514411B88DB9993142EDBC8]</object-id>
+          </metadata-record>
+        </metadata-records>
+      </connection>
+      <aliases enabled='yes' />
+      <column caption='links.csv' datatype='table' name='[__tableau_internal_object_id__].[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72]' role='measure' type='quantitative' />
+      <column caption='movies.csv' datatype='table' name='[__tableau_internal_object_id__].[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2]' role='measure' type='quantitative' />
+      <column caption='ratings.csv' datatype='table' name='[__tableau_internal_object_id__].[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]' role='measure' type='quantitative' />
+      <column caption='tags.csv' datatype='table' name='[__tableau_internal_object_id__].[tags.csv_565FE035F514411B88DB9993142EDBC8]' role='measure' type='quantitative' />
+      <column caption='Genres' datatype='string' name='[genres]' role='dimension' type='nominal' />
+      <column caption='Imdb Id' datatype='integer' name='[imdbId]' role='dimension' type='ordinal' />
+      <column datatype='integer' name='[movieId (movies.csv)]' role='dimension' type='ordinal' />
+      <column datatype='integer' name='[movieId (ratings.csv)]' role='dimension' type='ordinal' />
+      <column datatype='integer' name='[movieId (tags.csv)]' role='dimension' type='ordinal' />
+      <column caption='Movie Id' datatype='integer' name='[movieId]' role='dimension' type='ordinal' />
+      <column caption='Rating' datatype='string' name='[rating]' role='dimension' type='nominal' />
+      <column caption='Tag' datatype='string' name='[tag]' role='dimension' type='nominal' />
+      <column caption='Timestamp (Tags.Csv)' datatype='integer' name='[timestamp (tags.csv)]' role='measure' type='quantitative' />
+      <column caption='Timestamp' datatype='integer' name='[timestamp]' role='measure' type='quantitative' />
+      <column caption='Title' datatype='string' name='[title]' role='dimension' type='nominal' />
+      <column caption='Tmdb Id' datatype='integer' name='[tmdbId]' role='dimension' type='ordinal' />
+      <column datatype='integer' name='[userId (tags.csv)]' role='dimension' type='ordinal' />
+      <column caption='User Id' datatype='integer' name='[userId]' role='dimension' type='ordinal' />
+      <extract _.fcp.VConnDownstreamExtractsWithWarnings.true...user-specific='false' count='-1' enabled='true' object-id='' units='records'>
+        <connection access_mode='readonly' author-locale='pt_BR' class='hyper' dbname='C:/Users/Vitor/AppData/Local/Temp/TableauTemp/#TableauTemp_1xcdfo60zyu7701ehimlm10etk44.hyper' default-settings='hyper' schema='Extract' sslmode='' tablename='Extract' update-time='10/05/2025 08:36:00 PM' username='tableau_internal_user'>
+          <relation type='collection'>
+            <relation name='links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72' table='[Extract].[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72]' type='table' />
+            <relation name='movies.csv_BCD9D6A0413944A19CB506B9FE128FD2' table='[Extract].[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2]' type='table' />
+            <relation name='ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6' table='[Extract].[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]' type='table' />
+            <relation name='tags.csv_565FE035F514411B88DB9993142EDBC8' table='[Extract].[tags.csv_565FE035F514411B88DB9993142EDBC8]' type='table' />
+          </relation>
+          <cols>
+            <map key='[genres]' value='[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2].[genres]' />
+            <map key='[imdbId]' value='[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72].[imdbId]' />
+            <map key='[movieId (movies.csv)]' value='[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2].[movieId]' />
+            <map key='[movieId (ratings.csv)]' value='[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6].[movieId]' />
+            <map key='[movieId (tags.csv)]' value='[tags.csv_565FE035F514411B88DB9993142EDBC8].[movieId]' />
+            <map key='[movieId]' value='[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72].[movieId]' />
+            <map key='[rating]' value='[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6].[rating]' />
+            <map key='[tag]' value='[tags.csv_565FE035F514411B88DB9993142EDBC8].[tag]' />
+            <map key='[timestamp (tags.csv)]' value='[tags.csv_565FE035F514411B88DB9993142EDBC8].[timestamp]' />
+            <map key='[timestamp]' value='[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6].[timestamp]' />
+            <map key='[title]' value='[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2].[title]' />
+            <map key='[tmdbId]' value='[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72].[tmdbId]' />
+            <map key='[userId (tags.csv)]' value='[tags.csv_565FE035F514411B88DB9993142EDBC8].[userId]' />
+            <map key='[userId]' value='[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6].[userId]' />
+          </cols>
+          <metadata-records>
+            <metadata-record class='column'>
+              <remote-name>movieId</remote-name>
+              <remote-type>20</remote-type>
+              <local-name>[movieId]</local-name>
+              <parent-name>[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72]</parent-name>
+              <remote-alias>movieId</remote-alias>
+              <ordinal>0</ordinal>
+              <family>links.csv</family>
+              <local-type>integer</local-type>
+              <aggregation>Sum</aggregation>
+              <approx-count>9742</approx-count>
+              <contains-null>true</contains-null>
+              <object-id>[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72]</object-id>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>imdbId</remote-name>
+              <remote-type>20</remote-type>
+              <local-name>[imdbId]</local-name>
+              <parent-name>[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72]</parent-name>
+              <remote-alias>imdbId</remote-alias>
+              <ordinal>1</ordinal>
+              <family>links.csv</family>
+              <local-type>integer</local-type>
+              <aggregation>Sum</aggregation>
+              <approx-count>9742</approx-count>
+              <contains-null>true</contains-null>
+              <object-id>[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72]</object-id>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>tmdbId</remote-name>
+              <remote-type>20</remote-type>
+              <local-name>[tmdbId]</local-name>
+              <parent-name>[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72]</parent-name>
+              <remote-alias>tmdbId</remote-alias>
+              <ordinal>2</ordinal>
+              <family>links.csv</family>
+              <local-type>integer</local-type>
+              <aggregation>Sum</aggregation>
+              <approx-count>9356</approx-count>
+              <contains-null>true</contains-null>
+              <object-id>[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72]</object-id>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>movieId</remote-name>
+              <remote-type>20</remote-type>
+              <local-name>[movieId (movies.csv)]</local-name>
+              <parent-name>[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2]</parent-name>
+              <remote-alias>movieId</remote-alias>
+              <ordinal>3</ordinal>
+              <family>movies.csv</family>
+              <local-type>integer</local-type>
+              <aggregation>Sum</aggregation>
+              <approx-count>9742</approx-count>
+              <contains-null>true</contains-null>
+              <object-id>[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2]</object-id>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>title</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[title]</local-name>
+              <parent-name>[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2]</parent-name>
+              <remote-alias>title</remote-alias>
+              <ordinal>4</ordinal>
+              <family>movies.csv</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>9742</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='LPT_RBR' />
+              <object-id>[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2]</object-id>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>genres</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[genres]</local-name>
+              <parent-name>[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2]</parent-name>
+              <remote-alias>genres</remote-alias>
+              <ordinal>5</ordinal>
+              <family>movies.csv</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>695</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='LPT_RBR' />
+              <object-id>[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2]</object-id>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>userId</remote-name>
+              <remote-type>20</remote-type>
+              <local-name>[userId]</local-name>
+              <parent-name>[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]</parent-name>
+              <remote-alias>userId</remote-alias>
+              <ordinal>6</ordinal>
+              <family>ratings.csv</family>
+              <local-type>integer</local-type>
+              <aggregation>Sum</aggregation>
+              <approx-count>1790</approx-count>
+              <contains-null>true</contains-null>
+              <object-id>[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]</object-id>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>movieId</remote-name>
+              <remote-type>20</remote-type>
+              <local-name>[movieId (ratings.csv)]</local-name>
+              <parent-name>[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]</parent-name>
+              <remote-alias>movieId</remote-alias>
+              <ordinal>7</ordinal>
+              <family>ratings.csv</family>
+              <local-type>integer</local-type>
+              <aggregation>Sum</aggregation>
+              <approx-count>8462</approx-count>
+              <contains-null>true</contains-null>
+              <object-id>[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]</object-id>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>rating</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[rating]</local-name>
+              <parent-name>[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]</parent-name>
+              <remote-alias>rating</remote-alias>
+              <ordinal>8</ordinal>
+              <family>ratings.csv</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>10</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='LPT_RBR' />
+              <object-id>[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]</object-id>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>timestamp</remote-name>
+              <remote-type>20</remote-type>
+              <local-name>[timestamp]</local-name>
+              <parent-name>[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]</parent-name>
+              <remote-alias>timestamp</remote-alias>
+              <ordinal>9</ordinal>
+              <family>ratings.csv</family>
+              <local-type>integer</local-type>
+              <aggregation>Sum</aggregation>
+              <approx-count>74490</approx-count>
+              <contains-null>true</contains-null>
+              <object-id>[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]</object-id>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>userId</remote-name>
+              <remote-type>20</remote-type>
+              <local-name>[userId (tags.csv)]</local-name>
+              <parent-name>[tags.csv_565FE035F514411B88DB9993142EDBC8]</parent-name>
+              <remote-alias>userId</remote-alias>
+              <ordinal>10</ordinal>
+              <family>tags.csv</family>
+              <local-type>integer</local-type>
+              <aggregation>Sum</aggregation>
+              <approx-count>53</approx-count>
+              <contains-null>true</contains-null>
+              <object-id>[tags.csv_565FE035F514411B88DB9993142EDBC8]</object-id>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>movieId</remote-name>
+              <remote-type>20</remote-type>
+              <local-name>[movieId (tags.csv)]</local-name>
+              <parent-name>[tags.csv_565FE035F514411B88DB9993142EDBC8]</parent-name>
+              <remote-alias>movieId</remote-alias>
+              <ordinal>11</ordinal>
+              <family>tags.csv</family>
+              <local-type>integer</local-type>
+              <aggregation>Sum</aggregation>
+              <approx-count>1103</approx-count>
+              <contains-null>true</contains-null>
+              <object-id>[tags.csv_565FE035F514411B88DB9993142EDBC8]</object-id>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>tag</remote-name>
+              <remote-type>129</remote-type>
+              <local-name>[tag]</local-name>
+              <parent-name>[tags.csv_565FE035F514411B88DB9993142EDBC8]</parent-name>
+              <remote-alias>tag</remote-alias>
+              <ordinal>12</ordinal>
+              <family>tags.csv</family>
+              <local-type>string</local-type>
+              <aggregation>Count</aggregation>
+              <approx-count>1057</approx-count>
+              <contains-null>true</contains-null>
+              <collation flag='0' name='LPT_RBR' />
+              <object-id>[tags.csv_565FE035F514411B88DB9993142EDBC8]</object-id>
+            </metadata-record>
+            <metadata-record class='column'>
+              <remote-name>timestamp</remote-name>
+              <remote-type>20</remote-type>
+              <local-name>[timestamp (tags.csv)]</local-name>
+              <parent-name>[tags.csv_565FE035F514411B88DB9993142EDBC8]</parent-name>
+              <remote-alias>timestamp</remote-alias>
+              <ordinal>13</ordinal>
+              <family>tags.csv</family>
+              <local-type>integer</local-type>
+              <aggregation>Sum</aggregation>
+              <approx-count>2309</approx-count>
+              <contains-null>true</contains-null>
+              <object-id>[tags.csv_565FE035F514411B88DB9993142EDBC8]</object-id>
+            </metadata-record>
+          </metadata-records>
+        </connection>
+      </extract>
+      <layout dim-ordering='alphabetic' measure-ordering='alphabetic' show-structure='true' />
+      <semantic-values>
+        <semantic-value key='[Country].[Name]' value='&quot;Brasil&quot;' />
+      </semantic-values>
+      <object-graph>
+        <objects>
+          <object caption='links.csv' id='links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72'>
+            <properties context=''>
+              <relation connection='textscan.1lupzf10ah31go1e2srsl1ef0sma' name='links.csv' table='[links#csv]' type='table'>
+                <columns character-set='UTF-8' header='yes' locale='pt_BR'>
+                  <column datatype='integer' name='movieId' ordinal='0' />
+                  <column datatype='integer' name='imdbId' ordinal='1' />
+                  <column datatype='integer' name='tmdbId' ordinal='2' />
+                </columns>
+              </relation>
+            </properties>
+            <properties context='extract'>
+              <relation name='links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72' table='[Extract].[links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72]' type='table' />
+            </properties>
+          </object>
+          <object caption='movies.csv' id='movies.csv_BCD9D6A0413944A19CB506B9FE128FD2'>
+            <properties context=''>
+              <relation connection='textscan.0cuo00r0uruz7c1gv4wmd1a6ppkb' name='movies.csv' table='[movies#csv]' type='table'>
+                <columns character-set='UTF-8' header='yes' locale='pt_BR' separator=';'>
+                  <column datatype='integer' name='movieId' ordinal='0' />
+                  <column datatype='string' name='title' ordinal='1' />
+                  <column datatype='string' name='genres' ordinal='2' />
+                </columns>
+              </relation>
+            </properties>
+            <properties context='extract'>
+              <relation name='movies.csv_BCD9D6A0413944A19CB506B9FE128FD2' table='[Extract].[movies.csv_BCD9D6A0413944A19CB506B9FE128FD2]' type='table' />
+            </properties>
+          </object>
+          <object caption='ratings.csv' id='ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6'>
+            <properties context=''>
+              <relation connection='textscan.0cuo00r0uruz7c1gv4wmd1a6ppkb' name='ratings.csv' table='[ratings#csv]' type='table'>
+                <columns character-set='UTF-8' header='yes' locale='pt_BR'>
+                  <column datatype='integer' name='userId' ordinal='0' />
+                  <column datatype='integer' name='movieId' ordinal='1' />
+                  <column datatype='string' name='rating' ordinal='2' />
+                  <column datatype='integer' name='timestamp' ordinal='3' />
+                </columns>
+              </relation>
+            </properties>
+            <properties context='extract'>
+              <relation name='ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6' table='[Extract].[ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6]' type='table' />
+            </properties>
+          </object>
+          <object caption='tags.csv' id='tags.csv_565FE035F514411B88DB9993142EDBC8'>
+            <properties context=''>
+              <relation connection='textscan.0cuo00r0uruz7c1gv4wmd1a6ppkb' name='tags.csv' table='[tags#csv]' type='table'>
+                <columns character-set='UTF-8' header='yes' locale='pt_BR'>
+                  <column datatype='integer' name='userId' ordinal='0' />
+                  <column datatype='integer' name='movieId' ordinal='1' />
+                  <column datatype='string' name='tag' ordinal='2' />
+                  <column datatype='integer' name='timestamp' ordinal='3' />
+                </columns>
+              </relation>
+            </properties>
+            <properties context='extract'>
+              <relation name='tags.csv_565FE035F514411B88DB9993142EDBC8' table='[Extract].[tags.csv_565FE035F514411B88DB9993142EDBC8]' type='table' />
+            </properties>
+          </object>
+        </objects>
+        <relationships>
+          <relationship>
+            <expression op='='>
+              <expression op='[movieId]' />
+              <expression op='[movieId (movies.csv)]' />
+            </expression>
+            <first-end-point object-id='links.csv_FE0BDF4114364AF19B2BF3DF68CD5D72' />
+            <second-end-point object-id='movies.csv_BCD9D6A0413944A19CB506B9FE128FD2' />
+          </relationship>
+          <relationship>
+            <expression op='='>
+              <expression op='[movieId (movies.csv)]' />
+              <expression op='[movieId (ratings.csv)]' />
+            </expression>
+            <first-end-point object-id='movies.csv_BCD9D6A0413944A19CB506B9FE128FD2' />
+            <second-end-point object-id='ratings.csv_D2D3E08D1C984533BBA7C0F6F8EEA4C6' />
+          </relationship>
+          <relationship>
+            <expression op='='>
+              <expression op='[movieId (movies.csv)]' />
+              <expression op='[movieId (tags.csv)]' />
+            </expression>
+            <first-end-point object-id='movies.csv_BCD9D6A0413944A19CB506B9FE128FD2' />
+            <second-end-point object-id='tags.csv_565FE035F514411B88DB9993142EDBC8' />
+          </relationship>
+        </relationships>
+      </object-graph>
+    </datasource>
+  </datasources>
+  <worksheets>
+    <worksheet name='Planilha 1'>
+      <table>
+        <view>
+          <datasources />
+          <aggregation value='true' />
+        </view>
+        <style />
+        <panes>
+          <pane selection-relaxation-option='selection-relaxation-allow'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+          </pane>
+        </panes>
+        <rows />
+        <cols />
+      </table>
+      <simple-id uuid='{75BD769F-1AD8-42D1-B864-2A9C00C60F36}' />
+    </worksheet>
+  </worksheets>
+  <windows source-height='30'>
+    <window class='worksheet' maximized='true' name='Planilha 1'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+        <edge name='top'>
+          <strip size='2147483647'>
+            <card type='columns' />
+          </strip>
+          <strip size='2147483647'>
+            <card type='rows' />
+          </strip>
+          <strip size='31'>
+            <card type='title' />
+          </strip>
+        </edge>
+      </cards>
+      <simple-id uuid='{52102DEE-33A5-4ABC-A13E-ADE4B03C622D}' />
+    </window>
+  </windows>
+  <thumbnails>
+    <thumbnail height='192' name='Planilha 1' width='192'>
+      iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAACXBIWXMAABYlAAAWJQFJUiTw
+      AAACFUlEQVR4nO3TMQEAIAzAMMC/5yFjRxMFfXpnZg5Eve0A2GQA0gxAmgFIMwBpBiDNAKQZ
+      gDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFI
+      MwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQD
+      kGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBp
+      BiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA
+      0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDN
+      AKQZgDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxA
+      mgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDNAKQZ
+      gDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFI
+      MwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDNAKQZgDQDkGYA0gxAmgFIMwBpBiDNAKR9Y+0F
+      fBUOM1sAAAAASUVORK5CYII=
+    </thumbnail>
+  </thumbnails>
+</workbook>
