@@ -1,4 +1,6 @@
 **/*.pdf
 **/.Rhistory
 **/.Rdata*
-Supervisionado2/trabalhos/trabalho1/venv
+**/*venv
+**/*checkpoints
+**/*vscode
