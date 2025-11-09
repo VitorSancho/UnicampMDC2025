@@ -1,0 +1,21 @@
+Resultado Final
+
+[('bruce banner', -0.29815303430079154),
+ ('peter quill', -0.26811594202898553),
+ ('rocket', -0.21658986175115208),
+ ('steve rogers', -0.150460593654043),
+ ('hank pym', -0.1095890410958904),
+ ('thanos', -0.10091743119266056),
+ ('tony stark', -0.087248322147651),
+ ('peter parker', -0.016333938294010888),
+ ("t'challa", 0.06976744186046512),
+ ('groot', 0.9166666666666666)]
+
+Análise:
+
+Percebemos que a média do sentimento, para a maioria dos personagens, tende ao campo negativo. 
+Para personagens mais sarcásticos ou até "auto-depreciativos", vemos que a média tende mais para baixo, como é o caso dos 3 primeiros: 
+Bruce Banner, Peter Quill e Rocket. Personagens tidos como mais positivos e "alegres", como o Peter Parker, acabam ficando com a média neutra, próxima de zero. 
+Curiosamente, o personagem T'Challa, o Pantera Negra, tem uma média levemente positiva, que talvez seja explicada por seu comportamento mais formal e educado. 
+Por fim, para efeitos de curiosidade, incluímos a análise do Groot, que ficou extremamente próxima de 1, já que a maioria das variações de "I am Groot" 
+são avaliadas com sentimento positivo pelo modelo.
